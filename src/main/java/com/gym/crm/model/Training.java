@@ -13,7 +13,7 @@ public class Training {
     private final Long traineeId;
     private final Long trainerId;
     private final String trainingName;
-    private final String trainingType;
+    private final TrainingType trainingType;
     private final LocalDate trainingDate;
     private final int trainingDuration;
 }

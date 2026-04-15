@@ -10,7 +10,7 @@ import lombok.experimental.SuperBuilder;
 public abstract class User {
     private final String firstName;
     private final String lastName;
-    private final String userName;
+    private final String username;
     private final String password;
     private final boolean isActive;
 }

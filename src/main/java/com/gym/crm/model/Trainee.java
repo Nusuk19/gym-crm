@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @Getter
 @ToString(callSuper = true)
 @SuperBuilder
-public class Trainee extends User{
+public class Trainee extends User {
     private final Long userId;
     private final LocalDate dateOfBirth;
     private final String address;
