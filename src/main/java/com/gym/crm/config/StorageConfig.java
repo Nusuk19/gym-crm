@@ -1,0 +1,30 @@
+package com.gym.crm.config;
+
+import com.gym.crm.model.Trainee;
+import com.gym.crm.model.Trainer;
+import com.gym.crm.model.Training;
+import com.gym.crm.model.TrainingKey;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@Configuration
+public class StorageConfig {
+
+    @Bean
+    public Map<Long, Trainee> traineeStorage() {
+        return new HashMap<>();
+    }
+
+    @Bean
+    public Map<Long, Trainer> trainerStorage() {
+        return new HashMap<>();
+    }
+
+    @Bean
+    public Map<TrainingKey, Training> trainingStorage() {
+        return new HashMap<>();
+    }
+}
