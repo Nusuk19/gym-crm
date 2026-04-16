@@ -1,4 +1,4 @@
-package com.gym.crm.model;
+package com.gym.crm.storage;
 
 import java.time.LocalDate;
 
