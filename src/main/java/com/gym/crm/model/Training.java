@@ -10,6 +10,7 @@ import java.time.LocalDate;
 @ToString
 @Builder
 public class Training {
+    private final Long trainingId;
     private final Long traineeId;
     private final Long trainerId;
     private final String trainingName;

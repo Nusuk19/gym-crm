@@ -3,7 +3,6 @@ package com.gym.crm.config;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.model.Training;
-import com.gym.crm.model.TrainingKey;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -24,7 +23,7 @@ public class StorageConfig {
     }
 
     @Bean
-    public Map<TrainingKey, Training> trainingStorage() {
+    public Map<Long, Training> trainingStorage() {
         return new HashMap<>();
     }
 }
