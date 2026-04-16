@@ -18,7 +18,7 @@ import java.util.Map;
 @Component
 public class StorageInitializer {
 
-    private static final String DELIMITER = ";";
+    private static final String DELIMITER = ",";
     private static final String TYPE_TRAINEE = "TRAINEE";
     private static final String TYPE_TRAINER = "TRAINER";
     private static final String TYPE_TRAINING = "TRAINING";
