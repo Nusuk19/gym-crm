@@ -42,7 +42,7 @@ public class StorageInitializer {
         readAllLines().stream()
                 .filter(line -> extractType(line) == RecordType.TRAINEE)
                 .map(parser::parseTrainee)
-                .forEach(t -> result.put(t.getUserId(), t));
+                .forEach(trainee -> result.put(trainee.getUserId(), trainee));
 
         return result;
     }
@@ -53,7 +53,7 @@ public class StorageInitializer {
         readAllLines().stream()
                 .filter(line -> extractType(line) == RecordType.TRAINER)
                 .map(parser::parseTrainer)
-                .forEach(t -> result.put(t.getUserId(), t));
+                .forEach(trainer -> result.put(trainer.getUserId(), trainer));
 
         return result;
     }
@@ -64,7 +64,7 @@ public class StorageInitializer {
         readAllLines().stream()
                 .filter(line -> extractType(line) == RecordType.TRAINING)
                 .map(parser::parseTraining)
-                .forEach(t -> result.put(t.getTrainingId(), t));
+                .forEach(training -> result.put(training.getTrainingId(), training));
 
         return result;
     }
@@ -78,6 +78,7 @@ public class StorageInitializer {
         if (idx < 0) {
             throw new IllegalStateException("Invalid record format: " + line);
         }
+
         return RecordType.from(line.substring(0, idx));
     }
 }
