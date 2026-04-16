@@ -26,7 +26,7 @@ public class StorageInitializer {
     private Resource initFile;
     private Map<Long, Trainee> traineeStorage;
     private Map<Long, Trainer> trainerStorage;
-    private Map<TrainingKey, Training> trainingStorage;
+    private Map<Long, Training> trainingStorage;
 
     @Value("${storage.init.file}")
     public void setInitFile(Resource initFile) {
@@ -44,7 +44,7 @@ public class StorageInitializer {
     }
 
     @Autowired
-    public void setTrainingStorage(Map<TrainingKey, Training> trainingStorage) {
+    public void setTrainingStorage(Map<Long, Training> trainingStorage) {
         this.trainingStorage = trainingStorage;
     }
 
@@ -53,7 +53,7 @@ public class StorageInitializer {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(initFile.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                if(line.isBlank()) continue;
+                if (line.isBlank()) continue;
                 processLine(line);
             }
         } catch (Exception e) {
@@ -68,7 +68,8 @@ public class StorageInitializer {
             case TYPE_TRAINEE -> processTrainee(tokens);
             case TYPE_TRAINER -> processTrainer(tokens);
             case TYPE_TRAINING -> processTraining(tokens);
-            default -> throw new IllegalStateException("Unknown record type: " + tokens[0] + "in line: " + String.join(DELIMITER, tokens));
+            default ->
+                    throw new IllegalStateException("Unknown record type: " + tokens[0] + " in line: " + String.join(DELIMITER, tokens));
         }
     }
 
@@ -102,23 +103,18 @@ public class StorageInitializer {
     }
 
     private void processTraining(String[] tokens) {
+        Long trainingId = Long.parseLong(tokens[1]);
+
         Training training = Training.builder()
-                .traineeId(Long.parseLong(tokens[1]))
-                .trainerId(Long.parseLong(tokens[2]))
-                .trainingName(tokens[3])
-                .trainingType(new TrainingType(tokens[4]))
-                .trainingDate(LocalDate.parse(tokens[5]))
-                .trainingDuration(Integer.parseInt(tokens[6]))
+                .trainingId(trainingId)
+                .traineeId(Long.parseLong(tokens[2]))
+                .trainerId(Long.parseLong(tokens[3]))
+                .trainingName(tokens[4])
+                .trainingType(new TrainingType(tokens[5]))
+                .trainingDate(LocalDate.parse(tokens[6]))
+                .trainingDuration(Integer.parseInt(tokens[7]))
                 .build();
 
-        TrainingKey key = new TrainingKey(
-                training.getTraineeId(),
-                training.getTrainerId(),
-                training.getTrainingDate()
-        );
-
-        trainingStorage.put(key, training);
+        trainingStorage.put(trainingId, training);
     }
-
-
 }
