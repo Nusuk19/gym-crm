@@ -21,13 +21,10 @@ public class TraineeDaoImpl implements TraineeDao {
         this.inMemoryStorage = inMemoryStorage;
     }
 
-    private Map<Long, Trainee> storage() {
-        return inMemoryStorage.getTraineeStorage();
-    }
-
     @Override
     public Trainee save(Trainee trainee) {
         storage().put(trainee.getUserId(), trainee);
+
         return trainee;
     }
 
@@ -37,6 +34,7 @@ public class TraineeDaoImpl implements TraineeDao {
             throw new EntityNotFoundException("Trainee not found: " + trainee.getUserId());
         }
         storage().put(trainee.getUserId(), trainee);
+
         return trainee;
     }
 
@@ -53,5 +51,9 @@ public class TraineeDaoImpl implements TraineeDao {
     @Override
     public List<Trainee> findAllTrainees() {
         return List.copyOf(storage().values());
+    }
+
+    private Map<Long, Trainee> storage() {
+        return inMemoryStorage.getTraineeStorage();
     }
 }

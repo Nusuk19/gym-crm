@@ -20,13 +20,10 @@ public class TrainingDaoImpl implements TrainingDao {
         this.inMemoryStorage = inMemoryStorage;
     }
 
-    private Map<Long, Training> storage() {
-        return inMemoryStorage.getTrainingStorage();
-    }
-
     @Override
     public Training save(Training training) {
         storage().put(training.getTrainingId(), training);
+
         return training;
     }
 
@@ -38,5 +35,9 @@ public class TrainingDaoImpl implements TrainingDao {
     @Override
     public List<Training> findAllTrainings() {
         return List.copyOf(storage().values());
+    }
+
+    private Map<Long, Training> storage() {
+        return inMemoryStorage.getTrainingStorage();
     }
 }

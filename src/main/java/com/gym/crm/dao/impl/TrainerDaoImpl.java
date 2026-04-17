@@ -21,13 +21,10 @@ public class TrainerDaoImpl implements TrainerDao {
         this.inMemoryStorage = inMemoryStorage;
     }
 
-    private Map<Long, Trainer> storage() {
-        return inMemoryStorage.getTrainerStorage();
-    }
-
     @Override
     public Trainer save(Trainer trainer) {
         storage().put(trainer.getUserId(), trainer);
+
         return trainer;
     }
 
@@ -37,6 +34,7 @@ public class TrainerDaoImpl implements TrainerDao {
             throw new EntityNotFoundException("Trainer not found: " + trainer.getUserId());
         }
         storage().put(trainer.getUserId(), trainer);
+
         return trainer;
     }
 
@@ -48,5 +46,9 @@ public class TrainerDaoImpl implements TrainerDao {
     @Override
     public List<Trainer> findAllTrainers() {
         return List.copyOf(storage().values());
+    }
+
+    private Map<Long, Trainer> storage() {
+        return inMemoryStorage.getTrainerStorage();
     }
 }
