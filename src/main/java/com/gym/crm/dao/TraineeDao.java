@@ -1,0 +1,18 @@
+package com.gym.crm.dao;
+
+import com.gym.crm.model.Trainee;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface TraineeDao {
+    Trainee save(Trainee trainee);
+
+    Trainee update(Trainee trainee);
+
+    void delete(Long id);
+
+    Optional<Trainee> findTraineeById(Long id);
+
+    List<Trainee> findAllTrainees();
+}
