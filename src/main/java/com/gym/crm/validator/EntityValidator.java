@@ -1,13 +1,34 @@
 package com.gym.crm.validator;
 
 import com.gym.crm.exception.EntityValidationException;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import com.gym.crm.model.Trainee;
+import com.gym.crm.model.Trainer;
+import com.gym.crm.model.Training;
 import org.springframework.stereotype.Component;
 
 @Component
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class ValidationUtils {
+public class EntityValidator {
+
+    public void validateTrainee(Trainee trainee) {
+        requireNonNull(trainee, "Trainee cannot be null");
+        requireNonBlank(trainee.getFirstName(), "First name cannot be blank");
+        requireNonBlank(trainee.getLastName(), "Last name cannot be blank");
+    }
+
+    public void validateTrainer(Trainer trainer) {
+        requireNonNull(trainer, "Trainer cannot be null");
+        requireNonBlank(trainer.getFirstName(), "First name cannot be blank");
+        requireNonBlank(trainer.getLastName(), "Last name cannot be blank");
+    }
+
+    public void validateTraining(Training training) {
+        requireNonNull(training, "Training cannot be null");
+        requireNonBlank(training.getTrainingName(), "Training name cannot be blank");
+        requireValidId(training.getTraineeId());
+        requireValidId(training.getTrainerId());
+        requireNonNull(training.getTrainingDate(), "Training date cannot be null");
+        requireNonNull(training.getTrainingType(), "Training type cannot be null");
+    }
 
     public void requireValidId(Long id) {
         if (id == null || id <= 0) {
@@ -15,9 +36,15 @@ public final class ValidationUtils {
         }
     }
 
-    public void requireNonBlank(String value, String message) {
+    private void requireNonBlank(String value, String message) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(message);
+            throw new EntityValidationException(message);
+        }
+    }
+
+    private void requireNonNull(Object value, String message) {
+        if (value == null) {
+            throw new EntityValidationException(message);
         }
     }
 }
