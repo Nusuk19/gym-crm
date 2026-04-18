@@ -1,8 +1,16 @@
 package com.gym.crm.facade;
 
-import com.gym.crm.model.Trainee;
-import com.gym.crm.model.Trainer;
-import com.gym.crm.model.Training;
+import com.gym.crm.dto.request.CreateTraineeRequest;
+import com.gym.crm.dto.request.CreateTrainerRequest;
+import com.gym.crm.dto.request.CreateTrainingRequest;
+import com.gym.crm.dto.request.UpdateTraineeRequest;
+import com.gym.crm.dto.request.UpdateTrainerRequest;
+import com.gym.crm.dto.response.TraineeResponse;
+import com.gym.crm.dto.response.TrainerResponse;
+import com.gym.crm.dto.response.TrainingResponse;
+import com.gym.crm.mapper.TraineeMapper;
+import com.gym.crm.mapper.TrainerMapper;
+import com.gym.crm.mapper.TrainingMapper;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
@@ -18,52 +26,62 @@ public class GymFacade {
     private final TraineeService traineeService;
     private final TrainerService trainerService;
     private final TrainingService trainingService;
+    private final TraineeMapper traineeMapper;
+    private final TrainerMapper trainerMapper;
+    private final TrainingMapper trainingMapper;
 
-    public Trainee createTrainee(Trainee trainee) {
-        return traineeService.create(trainee);
+    public TraineeResponse createTrainee(CreateTraineeRequest request) {
+        return traineeMapper.toResponse(traineeService.create(traineeMapper.toEntity(request)));
     }
 
-    public Trainee updateTrainee(Trainee trainee) {
-        return traineeService.update(trainee);
+    public TraineeResponse updateTrainee(UpdateTraineeRequest request) {
+        return traineeMapper.toResponse(traineeService.update(traineeMapper.toEntity(request)));
     }
 
     public void deleteTrainee(Long id) {
         traineeService.delete(id);
     }
 
-    public Optional<Trainee> findTraineeById(Long id) {
-        return traineeService.findById(id);
+    public Optional<TraineeResponse> findTraineeById(Long id) {
+        return traineeService.findById(id).map(traineeMapper::toResponse);
     }
 
-    public List<Trainee> findAllTrainees() {
-        return traineeService.findAll();
+    public List<TraineeResponse> findAllTrainees() {
+        return traineeService.findAll().stream()
+                .map(traineeMapper::toResponse)
+                .toList();
     }
 
-    public Trainer createTrainer(Trainer trainer) {
-        return trainerService.create(trainer);
+    public TrainerResponse createTrainer(CreateTrainerRequest request) {
+        return trainerMapper.toResponse(trainerService.create(trainerMapper.toEntity(request)));
     }
 
-    public Trainer updateTrainer(Trainer trainer) {
-        return trainerService.update(trainer);
+    public TrainerResponse updateTrainer(UpdateTrainerRequest request) {
+        return trainerMapper.toResponse(trainerService.update(trainerMapper.toEntity(request)));
     }
 
-    public Optional<Trainer> findTrainerById(Long id) {
-        return trainerService.findById(id);
+    public Optional<TrainerResponse> findTrainerById(Long id) {
+        return trainerService.findById(id).map(trainerMapper::toResponse);
     }
 
-    public List<Trainer> findAllTrainers() {
-        return trainerService.findAll();
+    public List<TrainerResponse> findAllTrainers() {
+        return trainerService.findAll().stream()
+                .map(trainerMapper::toResponse)
+                .toList();
     }
 
-    public Training createTraining(Training training) {
-        return trainingService.create(training);
+    public TrainingResponse createTraining(CreateTrainingRequest request) {
+        return trainingMapper.toResponse(
+                trainingService.create(trainingMapper.toEntity(request)));
     }
 
-    public Optional<Training> findTrainingById(Long id) {
-        return trainingService.findById(id);
+    public Optional<TrainingResponse> findTrainingById(Long id) {
+        return trainingService.findById(id).map(trainingMapper::toResponse);
     }
 
-    public List<Training> findAllTrainings() {
-        return trainingService.findAll();
+    public List<TrainingResponse> findAllTrainings() {
+        return trainingService.findAll().stream()
+                .map(trainingMapper::toResponse)
+                .toList();
     }
 }
