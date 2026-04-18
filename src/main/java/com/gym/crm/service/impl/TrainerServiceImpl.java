@@ -13,7 +13,7 @@ import java.util.Optional;
 @Service
 public class TrainerServiceImpl implements TrainerService {
     private TrainerDao trainerDao;
-    private EntityValidator entityValidator;
+    private EntityValidator validator;
 
     @Autowired
     public void setTrainerDao(TrainerDao trainerDao) {
@@ -21,27 +21,27 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Autowired
-    public void setEntityValidator(EntityValidator entityValidator) {
-        this.entityValidator = entityValidator;
+    public void setValidator(EntityValidator validator) {
+        this.validator = validator;
     }
 
     @Override
     public Trainer create(Trainer trainer) {
-        entityValidator.validateTrainer(trainer);
+        validator.validateTrainer(trainer);
 
         return trainerDao.save(trainer);
     }
 
     @Override
     public Trainer update(Trainer trainer) {
-        entityValidator.requireValidId(trainer.getUserId());
+        validator.requireValidId(trainer.getUserId());
 
         return trainerDao.update(trainer);
     }
 
     @Override
     public Optional<Trainer> findById(Long id) {
-        entityValidator.requireValidId(id);
+        validator.requireValidId(id);
 
         return trainerDao.findById(id);
     }

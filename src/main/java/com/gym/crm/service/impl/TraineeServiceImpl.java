@@ -14,7 +14,7 @@ import java.util.Optional;
 public class TraineeServiceImpl implements TraineeService {
 
     private TraineeDao traineeDao;
-    private EntityValidator entityValidator;
+    private EntityValidator validator;
 
     @Autowired
     public void setTraineeDao(TraineeDao traineeDao) {
@@ -22,34 +22,34 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Autowired
-    public void setEntityValidator(EntityValidator entityValidator) {
-        this.entityValidator = entityValidator;
+    public void setValidator(EntityValidator validator) {
+        this.validator = validator;
     }
 
     @Override
     public Trainee create(Trainee trainee) {
-        entityValidator.validateTrainee(trainee);
+        validator.validateTrainee(trainee);
 
         return traineeDao.save(trainee);
     }
 
     @Override
     public Trainee update(Trainee trainee) {
-        entityValidator.requireValidId(trainee.getUserId());
+        validator.requireValidId(trainee.getUserId());
 
         return traineeDao.update(trainee);
     }
 
     @Override
     public void delete(Long id) {
-        entityValidator.requireValidId(id);
+        validator.requireValidId(id);
 
         traineeDao.delete(id);
     }
 
     @Override
     public Optional<Trainee> findById(Long id) {
-        entityValidator.requireValidId(id);
+        validator.requireValidId(id);
 
         return traineeDao.findById(id);
     }
