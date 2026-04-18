@@ -40,6 +40,9 @@ public class TraineeDaoImpl implements TraineeDao {
 
     @Override
     public void delete(Long userId) {
+        if (!storage().containsKey(userId)) {
+            throw new EntityNotFoundException("Trainee not found with id: " + userId);
+        }
         storage().remove(userId);
     }
 
