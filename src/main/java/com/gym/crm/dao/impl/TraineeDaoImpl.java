@@ -44,12 +44,12 @@ public class TraineeDaoImpl implements TraineeDao {
     }
 
     @Override
-    public Optional<Trainee> findTraineeById(Long id) {
+    public Optional<Trainee> findById(Long id) {
         return Optional.ofNullable(storage().get(id));
     }
 
     @Override
-    public List<Trainee> findAllTrainees() {
+    public List<Trainee> findAll() {
         return List.copyOf(storage().values());
     }
 

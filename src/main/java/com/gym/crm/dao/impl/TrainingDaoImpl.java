@@ -28,12 +28,12 @@ public class TrainingDaoImpl implements TrainingDao {
     }
 
     @Override
-    public Optional<Training> findTrainingById(Long id) {
+    public Optional<Training> findById(Long id) {
         return Optional.ofNullable(storage().get(id));
     }
 
     @Override
-    public List<Training> findAllTrainings() {
+    public List<Training> findAll() {
         return List.copyOf(storage().values());
     }
 

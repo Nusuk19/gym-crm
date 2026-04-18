@@ -39,12 +39,12 @@ public class TrainerDaoImpl implements TrainerDao {
     }
 
     @Override
-    public Optional<Trainer> findTrainerById(Long id) {
+    public Optional<Trainer> findById(Long id) {
         return Optional.ofNullable(storage().get(id));
     }
 
     @Override
-    public List<Trainer> findAllTrainers() {
+    public List<Trainer> findAll() {
         return List.copyOf(storage().values());
     }
 
