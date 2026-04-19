@@ -9,6 +9,7 @@ import java.security.SecureRandom;
 @Component
 public class PasswordGenerator {
     private static final int REQUIRED_PASSWORD_LENGTH = 10;
+
     private final SecureRandom random = new SecureRandom();
 
     @Value("${password.characters}")
@@ -24,8 +25,8 @@ public class PasswordGenerator {
         }
         if (passwordLength != REQUIRED_PASSWORD_LENGTH) {
             throw new IllegalStateException(
-                    "Password length must be exactly " + REQUIRED_PASSWORD_LENGTH +
-                            ", but was: " + passwordLength);
+                    String.format("Default password length value must be exactly %d, but is defined in properties as %d",
+                            REQUIRED_PASSWORD_LENGTH, passwordLength));
         }
     }
 
