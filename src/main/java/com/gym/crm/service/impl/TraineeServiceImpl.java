@@ -42,13 +42,7 @@ public class TraineeServiceImpl implements TraineeService {
         String rawPassword = userProfileService.generatePassword();
         String hashedPassword = userProfileService.hashPassword(rawPassword);
 
-        Trainee traineeWithProfile = Trainee.builder()
-                .userId(trainee.getUserId())
-                .firstName(trainee.getFirstName())
-                .lastName(trainee.getLastName())
-                .dateOfBirth(trainee.getDateOfBirth())
-                .address(trainee.getAddress())
-                .isActive(trainee.isActive())
+        Trainee traineeWithProfile = trainee.toBuilder()
                 .username(username)
                 .password(hashedPassword)
                 .build();

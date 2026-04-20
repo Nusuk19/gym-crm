@@ -41,12 +41,7 @@ public class TrainerServiceImpl implements TrainerService {
         String rawPassword = userProfileService.generatePassword();
         String hashedPassword = userProfileService.hashPassword(rawPassword);
 
-        Trainer trainerWithProfile = Trainer.builder()
-                .userId(trainer.getUserId())
-                .firstName(trainer.getFirstName())
-                .lastName(trainer.getLastName())
-                .specialization(trainer.getSpecialization())
-                .isActive(trainer.isActive())
+        Trainer trainerWithProfile = trainer.toBuilder()
                 .username(username)
                 .password(hashedPassword)
                 .build();

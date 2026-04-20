@@ -22,9 +22,15 @@ public class TrainingDaoImpl implements TrainingDao {
 
     @Override
     public Training save(Training training) {
-        storage().put(training.getTrainingId(), training);
+        Long id = training.getTrainingId() != null ? training.getTrainingId() : generateId();
 
-        return training;
+        Training trainingWithId = training.toBuilder()
+                .trainingId(id)
+                .build();
+
+        storage().put(id, trainingWithId);
+
+        return trainingWithId;
     }
 
     @Override
@@ -35,6 +41,12 @@ public class TrainingDaoImpl implements TrainingDao {
     @Override
     public List<Training> findAll() {
         return List.copyOf(storage().values());
+    }
+
+    private Long generateId() {
+        return storage().keySet().stream()
+                .max(Long::compareTo)
+                .orElse(0L) + 1;
     }
 
     private Map<Long, Training> storage() {

@@ -23,9 +23,15 @@ public class TraineeDaoImpl implements TraineeDao {
 
     @Override
     public Trainee save(Trainee trainee) {
-        storage().put(trainee.getUserId(), trainee);
+        Long id = trainee.getUserId() != null ? trainee.getUserId() : generateId();
 
-        return trainee;
+        Trainee traineeWithId = trainee.toBuilder()
+                .userId(id)
+                .build();
+
+        storage().put(id, traineeWithId);
+
+        return traineeWithId;
     }
 
     @Override
@@ -54,6 +60,12 @@ public class TraineeDaoImpl implements TraineeDao {
     @Override
     public List<Trainee> findAll() {
         return List.copyOf(storage().values());
+    }
+
+    private Long generateId() {
+        return storage().keySet().stream()
+                .max(Long::compareTo)
+                .orElse(0L) + 1;
     }
 
     private Map<Long, Trainee> storage() {

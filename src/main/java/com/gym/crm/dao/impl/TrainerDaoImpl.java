@@ -2,6 +2,7 @@ package com.gym.crm.dao.impl;
 
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.storage.InMemoryStorage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +24,15 @@ public class TrainerDaoImpl implements TrainerDao {
 
     @Override
     public Trainer save(Trainer trainer) {
-        storage().put(trainer.getUserId(), trainer);
+        Long id = trainer.getUserId() != null ? trainer.getUserId() : generateId();
 
-        return trainer;
+        Trainer trainerWithId = trainer.toBuilder()
+                .userId(id)
+                .build();
+
+        storage().put(id, trainerWithId);
+
+        return trainerWithId;
     }
 
     @Override
@@ -46,6 +53,12 @@ public class TrainerDaoImpl implements TrainerDao {
     @Override
     public List<Trainer> findAll() {
         return List.copyOf(storage().values());
+    }
+
+    private Long generateId() {
+        return storage().keySet().stream()
+                .max(Long::compareTo)
+                .orElse(0L) + 1;
     }
 
     private Map<Long, Trainer> storage() {
