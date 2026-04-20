@@ -1,3 +1,3 @@
-TRAINEE,1,John,Smith,1990-01-01,Kyiv,true
-TRAINER,1,Mike,Tyson,BOXING,true
+TRAINEE,1,John,Smith,John.Smith,hashedPass123,1990-01-01,Kyiv,true
+TRAINER,1,Mike,Tyson,Mike.Tyson,hashedPass456,BOXING,true
 TRAINING,1,1,1,Boxing basics,BOXING,2024-05-01,60

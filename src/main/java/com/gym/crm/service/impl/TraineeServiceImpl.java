@@ -3,6 +3,7 @@ package com.gym.crm.service.impl;
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.service.TraineeService;
+import com.gym.crm.service.UserProfileService;
 import com.gym.crm.validator.EntityValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     private TraineeDao traineeDao;
     private EntityValidator validator;
+    private UserProfileService userProfileService;
 
     @Autowired
     public void setTraineeDao(TraineeDao traineeDao) {
@@ -26,16 +28,31 @@ public class TraineeServiceImpl implements TraineeService {
         this.validator = validator;
     }
 
+    @Autowired
+    public void setUserProfileService(UserProfileService userProfileService) {
+        this.userProfileService = userProfileService;
+    }
+
     @Override
     public Trainee create(Trainee trainee) {
         validator.validateTrainee(trainee);
 
-        return traineeDao.save(trainee);
+        String username = userProfileService.generateUsername(
+                trainee.getFirstName(), trainee.getLastName());
+        String rawPassword = userProfileService.generatePassword();
+        String hashedPassword = userProfileService.hashPassword(rawPassword);
+
+        Trainee traineeWithProfile = trainee.toBuilder()
+                .username(username)
+                .password(hashedPassword)
+                .build();
+
+        return traineeDao.save(traineeWithProfile);
     }
 
     @Override
     public Trainee update(Trainee trainee) {
-        validator.requireValidId(trainee.getUserId());
+        validator.validateForUpdate(trainee, trainee.getUserId());
 
         return traineeDao.update(trainee);
     }

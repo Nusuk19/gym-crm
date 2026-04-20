@@ -6,7 +6,7 @@ import lombok.experimental.SuperBuilder;
 
 @Getter
 @ToString
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 public abstract class User {
     private final String firstName;
     private final String lastName;

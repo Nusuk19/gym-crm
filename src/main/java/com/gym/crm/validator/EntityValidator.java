@@ -30,6 +30,11 @@ public class EntityValidator {
         requireNonNull(training.getTrainingType(), "Training type cannot be null");
     }
 
+    public void validateForUpdate(Object entity, Long id) {
+        requireNonNull(entity, "Entity cannot be null");
+        requireValidId(id);
+    }
+
     public void requireValidId(Long id) {
         if (id == null || id <= 0) {
             throw new EntityValidationException("Id must be a positive integer, but was " + id);
