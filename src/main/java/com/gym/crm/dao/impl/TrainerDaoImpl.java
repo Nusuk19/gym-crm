@@ -2,7 +2,6 @@ package com.gym.crm.dao.impl;
 
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.exception.EntityNotFoundException;
-import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.storage.InMemoryStorage;
 import org.springframework.beans.factory.annotation.Autowired;
