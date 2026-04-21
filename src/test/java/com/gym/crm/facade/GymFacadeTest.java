@@ -38,29 +38,23 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class GymFacadeTest {
 
-    @Mock
-    private TraineeService traineeService;
-
-    @Mock
-    private TrainerService trainerService;
-
-    @Mock
-    private TrainingService trainingService;
-
-    @Mock
-    private TraineeMapper traineeMapper;
-
-    @Mock
-    private TrainerMapper trainerMapper;
-
-    @Mock
-    private TrainingMapper trainingMapper;
-
-    @InjectMocks
-    private GymFacade gymFacade;
-
     private static final Long EXISTING_ID = 1L;
     private static final Long NON_EXISTING_ID = 99L;
+
+    @Mock
+    private TraineeService traineeService;
+    @Mock
+    private TrainerService trainerService;
+    @Mock
+    private TrainingService trainingService;
+    @Mock
+    private TraineeMapper traineeMapper;
+    @Mock
+    private TrainerMapper trainerMapper;
+    @Mock
+    private TrainingMapper trainingMapper;
+    @InjectMocks
+    private GymFacade gymFacade;
 
     private Trainee trainee;
     private Trainer trainer;

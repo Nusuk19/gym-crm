@@ -18,13 +18,10 @@ class UserProfileServiceImplTest {
 
     @Mock
     private UsernameGenerator usernameGenerator;
-
     @Mock
     private PasswordGenerator passwordGenerator;
-
     @Mock
     private PasswordEncoder passwordEncoder;
-
     @InjectMocks
     private UserProfileServiceImpl userProfileService;
 

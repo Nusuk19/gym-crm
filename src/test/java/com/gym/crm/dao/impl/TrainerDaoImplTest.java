@@ -25,17 +25,16 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class TrainerDaoImplTest {
 
-    @Mock
-    private InMemoryStorage inMemoryStorage;
-
-    @InjectMocks
-    private TrainerDaoImpl trainerDao;
-
     private static final Long EXISTING_ID = 1L;
     private static final Long SECOND_ID = 2L;
     private static final Long GAP_ID = 5L;
     private static final Long GENERATED_ID = 6L;
     private static final Long NON_EXISTING_ID = 99L;
+
+    @Mock
+    private InMemoryStorage inMemoryStorage;
+    @InjectMocks
+    private TrainerDaoImpl trainerDao;
 
     private Map<Long, Trainer> storageMap;
     private Trainer trainer;

@@ -19,12 +19,11 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class InMemoryStorageTest {
 
-    @Mock
-    private StorageInitializer initializer;
-
     private static final Long ID = 1L;
     private static final Long SECOND_ID = 2L;
 
+    @Mock
+    private StorageInitializer initializer;
 
     private Map<Long, Trainee> traineeStorage;
     private Map<Long, Trainer> trainerStorage;

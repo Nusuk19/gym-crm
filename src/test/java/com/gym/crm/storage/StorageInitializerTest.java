@@ -31,14 +31,12 @@ class StorageInitializerTest {
             "TRAINER,1,Mike,Tyson,Mike.Tyson,hashedPass,BOXING,true";
     private static final String TRAINING_LINE =
             "TRAINING,1,1,1,Boxing basics,BOXING,2024-05-01,60";
-
     private static final Long ID = 1L;
 
     @Mock
     private FileLineReader fileLineReader;
 
     private StorageInitializer storageInitializer;
-
     private Resource initFile;
 
     @BeforeEach

@@ -21,7 +21,6 @@ class TraineeMapperTest {
 
     private TraineeMapper traineeMapper;
 
-
     @BeforeEach
     void setUp() {
         traineeMapper = new TraineeMapper();

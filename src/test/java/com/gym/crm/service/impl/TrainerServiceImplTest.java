@@ -32,20 +32,17 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class TrainerServiceImplTest {
 
-    @Mock
-    private TrainerDao trainerDao;
-
-    @Mock
-    private EntityValidator validator;
-
-    @Mock
-    private UserProfileService userProfileService;
-
-    @InjectMocks
-    private TrainerServiceImpl trainerService;
-
     private static final Long ID = 1L;
     private static final Long NON_EXISTING_ID = 99L;
+
+    @Mock
+    private TrainerDao trainerDao;
+    @Mock
+    private EntityValidator validator;
+    @Mock
+    private UserProfileService userProfileService;
+    @InjectMocks
+    private TrainerServiceImpl trainerService;
 
     private Trainer trainer;
 
