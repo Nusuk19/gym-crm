@@ -6,6 +6,8 @@ import com.gym.crm.model.Training;
 import com.gym.crm.model.enums.RecordType;
 import com.gym.crm.parser.CsvFileParser;
 import com.gym.crm.reader.FileLineReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -18,6 +20,7 @@ import java.util.Map;
 @Component
 public class StorageInitializer {
 
+    private static final Logger log = LoggerFactory.getLogger(StorageInitializer.class);
     private static final char DELIMITER = ',';
 
     @Value("${storage.init.file}")
@@ -43,6 +46,7 @@ public class StorageInitializer {
                 .filter(line -> extractType(line) == RecordType.TRAINEE)
                 .map(parser::parseTrainee)
                 .forEach(trainee -> result.put(trainee.getUserId(), trainee));
+        log.info("Loaded {} trainee(s) from storage init file", result.size());
 
         return result;
     }
@@ -54,6 +58,7 @@ public class StorageInitializer {
                 .filter(line -> extractType(line) == RecordType.TRAINER)
                 .map(parser::parseTrainer)
                 .forEach(trainer -> result.put(trainer.getUserId(), trainer));
+        log.info("Loaded {} trainer(s) from storage init file", result.size());
 
         return result;
     }
@@ -65,6 +70,7 @@ public class StorageInitializer {
                 .filter(line -> extractType(line) == RecordType.TRAINING)
                 .map(parser::parseTraining)
                 .forEach(training -> result.put(training.getTrainingId(), training));
+        log.info("Loaded {} training(s) from storage init file", result.size());
 
         return result;
     }
@@ -76,6 +82,7 @@ public class StorageInitializer {
     private RecordType extractType(String line) {
         int idx = line.indexOf(DELIMITER);
         if (idx < 0) {
+            log.error("Invalid record format, cannot extract type from line: [{}]", line);
             throw new IllegalStateException("Invalid record format: " + line);
         }
 

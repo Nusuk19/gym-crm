@@ -4,6 +4,8 @@ import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.storage.InMemoryStorage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +15,8 @@ import java.util.Optional;
 
 @Repository
 public class TraineeDaoImpl implements TraineeDao {
+
+    private static final Logger log = LoggerFactory.getLogger(TraineeDaoImpl.class);
 
     private InMemoryStorage inMemoryStorage;
 
@@ -30,6 +34,7 @@ public class TraineeDaoImpl implements TraineeDao {
                 .build();
 
         storage().put(id, traineeWithId);
+        log.info("Trainee saved to storage: id={}", id);
 
         return traineeWithId;
     }
@@ -40,6 +45,7 @@ public class TraineeDaoImpl implements TraineeDao {
             throw new EntityNotFoundException("Trainee not found: " + trainee.getUserId());
         }
         storage().put(trainee.getUserId(), trainee);
+        log.info("Trainee updated in storage: id={}", trainee.getUserId());
 
         return trainee;
     }
@@ -50,11 +56,17 @@ public class TraineeDaoImpl implements TraineeDao {
             throw new EntityNotFoundException("Trainee not found with id: " + userId);
         }
         storage().remove(userId);
+        log.info("Trainee removed from storage: id={}", userId);
     }
 
     @Override
     public Optional<Trainee> findById(Long id) {
-        return Optional.ofNullable(storage().get(id));
+        Optional<Trainee> result = Optional.ofNullable(storage().get(id));
+        if (result.isEmpty()) {
+            log.warn("Trainee not found in storage: id={}", id);
+        }
+
+        return result;
     }
 
     @Override

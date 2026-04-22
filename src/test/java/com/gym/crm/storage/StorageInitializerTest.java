@@ -1,5 +1,9 @@
 package com.gym.crm.storage;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.model.Training;
@@ -10,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 
 import java.lang.reflect.Field;
@@ -36,6 +41,8 @@ class StorageInitializerTest {
     private StorageInitializer storage;
     private Resource initFile;
 
+    private ListAppender<ILoggingEvent> listAppender;
+
     @BeforeEach
     void setUp() throws Exception {
         initFile = mock(Resource.class);
@@ -47,6 +54,11 @@ class StorageInitializerTest {
         Field initFileField = StorageInitializer.class.getDeclaredField("initFile");
         initFileField.setAccessible(true);
         initFileField.set(storage, initFile);
+
+        Logger logger = (Logger) LoggerFactory.getLogger(StorageInitializer.class);
+        listAppender = new ListAppender<>();
+        listAppender.start();
+        logger.addAppender(listAppender);
     }
 
     @Test
@@ -99,6 +111,19 @@ class StorageInitializerTest {
         when(fileLineReader.readLines(initFile)).thenReturn(List.of("INVALID_LINE_WITHOUT_COMMA"));
 
         assertThrows(IllegalStateException.class, () -> storage.loadTrainees());
+    }
+
+    @Test
+    void loadTrainees_whenLineHasNoComma_logsError() {
+        when(fileLineReader.readLines(initFile)).thenReturn(List.of("INVALID_LINE_WITHOUT_COMMA"));
+
+        assertThrows(IllegalStateException.class, () -> storage.loadTrainees());
+
+        boolean hasExpectedLog = listAppender.list.stream()
+                .anyMatch(event -> event.getLevel() == Level.ERROR
+                        && event.getFormattedMessage().contains("Invalid record format")
+                        && event.getFormattedMessage().contains("INVALID_LINE_WITHOUT_COMMA"));
+        assertTrue(hasExpectedLog);
     }
 
     @Test
