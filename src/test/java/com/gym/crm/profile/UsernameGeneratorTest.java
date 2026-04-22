@@ -56,8 +56,7 @@ class UsernameGeneratorTest {
     void generate_whenSuffix1AlsoExistsInTrainees_returnsUsernameWithSuffix2() {
         when(traineeDao.findAll()).thenReturn(List.of(
                 traineeWithUsername("Abdul.Hariton"),
-                traineeWithUsername("Abdul.Hariton1")
-        ));
+                traineeWithUsername("Abdul.Hariton1")));
         when(trainerDao.findAll()).thenReturn(List.of());
 
         String actual = usernameGenerator.generate("Abdul", "Hariton");
@@ -96,11 +95,9 @@ class UsernameGeneratorTest {
         when(traineeDao.findAll()).thenReturn(List.of(
                 traineeWithUsername("Abdul.Hariton"),
                 traineeWithUsername("Abdul.Hariton1"),
-                traineeWithUsername("Abdul.Hariton2")
-        ));
+                traineeWithUsername("Abdul.Hariton2")));
         when(trainerDao.findAll()).thenReturn(List.of(
-                trainerWithUsername("Abdul.Hariton3")
-        ));
+                trainerWithUsername("Abdul.Hariton3")));
 
         String actual = usernameGenerator.generate("Abdul", "Hariton");
 

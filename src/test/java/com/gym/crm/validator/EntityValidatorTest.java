@@ -180,8 +180,10 @@ class EntityValidatorTest {
                 .traineeId(null)
                 .build();
 
-        assertThrows(EntityValidationException.class,
+        EntityValidationException ex = assertThrows(EntityValidationException.class,
                 () -> validator.validateTraining(training));
+
+        assertEquals("Id must be a positive integer, but was null", ex.getMessage());
     }
 
     @Test
@@ -190,8 +192,10 @@ class EntityValidatorTest {
                 .trainerId(0L)
                 .build();
 
-        assertThrows(EntityValidationException.class,
+        EntityValidationException ex = assertThrows(EntityValidationException.class,
                 () -> validator.validateTraining(training));
+
+        assertEquals("Id must be a positive integer, but was 0", ex.getMessage());
     }
 
     @Test
@@ -225,20 +229,26 @@ class EntityValidatorTest {
 
     @Test
     void requireValidId_whenNull_throwsValidationException() {
-        assertThrows(EntityValidationException.class,
+        EntityValidationException ex = assertThrows(EntityValidationException.class,
                 () -> validator.requireValidId(null));
+
+        assertEquals("Id must be a positive integer, but was null", ex.getMessage());
     }
 
     @Test
     void requireValidId_whenZero_throwsValidationException() {
-        assertThrows(EntityValidationException.class,
+        EntityValidationException ex = assertThrows(EntityValidationException.class,
                 () -> validator.requireValidId(0L));
+
+        assertEquals("Id must be a positive integer, but was 0", ex.getMessage());
     }
 
     @Test
     void requireValidId_whenNegative_throwsValidationException() {
-        assertThrows(EntityValidationException.class,
+        EntityValidationException ex = assertThrows(EntityValidationException.class,
                 () -> validator.requireValidId(-5L));
+
+        assertEquals("Id must be a positive integer, but was -5", ex.getMessage());
     }
 
     @Test
@@ -256,20 +266,26 @@ class EntityValidatorTest {
 
     @Test
     void validateForUpdate_whenIdIsNull_throwsValidationException() {
-        assertThrows(EntityValidationException.class,
+        EntityValidationException ex = assertThrows(EntityValidationException.class,
                 () -> validator.validateForUpdate(new Object(), null));
+
+        assertEquals("Id must be a positive integer, but was null", ex.getMessage());
     }
 
     @Test
     void validateForUpdate_whenIdIsZero_throwsValidationException() {
-        assertThrows(EntityValidationException.class,
+        EntityValidationException ex = assertThrows(EntityValidationException.class,
                 () -> validator.validateForUpdate(new Object(), 0L));
+
+        assertEquals("Id must be a positive integer, but was 0", ex.getMessage());
     }
 
     @Test
     void validateForUpdate_whenIdIsNegative_throwsValidationException() {
-        assertThrows(EntityValidationException.class,
+        EntityValidationException ex = assertThrows(EntityValidationException.class,
                 () -> validator.validateForUpdate(new Object(), -EXISTING_ID));
+
+        assertEquals("Id must be a positive integer, but was -1", ex.getMessage());
     }
 
     private Trainee validTrainee() {

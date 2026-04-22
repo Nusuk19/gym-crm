@@ -1,10 +1,15 @@
 package com.gym.crm.profile;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PasswordGeneratorTest {
 
@@ -47,10 +52,7 @@ class PasswordGeneratorTest {
     void generate_passwordContainsOnlyAllowedCharacters() {
         String actual = passwordGenerator.generate();
 
-        for (char c : actual.toCharArray()) {
-            assertTrue(ALLOWED_CHARACTERS.indexOf(c) >= 0,
-                    "Character '" + c + "' is not in allowed characters");
-        }
+        assertTrue(StringUtils.containsOnly(actual, ALLOWED_CHARACTERS));
     }
 
     @Test

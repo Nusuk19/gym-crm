@@ -36,12 +36,11 @@ class PasswordEncoderTest {
     void encode_returnsBCryptFormattedHash() {
         String actual = passwordEncoder.encode(RAW_PASSWORD);
 
-        assertTrue(actual.startsWith("$2a$"),
-                "Expected BCrypt hash starting with $2a$, but got: " + actual);
+        assertTrue(actual.startsWith("$2a$"), "Expected BCrypt hash starting with $2a$, but got: " + actual);
     }
 
     @Test
-    void encode_samePaswordProducesDifferentHashes() {
+    void encode_samePasswordProducesDifferentHashes() {
         String firstHash = passwordEncoder.encode(RAW_PASSWORD);
         String secondHash = passwordEncoder.encode(RAW_PASSWORD);
 

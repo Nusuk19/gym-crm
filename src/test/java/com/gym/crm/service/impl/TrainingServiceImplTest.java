@@ -5,7 +5,6 @@ import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.Training;
 import com.gym.crm.model.TrainingType;
 import com.gym.crm.validator.EntityValidator;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,25 +31,20 @@ class TrainingServiceImplTest {
     private static final Long ID = 1L;
     private static final Long NON_EXISTING_ID = 99L;
 
+    private final Training training = buildTraining();
+
     @Mock
     private TrainingDao trainingDao;
     @Mock
     private EntityValidator validator;
     @InjectMocks
-    private TrainingServiceImpl trainingService;
-
-    private Training training;
-
-    @BeforeEach
-    void setUp() {
-        training = buildTraining();
-    }
+    private TrainingServiceImpl service;
 
     @Test
     void create_whenValidTraining_savesAndReturnsTraining() {
         when(trainingDao.save(training)).thenReturn(training);
 
-        Training actual = trainingService.create(training);
+        Training actual = service.create(training);
 
         assertEquals(training, actual);
         verify(validator).validateTraining(training);
@@ -62,7 +56,7 @@ class TrainingServiceImplTest {
         doThrow(new EntityValidationException("Training cannot be null"))
                 .when(validator).validateTraining(training);
 
-        assertThrows(EntityValidationException.class, () -> trainingService.create(training));
+        assertThrows(EntityValidationException.class, () -> service.create(training));
 
         verify(trainingDao, never()).save(any());
     }
@@ -71,7 +65,7 @@ class TrainingServiceImplTest {
     void findById_whenTrainingExists_returnsTraining() {
         when(trainingDao.findById(ID)).thenReturn(Optional.of(training));
 
-        Optional<Training> actual = trainingService.findById(ID);
+        Optional<Training> actual = service.findById(ID);
 
         assertTrue(actual.isPresent());
         assertEquals(training, actual.get());
@@ -83,7 +77,7 @@ class TrainingServiceImplTest {
     void findById_whenTrainingNotExists_returnsEmpty() {
         when(trainingDao.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
 
-        Optional<Training> actual = trainingService.findById(NON_EXISTING_ID);
+        Optional<Training> actual = service.findById(NON_EXISTING_ID);
 
         assertFalse(actual.isPresent());
         verify(validator).requireValidId(NON_EXISTING_ID);
@@ -95,7 +89,7 @@ class TrainingServiceImplTest {
         doThrow(new EntityValidationException("Id must be a positive integer"))
                 .when(validator).requireValidId(any());
 
-        assertThrows(EntityValidationException.class, () -> trainingService.findById(0L));
+        assertThrows(EntityValidationException.class, () -> service.findById(0L));
 
         verify(trainingDao, never()).findById(any());
     }
@@ -104,7 +98,7 @@ class TrainingServiceImplTest {
     void findAll_whenTrainingsExist_returnsAllTrainings() {
         when(trainingDao.findAll()).thenReturn(List.of(training));
 
-        List<Training> actual = trainingService.findAll();
+        List<Training> actual = service.findAll();
 
         assertEquals(List.of(training), actual);
         verify(trainingDao).findAll();
@@ -114,7 +108,7 @@ class TrainingServiceImplTest {
     void findAll_whenNoTrainingsExist_returnsEmptyList() {
         when(trainingDao.findAll()).thenReturn(List.of());
 
-        List<Training> actual = trainingService.findAll();
+        List<Training> actual = service.findAll();
 
         assertTrue(actual.isEmpty());
         verify(trainingDao).findAll();

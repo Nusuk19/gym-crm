@@ -54,7 +54,7 @@ class GymFacadeTest {
     @Mock
     private TrainingMapper trainingMapper;
     @InjectMocks
-    private GymFacade gymFacade;
+    private GymFacade facade;
 
     private Trainee trainee;
     private Trainer trainer;
@@ -83,7 +83,7 @@ class GymFacadeTest {
         when(traineeService.create(trainee)).thenReturn(trainee);
         when(traineeMapper.toResponse(trainee)).thenReturn(traineeResponse);
 
-        TraineeResponse actual = gymFacade.createTrainee(request);
+        TraineeResponse actual = facade.createTrainee(request);
 
         assertEquals(traineeResponse, actual);
         verify(traineeMapper).toEntity(request);
@@ -102,7 +102,7 @@ class GymFacadeTest {
         when(traineeService.update(trainee)).thenReturn(trainee);
         when(traineeMapper.toResponse(trainee)).thenReturn(traineeResponse);
 
-        TraineeResponse actual = gymFacade.updateTrainee(request);
+        TraineeResponse actual = facade.updateTrainee(request);
 
         assertEquals(traineeResponse, actual);
         verify(traineeMapper).toEntity(request);
@@ -112,7 +112,7 @@ class GymFacadeTest {
 
     @Test
     void deleteTrainee_whenValidId_callsService() {
-        gymFacade.deleteTrainee(EXISTING_ID);
+        facade.deleteTrainee(EXISTING_ID);
 
         verify(traineeService).delete(EXISTING_ID);
     }
@@ -122,7 +122,7 @@ class GymFacadeTest {
         when(traineeService.findById(EXISTING_ID)).thenReturn(Optional.of(trainee));
         when(traineeMapper.toResponse(trainee)).thenReturn(traineeResponse);
 
-        Optional<TraineeResponse> actual = gymFacade.findTraineeById(EXISTING_ID);
+        Optional<TraineeResponse> actual = facade.findTraineeById(EXISTING_ID);
 
         assertTrue(actual.isPresent());
         assertEquals(traineeResponse, actual.get());
@@ -133,7 +133,7 @@ class GymFacadeTest {
     void findTraineeById_whenTraineeNotExists_returnsEmpty() {
         when(traineeService.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
 
-        Optional<TraineeResponse> actual = gymFacade.findTraineeById(NON_EXISTING_ID);
+        Optional<TraineeResponse> actual = facade.findTraineeById(NON_EXISTING_ID);
 
         assertFalse(actual.isPresent());
         verify(traineeService).findById(NON_EXISTING_ID);
@@ -144,7 +144,7 @@ class GymFacadeTest {
         when(traineeService.findAll()).thenReturn(List.of(trainee));
         when(traineeMapper.toResponse(trainee)).thenReturn(traineeResponse);
 
-        List<TraineeResponse> actual = gymFacade.findAllTrainees();
+        List<TraineeResponse> actual = facade.findAllTrainees();
 
         assertEquals(1, actual.size());
         assertEquals(traineeResponse, actual.get(0));
@@ -161,7 +161,7 @@ class GymFacadeTest {
         when(trainerService.create(trainer)).thenReturn(trainer);
         when(trainerMapper.toResponse(trainer)).thenReturn(trainerResponse);
 
-        TrainerResponse actual = gymFacade.createTrainer(request);
+        TrainerResponse actual = facade.createTrainer(request);
 
         assertEquals(trainerResponse, actual);
         verify(trainerMapper).toEntity(request);
@@ -180,7 +180,7 @@ class GymFacadeTest {
         when(trainerService.update(trainer)).thenReturn(trainer);
         when(trainerMapper.toResponse(trainer)).thenReturn(trainerResponse);
 
-        TrainerResponse actual = gymFacade.updateTrainer(request);
+        TrainerResponse actual = facade.updateTrainer(request);
 
         assertEquals(trainerResponse, actual);
         verify(trainerMapper).toEntity(request);
@@ -193,7 +193,7 @@ class GymFacadeTest {
         when(trainerService.findById(EXISTING_ID)).thenReturn(Optional.of(trainer));
         when(trainerMapper.toResponse(trainer)).thenReturn(trainerResponse);
 
-        Optional<TrainerResponse> actual = gymFacade.findTrainerById(EXISTING_ID);
+        Optional<TrainerResponse> actual = facade.findTrainerById(EXISTING_ID);
 
         assertTrue(actual.isPresent());
         assertEquals(trainerResponse, actual.get());
@@ -204,7 +204,7 @@ class GymFacadeTest {
     void findTrainerById_whenTrainerNotExists_returnsEmpty() {
         when(trainerService.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
 
-        Optional<TrainerResponse> actual = gymFacade.findTrainerById(NON_EXISTING_ID);
+        Optional<TrainerResponse> actual = facade.findTrainerById(NON_EXISTING_ID);
 
         assertFalse(actual.isPresent());
         verify(trainerService).findById(NON_EXISTING_ID);
@@ -215,7 +215,7 @@ class GymFacadeTest {
         when(trainerService.findAll()).thenReturn(List.of(trainer));
         when(trainerMapper.toResponse(trainer)).thenReturn(trainerResponse);
 
-        List<TrainerResponse> actual = gymFacade.findAllTrainers();
+        List<TrainerResponse> actual = facade.findAllTrainers();
 
         assertEquals(1, actual.size());
         assertEquals(trainerResponse, actual.get(0));
@@ -233,7 +233,7 @@ class GymFacadeTest {
         when(trainingService.create(training)).thenReturn(training);
         when(trainingMapper.toResponse(training)).thenReturn(trainingResponse);
 
-        TrainingResponse actual = gymFacade.createTraining(request);
+        TrainingResponse actual = facade.createTraining(request);
 
         assertEquals(trainingResponse, actual);
         verify(trainingMapper).toEntity(request);
@@ -246,7 +246,7 @@ class GymFacadeTest {
         when(trainingService.findById(EXISTING_ID)).thenReturn(Optional.of(training));
         when(trainingMapper.toResponse(training)).thenReturn(trainingResponse);
 
-        Optional<TrainingResponse> actual = gymFacade.findTrainingById(EXISTING_ID);
+        Optional<TrainingResponse> actual = facade.findTrainingById(EXISTING_ID);
 
         assertTrue(actual.isPresent());
         assertEquals(trainingResponse, actual.get());
@@ -257,7 +257,7 @@ class GymFacadeTest {
     void findTrainingById_whenTrainingNotExists_returnsEmpty() {
         when(trainingService.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
 
-        Optional<TrainingResponse> actual = gymFacade.findTrainingById(NON_EXISTING_ID);
+        Optional<TrainingResponse> actual = facade.findTrainingById(NON_EXISTING_ID);
 
         assertFalse(actual.isPresent());
         verify(trainingService).findById(NON_EXISTING_ID);
@@ -268,7 +268,7 @@ class GymFacadeTest {
         when(trainingService.findAll()).thenReturn(List.of(training));
         when(trainingMapper.toResponse(training)).thenReturn(trainingResponse);
 
-        List<TrainingResponse> actual = gymFacade.findAllTrainings();
+        List<TrainingResponse> actual = facade.findAllTrainings();
 
         assertEquals(1, actual.size());
         assertEquals(trainingResponse, actual.get(0));

@@ -25,38 +25,35 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class StorageInitializerTest {
 
-    private static final String TRAINEE_LINE =
-            "TRAINEE,1,Abdul,Hariton,Abdul.Hariton,hashedPass,1990-01-01,Kyiv,true";
-    private static final String TRAINER_LINE =
-            "TRAINER,1,Mike,Tyson,Mike.Tyson,hashedPass,BOXING,true";
-    private static final String TRAINING_LINE =
-            "TRAINING,1,1,1,Boxing basics,BOXING,2024-05-01,60";
+    private static final String TRAINEE_LINE = "TRAINEE,1,Abdul,Hariton,Abdul.Hariton,hashedPass,1990-01-01,Kyiv,true";
+    private static final String TRAINER_LINE = "TRAINER,1,Mike,Tyson,Mike.Tyson,hashedPass,BOXING,true";
+    private static final String TRAINING_LINE = "TRAINING,1,1,1,Boxing basics,BOXING,2024-05-01,60";
     private static final Long ID = 1L;
 
     @Mock
     private FileLineReader fileLineReader;
 
-    private StorageInitializer storageInitializer;
+    private StorageInitializer storage;
     private Resource initFile;
 
     @BeforeEach
     void setUp() throws Exception {
         initFile = mock(Resource.class);
 
-        storageInitializer = new StorageInitializer();
-        storageInitializer.setFileLineReader(fileLineReader);
-        storageInitializer.setParser(new CsvFileParser());
+        storage = new StorageInitializer();
+        storage.setFileLineReader(fileLineReader);
+        storage.setParser(new CsvFileParser());
 
         Field initFileField = StorageInitializer.class.getDeclaredField("initFile");
         initFileField.setAccessible(true);
-        initFileField.set(storageInitializer, initFile);
+        initFileField.set(storage, initFile);
     }
 
     @Test
     void loadTrainees_whenFileContainsTraineeLine_returnsTraineeMap() {
         when(fileLineReader.readLines(initFile)).thenReturn(List.of(TRAINEE_LINE));
 
-        Map<Long, Trainee> actual = storageInitializer.loadTrainees();
+        Map<Long, Trainee> actual = storage.loadTrainees();
 
         assertEquals(1, actual.size());
         Trainee trainee = actual.get(ID);
@@ -72,7 +69,7 @@ class StorageInitializerTest {
     void loadTrainees_whenFileContainsOnlyNonTraineeLines_returnsEmptyMap() {
         when(fileLineReader.readLines(initFile)).thenReturn(List.of(TRAINER_LINE, TRAINING_LINE));
 
-        Map<Long, Trainee> actual = storageInitializer.loadTrainees();
+        Map<Long, Trainee> actual = storage.loadTrainees();
 
         assertTrue(actual.isEmpty());
     }
@@ -82,7 +79,7 @@ class StorageInitializerTest {
         when(fileLineReader.readLines(initFile))
                 .thenReturn(List.of(TRAINEE_LINE, TRAINER_LINE, TRAINING_LINE));
 
-        Map<Long, Trainee> actual = storageInitializer.loadTrainees();
+        Map<Long, Trainee> actual = storage.loadTrainees();
 
         assertEquals(1, actual.size());
         assertTrue(actual.containsKey(ID));
@@ -92,7 +89,7 @@ class StorageInitializerTest {
     void loadTrainees_whenFileIsEmpty_returnsEmptyMap() {
         when(fileLineReader.readLines(initFile)).thenReturn(List.of());
 
-        Map<Long, Trainee> actual = storageInitializer.loadTrainees();
+        Map<Long, Trainee> actual = storage.loadTrainees();
 
         assertTrue(actual.isEmpty());
     }
@@ -101,21 +98,21 @@ class StorageInitializerTest {
     void loadTrainees_whenLineHasNoComma_throwsIllegalStateException() {
         when(fileLineReader.readLines(initFile)).thenReturn(List.of("INVALID_LINE_WITHOUT_COMMA"));
 
-        assertThrows(IllegalStateException.class, () -> storageInitializer.loadTrainees());
+        assertThrows(IllegalStateException.class, () -> storage.loadTrainees());
     }
 
     @Test
     void loadTrainees_whenLineHasUnknownRecordType_throwsIllegalStateException() {
         when(fileLineReader.readLines(initFile)).thenReturn(List.of("UNKNOWN,1,data"));
 
-        assertThrows(IllegalStateException.class, () -> storageInitializer.loadTrainees());
+        assertThrows(IllegalStateException.class, () -> storage.loadTrainees());
     }
 
     @Test
     void loadTrainers_whenFileContainsTrainerLine_returnsTrainerMap() {
         when(fileLineReader.readLines(initFile)).thenReturn(List.of(TRAINER_LINE));
 
-        Map<Long, Trainer> actual = storageInitializer.loadTrainers();
+        Map<Long, Trainer> actual = storage.loadTrainers();
 
         assertEquals(1, actual.size());
         Trainer trainer = actual.get(ID);
@@ -131,7 +128,7 @@ class StorageInitializerTest {
     void loadTrainers_whenFileContainsOnlyNonTrainerLines_returnsEmptyMap() {
         when(fileLineReader.readLines(initFile)).thenReturn(List.of(TRAINEE_LINE, TRAINING_LINE));
 
-        Map<Long, Trainer> actual = storageInitializer.loadTrainers();
+        Map<Long, Trainer> actual = storage.loadTrainers();
 
         assertTrue(actual.isEmpty());
     }
@@ -141,7 +138,7 @@ class StorageInitializerTest {
         when(fileLineReader.readLines(initFile))
                 .thenReturn(List.of(TRAINEE_LINE, TRAINER_LINE, TRAINING_LINE));
 
-        Map<Long, Trainer> actual = storageInitializer.loadTrainers();
+        Map<Long, Trainer> actual = storage.loadTrainers();
 
         assertEquals(1, actual.size());
         assertTrue(actual.containsKey(ID));
@@ -151,7 +148,7 @@ class StorageInitializerTest {
     void loadTrainings_whenFileContainsTrainingLine_returnsTrainingMap() {
         when(fileLineReader.readLines(initFile)).thenReturn(List.of(TRAINING_LINE));
 
-        Map<Long, Training> actual = storageInitializer.loadTrainings();
+        Map<Long, Training> actual = storage.loadTrainings();
 
         assertEquals(1, actual.size());
         Training training = actual.get(ID);
@@ -167,7 +164,7 @@ class StorageInitializerTest {
     void loadTrainings_whenFileContainsOnlyNonTrainingLines_returnsEmptyMap() {
         when(fileLineReader.readLines(initFile)).thenReturn(List.of(TRAINEE_LINE, TRAINER_LINE));
 
-        Map<Long, Training> actual = storageInitializer.loadTrainings();
+        Map<Long, Training> actual = storage.loadTrainings();
 
         assertTrue(actual.isEmpty());
     }
@@ -177,7 +174,7 @@ class StorageInitializerTest {
         when(fileLineReader.readLines(initFile))
                 .thenReturn(List.of(TRAINEE_LINE, TRAINER_LINE, TRAINING_LINE));
 
-        Map<Long, Training> actual = storageInitializer.loadTrainings();
+        Map<Long, Training> actual = storage.loadTrainings();
 
         assertEquals(1, actual.size());
         assertTrue(actual.containsKey(ID));

@@ -23,13 +23,13 @@ class UserProfileServiceImplTest {
     @Mock
     private PasswordEncoder passwordEncoder;
     @InjectMocks
-    private UserProfileServiceImpl userProfileService;
+    private UserProfileServiceImpl service;
 
     @Test
     void generateUsername_delegatesToUsernameGenerator() {
         when(usernameGenerator.generate("Abdul", "Hariton")).thenReturn("Abdul.Hariton");
 
-        String result = userProfileService.generateUsername("Abdul", "Hariton");
+        String result = service.generateUsername("Abdul", "Hariton");
 
         assertEquals("Abdul.Hariton", result);
         verify(usernameGenerator).generate("Abdul", "Hariton");
@@ -39,7 +39,7 @@ class UserProfileServiceImplTest {
     void generateUsername_returnsGeneratedUsernameWithSuffix() {
         when(usernameGenerator.generate("Abdul", "Hariton")).thenReturn("Abdul.Hariton1");
 
-        String actual = userProfileService.generateUsername("Abdul", "Hariton");
+        String actual = service.generateUsername("Abdul", "Hariton");
 
         assertEquals("Abdul.Hariton1", actual);
         verify(usernameGenerator).generate("Abdul", "Hariton");
@@ -49,7 +49,7 @@ class UserProfileServiceImplTest {
     void generatePassword_delegatesToPasswordGenerator() {
         when(passwordGenerator.generate()).thenReturn("aB3!xZ9qWm");
 
-        String actual = userProfileService.generatePassword();
+        String actual = service.generatePassword();
 
         assertEquals("aB3!xZ9qWm", actual);
         verify(passwordGenerator).generate();
@@ -59,7 +59,7 @@ class UserProfileServiceImplTest {
     void hashPassword_delegatesToPasswordEncoder() {
         when(passwordEncoder.encode("rawPass")).thenReturn("$2a$10$hashedValue");
 
-        String actual = userProfileService.hashPassword("rawPass");
+        String actual = service.hashPassword("rawPass");
 
         assertEquals("$2a$10$hashedValue", actual);
         verify(passwordEncoder).encode("rawPass");
@@ -69,7 +69,7 @@ class UserProfileServiceImplTest {
     void hashPassword_returnsEncodedValue() {
         when(passwordEncoder.encode("anotherPass")).thenReturn("$2a$10$differentHash");
 
-        String actual = userProfileService.hashPassword("anotherPass");
+        String actual = service.hashPassword("anotherPass");
 
         assertEquals("$2a$10$differentHash", actual);
         verify(passwordEncoder).encode("anotherPass");

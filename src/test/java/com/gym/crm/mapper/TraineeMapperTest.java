@@ -85,8 +85,7 @@ class TraineeMapperTest {
 
     @Test
     void toResponse_passwordFieldNotPresentInResponse() {
-        assertThrows(NoSuchFieldException.class,
-                () -> TraineeResponse.class.getDeclaredField("password"));
+        assertThrows(NoSuchFieldException.class, () -> TraineeResponse.class.getDeclaredField("password"));
     }
 
 

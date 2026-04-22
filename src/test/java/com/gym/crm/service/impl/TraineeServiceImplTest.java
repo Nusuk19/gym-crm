@@ -5,7 +5,6 @@ import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.service.UserProfileService;
 import com.gym.crm.validator.EntityValidator;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -33,6 +32,8 @@ class TraineeServiceImplTest {
     private static final Long ID = 1L;
     private static final Long NON_EXISTING_ID = 99L;
 
+    private final Trainee trainee = buildTrainee();
+
     @Mock
     private TraineeDao traineeDao;
     @Mock
@@ -40,14 +41,7 @@ class TraineeServiceImplTest {
     @Mock
     private UserProfileService userProfileService;
     @InjectMocks
-    private TraineeServiceImpl traineeService;
-
-    private Trainee trainee;
-
-    @BeforeEach
-    void setUp() {
-        trainee = buildTrainee();
-    }
+    private TraineeServiceImpl service;
 
     @Test
     void create_whenValidTrainee_savesWithGeneratedProfile() {
@@ -56,7 +50,7 @@ class TraineeServiceImplTest {
         when(userProfileService.hashPassword("rawPass123")).thenReturn("hashedPass");
         when(traineeDao.save(any(Trainee.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Trainee actual = traineeService.create(trainee);
+        Trainee actual = service.create(trainee);
 
         assertEquals("Abdul.Hariton", actual.getUsername());
         assertEquals("hashedPass", actual.getPassword());
@@ -73,7 +67,7 @@ class TraineeServiceImplTest {
         doThrow(new EntityValidationException("Trainee cannot be null"))
                 .when(validator).validateTrainee(any());
 
-        assertThrows(EntityValidationException.class, () -> traineeService.create(null));
+        assertThrows(EntityValidationException.class, () -> service.create(null));
 
         verify(traineeDao, never()).save(any());
     }
@@ -82,7 +76,7 @@ class TraineeServiceImplTest {
     void update_whenValidTrainee_updatesSuccessfully() {
         when(traineeDao.update(trainee)).thenReturn(trainee);
 
-        Trainee actual = traineeService.update(trainee);
+        Trainee actual = service.update(trainee);
 
         assertEquals(trainee, actual);
         verify(validator).validateForUpdate(trainee, trainee.getUserId());
@@ -96,17 +90,18 @@ class TraineeServiceImplTest {
                 .firstName("Abdul")
                 .lastName("Hariton")
                 .build();
+
         doThrow(new EntityValidationException("Id must be a positive integer"))
                 .when(validator).validateForUpdate(any(), any());
 
-        assertThrows(EntityValidationException.class, () -> traineeService.update(invalidTrainee));
+        assertThrows(EntityValidationException.class, () -> service.update(invalidTrainee));
 
         verify(traineeDao, never()).update(any());
     }
 
     @Test
     void delete_whenValidId_deletesSuccessfully() {
-        traineeService.delete(ID);
+        service.delete(ID);
 
         verify(validator).requireValidId(ID);
         verify(traineeDao).delete(ID);
@@ -117,7 +112,7 @@ class TraineeServiceImplTest {
         doThrow(new EntityValidationException("Id must be a positive integer"))
                 .when(validator).requireValidId(any());
 
-        assertThrows(EntityValidationException.class, () -> traineeService.delete(-ID));
+        assertThrows(EntityValidationException.class, () -> service.delete(-ID));
 
         verify(traineeDao, never()).delete(any());
     }
@@ -126,7 +121,7 @@ class TraineeServiceImplTest {
     void findById_whenTraineeExists_returnsTrainee() {
         when(traineeDao.findById(ID)).thenReturn(Optional.of(trainee));
 
-        Optional<Trainee> actual = traineeService.findById(ID);
+        Optional<Trainee> actual = service.findById(ID);
 
         assertTrue(actual.isPresent());
         assertEquals(trainee, actual.get());
@@ -137,7 +132,7 @@ class TraineeServiceImplTest {
     void findById_whenTraineeNotExists_returnsEmpty() {
         when(traineeDao.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
 
-        Optional<Trainee> actual = traineeService.findById(NON_EXISTING_ID);
+        Optional<Trainee> actual = service.findById(NON_EXISTING_ID);
 
         assertFalse(actual.isPresent());
         verify(validator).requireValidId(NON_EXISTING_ID);
@@ -148,7 +143,7 @@ class TraineeServiceImplTest {
         doThrow(new EntityValidationException("Id must be a positive integer"))
                 .when(validator).requireValidId(any());
 
-        assertThrows(EntityValidationException.class, () -> traineeService.findById(0L));
+        assertThrows(EntityValidationException.class, () -> service.findById(0L));
 
         verify(traineeDao, never()).findById(any());
     }
@@ -158,7 +153,7 @@ class TraineeServiceImplTest {
         List<Trainee> trainees = List.of(trainee);
         when(traineeDao.findAll()).thenReturn(trainees);
 
-        List<Trainee> actual = traineeService.findAll();
+        List<Trainee> actual = service.findAll();
 
         assertEquals(1, actual.size());
         assertTrue(actual.contains(trainee));
@@ -168,7 +163,7 @@ class TraineeServiceImplTest {
     void findAll_whenEmpty_returnsEmptyList() {
         when(traineeDao.findAll()).thenReturn(List.of());
 
-        List<Trainee> actual = traineeService.findAll();
+        List<Trainee> actual = service.findAll();
 
         assertTrue(actual.isEmpty());
     }

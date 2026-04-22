@@ -28,7 +28,7 @@ class InMemoryStorageTest {
     private Map<Long, Trainee> traineeStorage;
     private Map<Long, Trainer> trainerStorage;
     private Map<Long, Training> trainingStorage;
-    private InMemoryStorage inMemoryStorage;
+    private InMemoryStorage storage;
 
     @BeforeEach
     void setUp() {
@@ -36,26 +36,26 @@ class InMemoryStorageTest {
         trainerStorage = new HashMap<>();
         trainingStorage = new HashMap<>();
 
-        inMemoryStorage = new InMemoryStorage();
-        inMemoryStorage.setTraineeStorage(traineeStorage);
-        inMemoryStorage.setTrainerStorage(trainerStorage);
-        inMemoryStorage.setTrainingStorage(trainingStorage);
-        inMemoryStorage.setInitializer(initializer);
+        storage = new InMemoryStorage();
+        storage.setTraineeStorage(traineeStorage);
+        storage.setTrainerStorage(trainerStorage);
+        storage.setTrainingStorage(trainingStorage);
+        storage.setInitializer(initializer);
     }
 
     @Test
     void getTraineeStorage_returnsInjectedMap() {
-        assertSame(traineeStorage, inMemoryStorage.getTraineeStorage());
+        assertSame(traineeStorage, storage.getTraineeStorage());
     }
 
     @Test
     void getTrainerStorage_returnsInjectedMap() {
-        assertSame(trainerStorage, inMemoryStorage.getTrainerStorage());
+        assertSame(trainerStorage, storage.getTrainerStorage());
     }
 
     @Test
     void getTrainingStorage_returnsInjectedMap() {
-        assertSame(trainingStorage, inMemoryStorage.getTrainingStorage());
+        assertSame(trainingStorage, storage.getTrainingStorage());
     }
 
     @Test
@@ -69,7 +69,7 @@ class InMemoryStorageTest {
         when(initializer.loadTrainers()).thenReturn(Map.of());
         when(initializer.loadTrainings()).thenReturn(Map.of());
 
-        inMemoryStorage.init();
+        storage.init();
 
         assertEquals(1, traineeStorage.size());
         assertEquals(trainee, traineeStorage.get(ID));
@@ -86,7 +86,7 @@ class InMemoryStorageTest {
         when(initializer.loadTrainers()).thenReturn(Map.of(ID, trainer));
         when(initializer.loadTrainings()).thenReturn(Map.of());
 
-        inMemoryStorage.init();
+        storage.init();
 
         assertEquals(1, trainerStorage.size());
         assertEquals(trainer, trainerStorage.get(ID));
@@ -102,7 +102,7 @@ class InMemoryStorageTest {
         when(initializer.loadTrainers()).thenReturn(Map.of());
         when(initializer.loadTrainings()).thenReturn(Map.of(ID, training));
 
-        inMemoryStorage.init();
+        storage.init();
 
         assertEquals(1, trainingStorage.size());
         assertEquals(training, trainingStorage.get(ID));
@@ -116,7 +116,7 @@ class InMemoryStorageTest {
         when(initializer.loadTrainers()).thenReturn(Map.of());
         when(initializer.loadTrainings()).thenReturn(Map.of());
 
-        inMemoryStorage.init();
+        storage.init();
 
         assertEquals(2, traineeStorage.size());
         assertEquals(first, traineeStorage.get(ID));
