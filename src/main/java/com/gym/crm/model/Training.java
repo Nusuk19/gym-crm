@@ -1,6 +1,7 @@
 package com.gym.crm.model;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -8,6 +9,7 @@ import java.time.LocalDate;
 
 @Getter
 @ToString
+@EqualsAndHashCode
 @Builder(toBuilder = true)
 public class Training {
     private final Long trainingId;

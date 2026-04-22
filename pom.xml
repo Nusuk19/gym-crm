@@ -14,6 +14,7 @@
 		<spring.version>6.1.0</spring.version>
 		<junit.version>5.10.0</junit.version>
 		<mockito.version>5.11.0</mockito.version>
+		<commons.lang3.version>3.18.0</commons.lang3.version>
 	</properties>
 
 	<dependencies>
@@ -38,7 +39,7 @@
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-crypto</artifactId>
-			<version>6.2.1</version>
+			<version>6.4.5</version>
 		</dependency>
 		<!-- Tests -->
 		<dependency>
@@ -64,6 +65,11 @@
 			<artifactId>mockito-junit-jupiter</artifactId>
 			<version>${mockito.version}</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>${commons.lang3.version}</version>
 		</dependency>
 	</dependencies>
 
