@@ -71,6 +71,6 @@ public class TrainerDaoImpl implements TrainerDao {
     }
 
     private Map<Long, Trainer> storage() {
-        return inMemoryStorage.getTrainerStorage();
+        return inMemoryStorage.getEntityStorage("trainers");
     }
 }

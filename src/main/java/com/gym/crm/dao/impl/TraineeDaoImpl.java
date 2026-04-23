@@ -81,6 +81,6 @@ public class TraineeDaoImpl implements TraineeDao {
     }
 
     private Map<Long, Trainee> storage() {
-        return inMemoryStorage.getTraineeStorage();
+        return inMemoryStorage.getEntityStorage("trainees");
     }
 }
