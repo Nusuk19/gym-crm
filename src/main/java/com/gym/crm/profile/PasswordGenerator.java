@@ -1,6 +1,7 @@
 package com.gym.crm.profile;
 
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -12,11 +13,18 @@ public class PasswordGenerator {
 
     private final SecureRandom random = new SecureRandom();
 
-    @Value("${password.characters}")
     private String characters;
-
-    @Value("${password.length}")
     private int passwordLength;
+
+    @Autowired
+    public void setCharacters(@Value("${password.characters}") String characters) {
+        this.characters = characters;
+    }
+
+    @Autowired
+    public void setPasswordLength(@Value("${password.length}") int passwordLength) {
+        this.passwordLength = passwordLength;
+    }
 
     @PostConstruct
     public void validate() {
