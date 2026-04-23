@@ -25,7 +25,6 @@ public class TrainerMapper {
                 .lastName(request.getLastName())
                 .specialization(request.getSpecialization())
                 .isActive(request.isActive())
-                .username(request.getUsername())
                 .build();
     }
 

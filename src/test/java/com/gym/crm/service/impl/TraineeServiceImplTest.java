@@ -114,13 +114,20 @@ class TraineeServiceImplTest {
 
     @Test
     void update_whenValidTrainee_updatesSuccessfully() {
-        when(traineeDao.update(trainee)).thenReturn(trainee);
+        Trainee existing = trainee.toBuilder()
+                .username("Abdul.Hariton")
+                .password("existingHash")
+                .build();
+
+        when(traineeDao.findById(ID)).thenReturn(Optional.of(existing));
+        when(traineeDao.update(any(Trainee.class))).thenReturn(trainee);
 
         Trainee actual = service.update(trainee);
 
         assertEquals(trainee, actual);
         verify(validator).validateForUpdate(trainee, trainee.getUserId());
-        verify(traineeDao).update(trainee);
+        verify(traineeDao).findById(ID);
+        verify(traineeDao).update(any(Trainee.class));
     }
 
     @Test
@@ -136,6 +143,7 @@ class TraineeServiceImplTest {
 
         assertThrows(EntityValidationException.class, () -> service.update(invalidTrainee));
 
+        verify(traineeDao, never()).findById(any());
         verify(traineeDao, never()).update(any());
     }
 

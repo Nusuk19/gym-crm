@@ -65,7 +65,6 @@ class TraineeMapperTest {
         assertEquals(LocalDate.of(1990, 1, 1), actual.getDateOfBirth());
         assertEquals("Lviv", actual.getAddress());
         assertFalse(actual.isActive());
-        assertEquals("Abdul.Hariton", actual.getUsername());
     }
 
     @Test

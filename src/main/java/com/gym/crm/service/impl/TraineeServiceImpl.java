@@ -1,6 +1,7 @@
 package com.gym.crm.service.impl;
 
 import com.gym.crm.dao.TraineeDao;
+import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.UserProfileService;
@@ -60,7 +61,15 @@ public class TraineeServiceImpl implements TraineeService {
         log.info("Updating trainee: id={}", trainee.getUserId());
         validator.validateForUpdate(trainee, trainee.getUserId());
 
-        return traineeDao.update(trainee);
+        Trainee existing = traineeDao.findById(trainee.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + trainee.getUserId()));
+
+        Trainee merged = trainee.toBuilder()
+                .username(existing.getUsername())
+                .password(existing.getPassword())
+                .build();
+
+        return traineeDao.update(merged);
     }
 
     @Override

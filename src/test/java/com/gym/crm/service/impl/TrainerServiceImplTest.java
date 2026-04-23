@@ -1,6 +1,7 @@
 package com.gym.crm.service.impl;
 
 import com.gym.crm.dao.TrainerDao;
+import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.model.TrainingType;
@@ -74,13 +75,20 @@ class TrainerServiceImplTest {
 
     @Test
     void update_whenValidTrainer_updatesSuccessfully() {
-        when(trainerDao.update(trainer)).thenReturn(trainer);
+        Trainer existing = trainer.toBuilder()
+                .username("Mike.Tyson")
+                .password("existingHash")
+                .build();
+
+        when(trainerDao.findById(ID)).thenReturn(Optional.of(existing));
+        when(trainerDao.update(any(Trainer.class))).thenReturn(trainer);
 
         Trainer actual = service.update(trainer);
 
         assertEquals(trainer, actual);
         verify(validator).validateForUpdate(trainer, trainer.getUserId());
-        verify(trainerDao).update(trainer);
+        verify(trainerDao).findById(ID);
+        verify(trainerDao).update(any(Trainer.class));
     }
 
     @Test
@@ -89,6 +97,16 @@ class TrainerServiceImplTest {
                 .when(validator).validateForUpdate(any(), any());
 
         assertThrows(EntityValidationException.class, () -> service.update(trainer));
+
+        verify(trainerDao, never()).findById(any());
+        verify(trainerDao, never()).update(any());
+    }
+
+    @Test
+    void update_whenTrainerNotFound_throwsEntityNotFoundException() {
+        when(trainerDao.findById(ID)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> service.update(trainer));
 
         verify(trainerDao, never()).update(any());
     }
