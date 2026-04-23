@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -119,11 +120,17 @@ class StorageInitializerTest {
 
         assertThrows(IllegalStateException.class, () -> storage.loadTrainees());
 
-        boolean hasExpectedLog = listAppender.list.stream()
-                .anyMatch(event -> event.getLevel() == Level.ERROR
-                        && event.getFormattedMessage().contains("Invalid record format")
-                        && event.getFormattedMessage().contains("INVALID_LINE_WITHOUT_COMMA"));
-        assertTrue(hasExpectedLog);
+        assertThat(listAppender.list)
+                .extracting(ILoggingEvent::getLevel)
+                .contains(Level.ERROR);
+
+        assertThat(listAppender.list)
+                .anySatisfy(event -> {
+                    assertThat(event.getLevel()).isEqualTo(Level.ERROR);
+                    assertThat(event.getFormattedMessage())
+                            .contains("Invalid record format")
+                            .contains("INVALID_LINE_WITHOUT_COMMA");
+                });
     }
 
     @Test

@@ -46,6 +46,12 @@
 			<artifactId>logback-classic</artifactId>
 			<version>1.4.14</version>
 		</dependency>
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>3.25.3</version>
+			<scope>test</scope>
+		</dependency>
 		<!-- Tests -->
 		<dependency>
 			<groupId>org.springframework</groupId>

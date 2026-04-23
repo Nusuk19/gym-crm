@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -87,12 +88,18 @@ class TraineeServiceImplTest {
 
         service.create(trainee);
 
-        boolean hasExpectedLog = listAppender.list.stream()
-                .anyMatch(event -> event.getLevel() == Level.INFO
-                        && event.getFormattedMessage().contains("Creating trainee")
-                        && event.getFormattedMessage().contains("Abdul")
-                        && event.getFormattedMessage().contains("Hariton"));
-        assertTrue(hasExpectedLog);
+        assertThat(listAppender.list)
+                .extracting(ILoggingEvent::getLevel)
+                .doesNotContain(Level.ERROR);
+
+        assertThat(listAppender.list)
+                .anySatisfy(event -> {
+                    assertThat(event.getLevel()).isEqualTo(Level.INFO);
+                    assertThat(event.getFormattedMessage())
+                            .contains("Creating trainee")
+                            .contains("Abdul")
+                            .contains("Hariton");
+                });
     }
 
     @Test
