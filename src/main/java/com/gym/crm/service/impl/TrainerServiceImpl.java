@@ -5,6 +5,8 @@ import com.gym.crm.model.Trainer;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.UserProfileService;
 import com.gym.crm.validator.EntityValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,8 @@ import java.util.Optional;
 
 @Service
 public class TrainerServiceImpl implements TrainerService {
+    private static final Logger log = LoggerFactory.getLogger(TrainerServiceImpl.class);
+
     private TrainerDao trainerDao;
     private EntityValidator validator;
     private UserProfileService userProfileService;
@@ -34,6 +38,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public Trainer create(Trainer trainer) {
+        log.info("Creating trainer: firstName={}, lastName={}", trainer.getFirstName(), trainer.getLastName());
         validator.validateTrainer(trainer);
 
         String username = userProfileService.generateUsername(
@@ -51,6 +56,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public Trainer update(Trainer trainer) {
+        log.info("Updating trainer: id={}", trainer.getUserId());
         validator.validateForUpdate(trainer, trainer.getUserId());
 
         return trainerDao.update(trainer);

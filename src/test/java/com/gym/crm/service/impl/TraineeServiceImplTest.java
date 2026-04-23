@@ -1,20 +1,27 @@
 package com.gym.crm.service.impl;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.service.UserProfileService;
 import com.gym.crm.validator.EntityValidator;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -43,6 +50,16 @@ class TraineeServiceImplTest {
     @InjectMocks
     private TraineeServiceImpl service;
 
+    private ListAppender<ILoggingEvent> listAppender;
+
+    @BeforeEach
+    void setUp() {
+        Logger logger = (Logger) LoggerFactory.getLogger(TraineeServiceImpl.class);
+        listAppender = new ListAppender<>();
+        listAppender.start();
+        logger.addAppender(listAppender);
+    }
+
     @Test
     void create_whenValidTrainee_savesWithGeneratedProfile() {
         when(userProfileService.generateUsername("Abdul", "Hariton")).thenReturn("Abdul.Hariton");
@@ -60,6 +77,29 @@ class TraineeServiceImplTest {
         verify(userProfileService).generatePassword();
         verify(userProfileService).hashPassword("rawPass123");
         verify(traineeDao).save(any(Trainee.class));
+    }
+
+    @Test
+    void create_whenValidTrainee_logsInfoWithUsername() {
+        when(userProfileService.generateUsername("Abdul", "Hariton")).thenReturn("Abdul.Hariton");
+        when(userProfileService.generatePassword()).thenReturn("rawPass123");
+        when(userProfileService.hashPassword("rawPass123")).thenReturn("hashedPass");
+        when(traineeDao.save(any(Trainee.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        service.create(trainee);
+
+        assertThat(listAppender.list)
+                .extracting(ILoggingEvent::getLevel)
+                .doesNotContain(Level.ERROR);
+
+        assertThat(listAppender.list)
+                .anySatisfy(event -> {
+                    assertThat(event.getLevel()).isEqualTo(Level.INFO);
+                    assertThat(event.getFormattedMessage())
+                            .contains("Creating trainee")
+                            .contains("Abdul")
+                            .contains("Hariton");
+                });
     }
 
     @Test

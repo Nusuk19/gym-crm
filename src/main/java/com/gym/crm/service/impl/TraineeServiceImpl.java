@@ -5,6 +5,8 @@ import com.gym.crm.model.Trainee;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.UserProfileService;
 import com.gym.crm.validator.EntityValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,7 @@ import java.util.Optional;
 
 @Service
 public class TraineeServiceImpl implements TraineeService {
+    private static final Logger log = LoggerFactory.getLogger(TraineeServiceImpl.class);
 
     private TraineeDao traineeDao;
     private EntityValidator validator;
@@ -47,11 +50,14 @@ public class TraineeServiceImpl implements TraineeService {
                 .password(hashedPassword)
                 .build();
 
+        log.info("Creating trainee: firstName={}, lastName={}", trainee.getFirstName(), trainee.getLastName());
+
         return traineeDao.save(traineeWithProfile);
     }
 
     @Override
     public Trainee update(Trainee trainee) {
+        log.info("Updating trainee: id={}", trainee.getUserId());
         validator.validateForUpdate(trainee, trainee.getUserId());
 
         return traineeDao.update(trainee);
@@ -59,6 +65,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     public void delete(Long id) {
+        log.info("Deleting trainee: id={}", id);
         validator.requireValidId(id);
 
         traineeDao.delete(id);

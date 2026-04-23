@@ -4,6 +4,8 @@ import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.storage.InMemoryStorage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +15,8 @@ import java.util.Optional;
 
 @Repository
 public class TrainerDaoImpl implements TrainerDao {
+
+    private static final Logger log = LoggerFactory.getLogger(TrainerDaoImpl.class);
 
     private InMemoryStorage inMemoryStorage;
 
@@ -30,6 +34,7 @@ public class TrainerDaoImpl implements TrainerDao {
                 .build();
 
         storage().put(id, trainerWithId);
+        log.info("Trainer saved to storage: id={}", id);
 
         return trainerWithId;
     }
@@ -40,13 +45,18 @@ public class TrainerDaoImpl implements TrainerDao {
             throw new EntityNotFoundException("Trainer not found: " + trainer.getUserId());
         }
         storage().put(trainer.getUserId(), trainer);
+        log.info("Trainer updated in storage: id={}", trainer.getUserId());
 
         return trainer;
     }
 
     @Override
     public Optional<Trainer> findById(Long id) {
-        return Optional.ofNullable(storage().get(id));
+        Optional<Trainer> result = Optional.ofNullable(storage().get(id));
+        if (result.isEmpty()) {
+            log.warn("Trainee not found in storage: id={}", id);
+        }
+        return result;
     }
 
     @Override

@@ -3,6 +3,8 @@ package com.gym.crm.dao.impl;
 import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.model.Training;
 import com.gym.crm.storage.InMemoryStorage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -12,6 +14,8 @@ import java.util.Optional;
 
 @Repository
 public class TrainingDaoImpl implements TrainingDao {
+
+    private static final Logger log = LoggerFactory.getLogger(TrainingDaoImpl.class);
 
     private InMemoryStorage inMemoryStorage;
 
@@ -29,13 +33,18 @@ public class TrainingDaoImpl implements TrainingDao {
                 .build();
 
         storage().put(id, trainingWithId);
+        log.info("Training saved to storage: id={}", id);
 
         return trainingWithId;
     }
 
     @Override
     public Optional<Training> findById(Long id) {
-        return Optional.ofNullable(storage().get(id));
+        Optional<Training> result = Optional.ofNullable(storage().get(id));
+        if (result.isEmpty()) {
+            log.warn("Trainee not found in storage: id={}", id);
+        }
+        return result;
     }
 
     @Override
