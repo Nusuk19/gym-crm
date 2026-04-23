@@ -14,21 +14,42 @@ import com.gym.crm.mapper.TrainingMapper;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
 
 @Component
-@RequiredArgsConstructor
 public class GymFacade {
     private final TraineeService traineeService;
     private final TrainerService trainerService;
     private final TrainingService trainingService;
-    private final TraineeMapper traineeMapper;
-    private final TrainerMapper trainerMapper;
-    private final TrainingMapper trainingMapper;
+
+    private TraineeMapper traineeMapper;
+    private TrainerMapper trainerMapper;
+    private TrainingMapper trainingMapper;
+
+    public GymFacade(TraineeService traineeService,
+                     TrainerService trainerService,
+                     TrainingService trainingService) {
+        this.traineeService = traineeService;
+        this.trainerService = trainerService;
+        this.trainingService = trainingService;
+    }
+
+    @Autowired
+    public void setTraineeMapper(TraineeMapper traineeMapper) {
+        this.traineeMapper = traineeMapper; }
+
+    @Autowired
+    public void setTrainerMapper(TrainerMapper trainerMapper) {
+        this.trainerMapper = trainerMapper; }
+
+    @Autowired
+    public void setTrainingMapper(TrainingMapper trainingMapper) {
+        this.trainingMapper = trainingMapper; }
+
 
     public TraineeResponse createTrainee(CreateTraineeRequest request) {
         return traineeMapper.toResponse(traineeService.create(traineeMapper.toEntity(request)));

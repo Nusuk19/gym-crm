@@ -63,7 +63,6 @@ class TrainerMapperTest {
         assertEquals("Tyson", actual.getLastName());
         assertEquals("YOGA", actual.getSpecialization().getTrainingTypeName());
         assertFalse(actual.isActive());
-        assertEquals("Mike.Tyson", actual.getUsername());
     }
 
     @Test

@@ -23,11 +23,14 @@ public class StorageInitializer {
     private static final Logger log = LoggerFactory.getLogger(StorageInitializer.class);
     private static final char DELIMITER = ',';
 
-    @Value("${storage.init.file}")
     private Resource initFile;
-
     private FileLineReader fileLineReader;
     private CsvFileParser parser;
+
+    @Autowired
+    public void setInitFile(@Value("${storage.init.file}") Resource initFile) {
+        this.initFile = initFile;
+    }
 
     @Autowired
     public void setFileLineReader(FileLineReader fileLineReader) {
