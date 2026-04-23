@@ -12,24 +12,12 @@ import java.util.Map;
 @Component
 public class InMemoryStorage {
 
-    private Map<Long, Trainee> traineeStorage;
-    private Map<Long, Trainer> trainerStorage;
-    private Map<Long, Training> trainingStorage;
+    private Map<String, Map<Long, Object>> storage;
     private StorageInitializer initializer;
 
     @Autowired
-    public void setTraineeStorage(Map<Long, Trainee> traineeStorage) {
-        this.traineeStorage = traineeStorage;
-    }
-
-    @Autowired
-    public void setTrainerStorage(Map<Long, Trainer> trainerStorage) {
-        this.trainerStorage = trainerStorage;
-    }
-
-    @Autowired
-    public void setTrainingStorage(Map<Long, Training> trainingStorage) {
-        this.trainingStorage = trainingStorage;
+    public void setStorage(Map<String, Map<Long, Object>> storage) {
+        this.storage = storage;
     }
 
     @Autowired
@@ -39,20 +27,13 @@ public class InMemoryStorage {
 
     @PostConstruct
     public void init() {
-        traineeStorage.putAll(initializer.loadTrainees());
-        trainerStorage.putAll(initializer.loadTrainers());
-        trainingStorage.putAll(initializer.loadTrainings());
+        this.<Trainee>getEntityStorage("trainees").putAll(initializer.loadTrainees());
+        this.<Trainer>getEntityStorage("trainers").putAll(initializer.loadTrainers());
+        this.<Training>getEntityStorage("trainings").putAll(initializer.loadTrainings());
     }
 
-    public Map<Long, Trainee> getTraineeStorage() {
-        return traineeStorage;
-    }
-
-    public Map<Long, Trainer> getTrainerStorage() {
-        return trainerStorage;
-    }
-
-    public Map<Long, Training> getTrainingStorage() {
-        return trainingStorage;
+    @SuppressWarnings("unchecked")
+    public <T> Map<Long, T> getEntityStorage(String namespace) {
+        return (Map<Long, T>) (Map<Long, ?>) storage.get(namespace);
     }
 }

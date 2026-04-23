@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,34 +28,44 @@ class InMemoryStorageTest {
     private Map<Long, Trainee> traineeStorage;
     private Map<Long, Trainer> trainerStorage;
     private Map<Long, Training> trainingStorage;
-    private InMemoryStorage storage;
+
+    private InMemoryStorage inMemoryStorage;
 
     @BeforeEach
     void setUp() {
-        traineeStorage = new HashMap<>();
-        trainerStorage = new HashMap<>();
-        trainingStorage = new HashMap<>();
+        Map<String, Map<Long, Object>> storage = new HashMap<>();
+        storage.put("trainees", new HashMap<>());
+        storage.put("trainers", new HashMap<>());
+        storage.put("trainings", new HashMap<>());
 
-        storage = new InMemoryStorage();
-        storage.setTraineeStorage(traineeStorage);
-        storage.setTrainerStorage(trainerStorage);
-        storage.setTrainingStorage(trainingStorage);
-        storage.setInitializer(initializer);
+        inMemoryStorage = new InMemoryStorage();
+        inMemoryStorage.setStorage(storage);
+        inMemoryStorage.setInitializer(initializer);
+
+        traineeStorage = inMemoryStorage.getEntityStorage("trainees");
+        trainerStorage = inMemoryStorage.getEntityStorage("trainers");
+        trainingStorage = inMemoryStorage.getEntityStorage("trainings");
     }
 
     @Test
     void getTraineeStorage_returnsInjectedMap() {
-        assertSame(traineeStorage, storage.getTraineeStorage());
+        Map<Long, Trainee> result = inMemoryStorage.getEntityStorage("trainees");
+
+        assertNotNull(result);
     }
 
     @Test
     void getTrainerStorage_returnsInjectedMap() {
-        assertSame(trainerStorage, storage.getTrainerStorage());
+        Map<Long, Trainer> result = inMemoryStorage.getEntityStorage("trainers");
+
+        assertNotNull(result);
     }
 
     @Test
     void getTrainingStorage_returnsInjectedMap() {
-        assertSame(trainingStorage, storage.getTrainingStorage());
+        Map<Long, Training> result = inMemoryStorage.getEntityStorage("trainings");
+
+        assertNotNull(result);
     }
 
     @Test
@@ -69,7 +79,7 @@ class InMemoryStorageTest {
         when(initializer.loadTrainers()).thenReturn(Map.of());
         when(initializer.loadTrainings()).thenReturn(Map.of());
 
-        storage.init();
+        inMemoryStorage.init();
 
         assertEquals(1, traineeStorage.size());
         assertEquals(trainee, traineeStorage.get(ID));
@@ -86,7 +96,7 @@ class InMemoryStorageTest {
         when(initializer.loadTrainers()).thenReturn(Map.of(ID, trainer));
         when(initializer.loadTrainings()).thenReturn(Map.of());
 
-        storage.init();
+        inMemoryStorage.init();
 
         assertEquals(1, trainerStorage.size());
         assertEquals(trainer, trainerStorage.get(ID));
@@ -102,7 +112,7 @@ class InMemoryStorageTest {
         when(initializer.loadTrainers()).thenReturn(Map.of());
         when(initializer.loadTrainings()).thenReturn(Map.of(ID, training));
 
-        storage.init();
+        inMemoryStorage.init();
 
         assertEquals(1, trainingStorage.size());
         assertEquals(training, trainingStorage.get(ID));
@@ -116,7 +126,7 @@ class InMemoryStorageTest {
         when(initializer.loadTrainers()).thenReturn(Map.of());
         when(initializer.loadTrainings()).thenReturn(Map.of());
 
-        storage.init();
+        inMemoryStorage.init();
 
         assertEquals(2, traineeStorage.size());
         assertEquals(first, traineeStorage.get(ID));

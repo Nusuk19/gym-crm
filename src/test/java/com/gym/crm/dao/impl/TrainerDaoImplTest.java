@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doReturn;
 
 @ExtendWith(MockitoExtension.class)
 class TrainerDaoImplTest {
@@ -44,7 +44,7 @@ class TrainerDaoImplTest {
         storageMap = new HashMap<>();
         trainer = buildTrainer();
 
-        when(inMemoryStorage.getTrainerStorage()).thenReturn(storageMap);
+        doReturn(storageMap).when(inMemoryStorage).getEntityStorage("trainers");
     }
 
     @Test

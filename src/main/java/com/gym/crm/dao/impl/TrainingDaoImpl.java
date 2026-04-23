@@ -59,6 +59,6 @@ public class TrainingDaoImpl implements TrainingDao {
     }
 
     private Map<Long, Training> storage() {
-        return inMemoryStorage.getTrainingStorage();
+        return inMemoryStorage.getEntityStorage("trainings");
     }
 }
