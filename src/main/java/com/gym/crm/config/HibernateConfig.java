@@ -28,8 +28,6 @@ public class HibernateConfig {
 
     @Bean(destroyMethod = "close")
     public SessionFactory sessionFactory() {
-        log.info("Initializing Hibernate SessionFactory");
-
         Properties properties = new Properties();
         properties.put("hibernate.connection.driver_class", driver);
         properties.put("hibernate.connection.url", url);
@@ -40,11 +38,9 @@ public class HibernateConfig {
         properties.put("hibernate.format_sql", "true");
         properties.put("hibernate.hbm2ddl.auto", "none");
 
-        SessionFactory sessionFactory = new org.hibernate.cfg.Configuration()
+        return  new org.hibernate.cfg.Configuration()
                 .addProperties(properties)
                 .buildSessionFactory();
 
-        log.info("Hibernate SessionFactory initialized successfully");
-        return sessionFactory;
     }
 }
