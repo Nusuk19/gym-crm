@@ -41,6 +41,5 @@ public class HibernateConfig {
         return  new org.hibernate.cfg.Configuration()
                 .addProperties(properties)
                 .buildSessionFactory();
-
     }
 }
