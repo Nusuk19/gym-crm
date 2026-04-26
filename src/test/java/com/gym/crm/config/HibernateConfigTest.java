@@ -1,5 +1,6 @@
 package com.gym.crm.config;
 
+import com.gym.crm.entity.*;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,17 @@ class HibernateConfigTest {
     void session_whenOpened_isConnectedToDatabase() {
         try (Session session = sessionFactory.openSession()) {
             assertTrue(session.isConnected());
+        }
+    }
+
+    @Test
+    void session_canLoadMetadata() {
+        try (Session session = sessionFactory.openSession()) {
+            assertNotNull(session.getMetamodel().entity(User.class));
+            assertNotNull(session.getMetamodel().entity(Trainee.class));
+            assertNotNull(session.getMetamodel().entity(Trainer.class));
+            assertNotNull(session.getMetamodel().entity(Training.class));
+            assertNotNull(session.getMetamodel().entity(TrainingType.class));
         }
     }
 }

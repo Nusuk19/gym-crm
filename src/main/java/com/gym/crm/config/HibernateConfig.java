@@ -1,5 +1,10 @@
 package com.gym.crm.config;
 
+import com.gym.crm.entity.Trainee;
+import com.gym.crm.entity.Trainer;
+import com.gym.crm.entity.Training;
+import com.gym.crm.entity.TrainingType;
+import com.gym.crm.entity.User;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +45,11 @@ public class HibernateConfig {
 
         return  new org.hibernate.cfg.Configuration()
                 .addProperties(properties)
+                .addAnnotatedClass(User.class)
+                .addAnnotatedClass(Trainee.class)
+                .addAnnotatedClass(Trainer.class)
+                .addAnnotatedClass(Training.class)
+                .addAnnotatedClass(TrainingType.class)
                 .buildSessionFactory();
     }
 }
