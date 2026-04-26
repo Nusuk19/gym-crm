@@ -10,11 +10,9 @@ import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
-@Setter
 @Getter
 @ToString(exclude = {"password", "trainee", "trainer"})
 @SuperBuilder(toBuilder = true)
@@ -34,7 +32,7 @@ public class User {
     @Column(name = "last_name", nullable = false, length = 50)
     private String lastName;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, unique = true, length = 110)
     private String username;
 
     @Column(nullable = false, length = 255)
@@ -43,9 +41,9 @@ public class User {
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
 
-    @OneToOne(mappedBy ="user")
+    @OneToOne(mappedBy = "user")
     private Trainee trainee;
 
-    @OneToOne(mappedBy ="user")
+    @OneToOne(mappedBy = "user")
     private Trainer trainer;
 }

@@ -15,42 +15,39 @@ import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-@Setter
 @Getter
 @SuperBuilder(toBuilder = true)
 @EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @Entity
-@Table(name="trainees")
+@Table(name = "trainees")
 public class Trainee {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "date_of_birth")
+    @Column(name = "date_of_birth", nullable = true)
     private LocalDate dateOfBirth;
 
-    @Column(name = "address" ,length = 100)
+    @Column(name = "address", nullable = true, length = 100)
     private String address;
 
     @OneToOne
-    @JoinColumn(name="user_id", nullable = false, unique = true)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
     @OneToMany(mappedBy = "trainee", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Training> trainings=new ArrayList<>();
+    private List<Training> trainings = new ArrayList<>();
 
     @ManyToMany
-    @JoinTable(
-            name = "trainee_trainer",
+    @JoinTable(name = "trainee_trainer",
             joinColumns = @JoinColumn(name = "trainee_id"),
             inverseJoinColumns = @JoinColumn(name = "trainer_id")
     )

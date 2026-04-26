@@ -11,26 +11,24 @@ import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Setter
 @Getter
 @SuperBuilder(toBuilder = true)
 @NoArgsConstructor
 @EqualsAndHashCode(of = "id")
 @Entity
-@Table(name="trainings")
+@Table(name = "trainings")
 public class Training {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name ="training_name", nullable = false, length = 100)
+    @Column(name = "training_name", nullable = false, length = 100)
     private String name;
 
     @Column(name = "training_date", nullable = false)
