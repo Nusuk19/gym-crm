@@ -35,7 +35,7 @@ public class Trainer {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "training_type_id", nullable = false)
+    @JoinColumn(name = "specialization_id", nullable = false)
     private TrainingType specialization;
 
     @OneToMany(mappedBy = "trainer")

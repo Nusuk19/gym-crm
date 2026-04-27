@@ -46,6 +46,6 @@ public class Training {
     private Trainer trainer;
 
     @ManyToOne
-    @JoinColumn(name = "training_type_id", nullable = false)
+    @JoinColumn(name = "specialization_id", nullable = false)
     private TrainingType trainingType;
 }
