@@ -1,21 +1,18 @@
-package com.gym.crm.dao;
+package com.gym.crm.dao.legacy;
 
-import com.gym.crm.entity.Trainee;
+import com.gym.crm.model.Trainee;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface TraineeDao {
-
     Trainee save(Trainee trainee);
 
     Trainee update(Trainee trainee);
 
-    void deleteByUsername(String username);
+    void delete(Long id);
 
     Optional<Trainee> findById(Long id);
-
-    Optional<Trainee> findByUsername(String username);
 
     List<Trainee> findAll();
 }

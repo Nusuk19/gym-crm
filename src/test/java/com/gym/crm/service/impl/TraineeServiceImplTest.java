@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import com.gym.crm.dao.TraineeDao;
+import com.gym.crm.dao.legacy.TraineeDao;
 import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.service.UserProfileService;

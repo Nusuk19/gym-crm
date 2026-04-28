@@ -1,86 +1,65 @@
 package com.gym.crm.dao.impl;
 
 import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.exception.EntityNotFoundException;
-import com.gym.crm.model.Trainee;
-import com.gym.crm.storage.InMemoryStorage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.gym.crm.entity.Trainee;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
+@AllArgsConstructor
 @Repository
 public class TraineeDaoImpl implements TraineeDao {
 
-    private static final Logger log = LoggerFactory.getLogger(TraineeDaoImpl.class);
-
-    private InMemoryStorage inMemoryStorage;
-
-    @Autowired
-    public void setInMemoryStorage(InMemoryStorage inMemoryStorage) {
-        this.inMemoryStorage = inMemoryStorage;
-    }
+    private final SessionFactory sessionFactory;
 
     @Override
     public Trainee save(Trainee trainee) {
-        Long id = trainee.getUserId() != null ? trainee.getUserId() : generateId();
-
-        Trainee traineeWithId = trainee.toBuilder()
-                .userId(id)
-                .build();
-
-        storage().put(id, traineeWithId);
-        log.info("Trainee saved to storage: id={}", id);
-
-        return traineeWithId;
-    }
-
-    @Override
-    public Trainee update(Trainee trainee) {
-        if (!storage().containsKey(trainee.getUserId())) {
-            throw new EntityNotFoundException("Trainee not found: " + trainee.getUserId());
-        }
-        storage().put(trainee.getUserId(), trainee);
-        log.info("Trainee updated in storage: id={}", trainee.getUserId());
+        sessionFactory.getCurrentSession().persist(trainee);
+        log.info("Trainee saved: username={}", trainee.getUser().getUsername());
 
         return trainee;
     }
 
     @Override
-    public void delete(Long userId) {
-        if (!storage().containsKey(userId)) {
-            throw new EntityNotFoundException("Trainee not found with id: " + userId);
-        }
-        storage().remove(userId);
-        log.info("Trainee removed from storage: id={}", userId);
+    public Trainee update(Trainee trainee) {
+        Trainee merged = sessionFactory.getCurrentSession().merge(trainee);
+        log.info("Trainee updated: username={}", merged.getUser().getUsername());
+
+        return merged;
+    }
+
+    @Override
+    public void deleteByUsername(String username) {
+        findByUsername(username).ifPresent(trainee -> {
+            sessionFactory.getCurrentSession().remove(trainee);
+            log.info("Trainee deleted: username={}", username);
+        });
     }
 
     @Override
     public Optional<Trainee> findById(Long id) {
-        Optional<Trainee> result = Optional.ofNullable(storage().get(id));
-        if (result.isEmpty()) {
-            log.warn("Trainee not found in storage: id={}", id);
-        }
+        Trainee trainee = sessionFactory.getCurrentSession().get(Trainee.class, id);
 
-        return result;
+        return Optional.ofNullable(trainee);
+    }
+
+    @Override
+    public Optional<Trainee> findByUsername(String username) {
+        return sessionFactory.getCurrentSession()
+                .createQuery("FROM Trainee t WHERE t.user.username = :username", Trainee.class)
+                .setParameter("username", username)
+                .uniqueResultOptional();
     }
 
     @Override
     public List<Trainee> findAll() {
-        return List.copyOf(storage().values());
-    }
-
-    private Long generateId() {
-        return storage().keySet().stream()
-                .max(Long::compareTo)
-                .orElse(0L) + 1;
-    }
-
-    private Map<Long, Trainee> storage() {
-        return inMemoryStorage.getEntityStorage("trainees");
+        return sessionFactory.getCurrentSession()
+                .createQuery("FROM Trainee", Trainee.class)
+                .list();
     }
 }

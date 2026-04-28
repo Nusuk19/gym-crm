@@ -1,5 +1,6 @@
-package com.gym.crm.dao.impl;
+package com.gym.crm.dao.legacy.impl;
 
+import com.gym.crm.dao.legacy.impl.TrainingDaoImpl;
 import com.gym.crm.model.Training;
 import com.gym.crm.model.TrainingType;
 import com.gym.crm.storage.InMemoryStorage;

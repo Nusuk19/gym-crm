@@ -1,5 +1,6 @@
-package com.gym.crm.dao.impl;
+package com.gym.crm.dao.legacy.impl;
 
+import com.gym.crm.dao.legacy.impl.TrainerDaoImpl;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.model.TrainingType;
