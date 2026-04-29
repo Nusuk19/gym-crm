@@ -2,29 +2,16 @@ package com.gym.crm.dao;
 
 import com.gym.crm.config.TestConfig;
 import org.hibernate.SessionFactory;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
+import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
+
+@Sql(scripts = {"/datasets/cleanup.sql", "/datasets/trainee-insert.sql"}, executionPhase = BEFORE_TEST_METHOD)
 @SpringJUnitConfig(TestConfig.class)
 public abstract class AbstractRepositoryTest {
 
     @Autowired
     protected SessionFactory sessionFactory;
-
-    @BeforeEach
-    void beginTransaction() {
-        sessionFactory.getCurrentSession().beginTransaction();
-    }
-
-    @AfterEach
-    void rollbackTransaction() {
-        sessionFactory.getCurrentSession().getTransaction().rollback();
-    }
-
-    protected void flushAndClear() {
-        sessionFactory.getCurrentSession().flush();
-        sessionFactory.getCurrentSession().clear();
-    }
 }
