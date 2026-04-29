@@ -51,7 +51,7 @@ public class TraineeDaoImpl implements TraineeDao {
     @Override
     public Optional<Trainee> findByUsername(String username) {
         return sessionFactory.getCurrentSession()
-                .createQuery("FROM Trainee t WHERE t.user.username = :username", Trainee.class)
+                .createQuery("FROM Trainee t JOIN FETCH t.user WHERE t.user.username = :username", Trainee.class)
                 .setParameter("username", username)
                 .uniqueResultOptional();
     }
@@ -59,7 +59,7 @@ public class TraineeDaoImpl implements TraineeDao {
     @Override
     public List<Trainee> findAll() {
         return sessionFactory.getCurrentSession()
-                .createQuery("FROM Trainee", Trainee.class)
+                .createQuery("FROM Trainee t JOIN FETCH t.user", Trainee.class)
                 .list();
     }
 }
