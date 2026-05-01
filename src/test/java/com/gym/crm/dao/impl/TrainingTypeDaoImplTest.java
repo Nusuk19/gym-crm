@@ -52,13 +52,7 @@ class TrainingTypeDaoImplTest extends AbstractRepositoryTest<TrainingTypeDao> {
         assertThat(result)
                 .isNotEmpty()
                 .extracting(TrainingType::getTrainingTypeName)
-                .contains(
-                        "Boxing",
-                        "Cardio",
-                        "Yoga",
-                        "Fitness",
-                        "Pilates"
-                );
+                .contains("Boxing", "Cardio", "Yoga", "Fitness", "Pilates");
     }
 
     @Override

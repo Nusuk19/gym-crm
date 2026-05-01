@@ -53,7 +53,9 @@ class TrainerDaoImplTest extends AbstractRepositoryTest<TrainerDao> {
     void findAll_returnsAllTrainers() {
         List<Trainer> result = dao.findAll();
 
-        assertThat(result).hasSizeGreaterThan(0).extracting("user.username").contains("Mike.Tyson", "Adam.Future");
+        assertThat(result).hasSizeGreaterThan(0)
+                .extracting("user.username")
+                .contains("Mike.Tyson", "Adam.Future");
     }
 
     @Test
@@ -74,7 +76,6 @@ class TrainerDaoImplTest extends AbstractRepositoryTest<TrainerDao> {
     @Test
     void update_changesTrainerData() {
         Trainer trainer = dao.findByUsername("Mike.Tyson").orElseThrow();
-
         Trainer updated = trainer.toBuilder()
                 .user(trainer.getUser().toBuilder()
                         .firstName("Michael")
@@ -94,7 +95,9 @@ class TrainerDaoImplTest extends AbstractRepositoryTest<TrainerDao> {
     void findAllNotAssignedToTrainee_returnsOnlyUnassigned() {
         List<Trainer> result = dao.findAllNotAssignedToTrainee("Abdul.Hariton");
 
-        assertThat(result).isNotEmpty().extracting("user.username").doesNotContain("Mike.Tyson");
+        assertThat(result).isNotEmpty()
+                .extracting("user.username")
+                .doesNotContain("Mike.Tyson");
     }
 
     @Test
@@ -127,10 +130,7 @@ class TrainerDaoImplTest extends AbstractRepositoryTest<TrainerDao> {
 
         TrainingType boxing = sessionFactory
                 .openSession()
-                .createQuery(
-                        "FROM TrainingType WHERE trainingTypeName = :name",
-                        TrainingType.class
-                )
+                .createQuery("FROM TrainingType WHERE trainingTypeName = :name", TrainingType.class)
                 .setParameter("name", "Boxing")
                 .uniqueResult();
 
