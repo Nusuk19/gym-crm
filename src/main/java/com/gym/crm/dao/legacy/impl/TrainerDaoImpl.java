@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@Repository
+@Repository("legacyTrainerDao")
 public class TrainerDaoImpl implements TrainerDao {
 
     private static final Logger log = LoggerFactory.getLogger(TrainerDaoImpl.class);
