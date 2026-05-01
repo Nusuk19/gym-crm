@@ -1,4 +1,4 @@
-package com.gym.crm.dao;
+package com.gym.crm.dao.legacy;
 
 import com.gym.crm.model.Training;
 

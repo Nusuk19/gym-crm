@@ -1,7 +1,7 @@
 package com.gym.crm.profile;
 
-import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.dao.TrainerDao;
+import com.gym.crm.dao.legacy.TraineeDao;
+import com.gym.crm.dao.legacy.TrainerDao;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
 import org.junit.jupiter.api.Test;

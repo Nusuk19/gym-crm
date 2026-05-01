@@ -1,190 +1,184 @@
 package com.gym.crm.dao.impl;
 
-import com.gym.crm.exception.EntityNotFoundException;
-import com.gym.crm.model.Trainee;
-import com.gym.crm.storage.InMemoryStorage;
-import org.junit.jupiter.api.BeforeEach;
+import com.gym.crm.dao.AbstractRepositoryTest;
+import com.gym.crm.dao.TraineeDao;
+import com.gym.crm.entity.Trainee;
+import com.gym.crm.entity.User;
+import org.hibernate.Session;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.jdbc.Sql;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.doReturn;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
 
-@ExtendWith(MockitoExtension.class)
-class TraineeDaoImplTest {
+@Sql(scripts = {"/datasets/cleanup.sql", "/datasets/trainee-insert.sql"}, executionPhase = BEFORE_TEST_METHOD)
+class TraineeDaoImplTest extends AbstractRepositoryTest<TraineeDao> {
 
-    private static final Long EXISTING_ID = 1L;
-    private static final Long SECOND_ID = 2L;
-    private static final Long GAP_ID = 5L;
-    private static final Long GENERATED_ID = 6L;
-    private static final Long NON_EXISTING_ID = 99L;
+    @Test
+    void findByUsername_existingUser_returnsTrainee() {
+        Optional<Trainee> result = dao.findByUsername("Abdul.Hariton");
 
-    @Mock
-    private InMemoryStorage inMemoryStorage;
-    @InjectMocks
-    private TraineeDaoImpl traineeDao;
-
-    private Map<Long, Trainee> storageMap;
-    private Trainee trainee;
-
-    @BeforeEach
-    void setUp() {
-        storageMap = new HashMap<>();
-        trainee = buildTrainee(EXISTING_ID, "Abdul", "Kyiv");
-
-        doReturn(storageMap).when(inMemoryStorage).getEntityStorage("trainees");
+        assertThat(result).isPresent();
+        assertThat(result.get().getUser().getFirstName()).isEqualTo("Abdul");
+        assertThat(result.get().getUser().getLastName()).isEqualTo("Hariton");
+        assertThat(result.get().getAddress()).isEqualTo("123 Wolfs St");
+        assertThat(result.get().getDateOfBirth()).isEqualTo(LocalDate.of(1994, 5, 6));
     }
 
     @Test
-    void save_whenTraineeHasId_storesWithProvidedId() {
-        Trainee actual = traineeDao.save(trainee);
+    void findByUsername_nonExistingUser_returnsEmpty() {
+        Optional<Trainee> result = dao.findByUsername("ghost.user");
 
-        assertEquals(EXISTING_ID, actual.getUserId());
-        assertEquals(trainee, storageMap.get(EXISTING_ID));
+        assertThat(result).isEmpty();
     }
 
     @Test
-    void save_whenTraineeHasNoIdAndStorageIsEmpty_generatesIdOne() {
-        Trainee traineeWithoutId = trainee.toBuilder()
-                .userId(null)
-                .build();
+    void findById_existingId_returnsTrainee() {
+        Long existingId = dao.findByUsername("Abdul.Hariton")
+                .orElseThrow()
+                .getId();
 
-        Trainee actual = traineeDao.save(traineeWithoutId);
+        Optional<Trainee> result = dao.findById(existingId);
 
-        assertEquals(EXISTING_ID, actual.getUserId());
-        assertTrue(storageMap.containsKey(EXISTING_ID));
+        assertThat(result).isPresent();
+        assertThat(result.get().getUser().getUsername()).isEqualTo("Abdul.Hariton");
     }
 
     @Test
-    void save_whenTraineeHasNoIdAndStorageHasEntries_generatesNextSequentialId() {
-        storageMap.put(EXISTING_ID, trainee);
-        Trainee second = trainee.toBuilder()
-                .userId(null)
-                .firstName("Jane")
-                .build();
+    void findById_nonExistingId_returnsEmpty() {
+        Optional<Trainee> result = dao.findById(999L);
 
-        Trainee actual = traineeDao.save(second);
-
-        assertEquals(SECOND_ID, actual.getUserId());
-        assertTrue(storageMap.containsKey(SECOND_ID));
+        assertThat(result).isEmpty();
     }
 
     @Test
-    void save_whenStorageHasGapsInIds_generatesIdAsMaxPlusOne() {
-        storageMap.put(SECOND_ID, trainee.toBuilder().userId(SECOND_ID).build());
-        storageMap.put(GAP_ID, trainee.toBuilder().userId(GAP_ID).build());
-        Trainee newTrainee = trainee.toBuilder().userId(null).build();
+    void findAll_returnsAllTrainees() {
+        List<Trainee> result = dao.findAll();
 
-        Trainee actual = traineeDao.save(newTrainee);
-
-        assertEquals(GENERATED_ID, actual.getUserId());
-        assertTrue(storageMap.containsKey(GENERATED_ID));
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().getUser().getUsername()).isEqualTo("Abdul.Hariton");
     }
 
     @Test
-    void update_whenTraineeExists_updatesAndReturns() {
-        storageMap.put(EXISTING_ID, trainee);
+    void save_newTrainee_persistsAndReturnsWithId() {
+        Trainee newTrainee = buildTrainee("Anna", "Koval", "Anna.Koval");
+
+        Trainee saved = dao.save(newTrainee);
+
+        Optional<Trainee> fromDb = dao.findById(saved.getId());
+        assertThat(fromDb).isPresent();
+        assertThat(fromDb.get().getUser().getUsername()).isEqualTo("Anna.Koval");
+        assertThat(fromDb.get().getAddress()).isEqualTo("Lviv, Ukraine");
+    }
+
+    @Test
+    void update_existingTrainee_modifiesAddress() {
+        Trainee trainee = dao.findByUsername("Abdul.Hariton").orElseThrow();
         Trainee updated = trainee.toBuilder()
-                .address("Lviv")
+                .address("New Address 456")
                 .build();
 
-        Trainee actual = traineeDao.update(updated);
+        dao.update(updated);
 
-        assertEquals("Lviv", actual.getAddress());
-        assertEquals("Lviv", storageMap.get(EXISTING_ID).getAddress());
+        Trainee result = dao.findByUsername("Abdul.Hariton").orElseThrow();
+        assertThat(result.getAddress()).isEqualTo("New Address 456");
     }
 
     @Test
-    void update_whenTraineeNotExists_throwsEntityNotFoundException() {
-        Trainee missing = trainee.toBuilder().userId(NON_EXISTING_ID).build();
+    void deleteByUsername_existingUser_removesTrainee() {
+        dao.deleteByUsername("Abdul.Hariton");
 
-        assertThrows(EntityNotFoundException.class, () -> traineeDao.update(missing));
+        assertThat(dao.findByUsername("Abdul.Hariton")).isEmpty();
+        assertThat(dao.findAll()).isEmpty();
     }
 
     @Test
-    void delete_whenTraineeExists_removesFromStorage() {
-        storageMap.put(EXISTING_ID, trainee);
+    void deleteByUsername_nonExistingUser_doesNotThrow() {
+        dao.deleteByUsername("nobody.here");
 
-        traineeDao.delete(EXISTING_ID);
-
-        assertFalse(storageMap.containsKey(EXISTING_ID));
+        assertThat(dao.findAll()).hasSize(1);
     }
 
     @Test
-    void delete_whenTraineeNotExists_throwsEntityNotFoundException() {
-        assertThrows(EntityNotFoundException.class, () -> traineeDao.delete(NON_EXISTING_ID));
+    void deleteByUsername_cascadesTrainings() {
+        long trainingsBefore = countTrainings();
+        assertThat(trainingsBefore).isEqualTo(1);
+
+        dao.deleteByUsername("Abdul.Hariton");
+
+        assertThat(dao.findByUsername("Abdul.Hariton")).isEmpty();
+        assertThat(countTrainings()).isZero();
     }
 
     @Test
-    void findById_whenTraineeExists_returnsTrainee() {
-        storageMap.put(EXISTING_ID, trainee);
+    void findByUsername_traineeHasAssignedTrainer() {
+        Trainee trainee = dao.findByUsername("Abdul.Hariton").orElseThrow();
 
-        Optional<Trainee> actual = traineeDao.findById(EXISTING_ID);
-
-        assertTrue(actual.isPresent());
-        assertEquals(trainee, actual.get());
+        assertThat(trainee.getTrainers()).hasSize(1);
+        assertThat(trainee.getTrainers().getFirst().getUser().getUsername()).isEqualTo("Mike.Tyson");
     }
 
     @Test
-    void findById_whenTraineeNotExists_returnsEmpty() {
-        Optional<Trainee> actual = traineeDao.findById(NON_EXISTING_ID);
+    void save_shouldAlsoPersistUser() {
+        Trainee trainee = buildTrainee("Adam", "Bextra", "Adam.Bextra");
 
-        assertFalse(actual.isPresent());
+        dao.save(trainee);
+
+        try (Session session = sessionFactory.openSession()) {
+            Long count = session
+                    .createQuery("SELECT COUNT(u) FROM User u WHERE username = :u", Long.class)
+                    .setParameter("u", "Adam.Bextra")
+                    .getSingleResult();
+
+            assertThat(count).isEqualTo(1);
+        }
     }
 
     @Test
-    void findAll_whenStorageHasEntries_returnsAllTrainees() {
-        Trainee second = trainee.toBuilder()
-                .userId(SECOND_ID)
-                .firstName("Jane")
-                .build();
-        storageMap.put(EXISTING_ID, trainee);
-        storageMap.put(SECOND_ID, second);
+    void save_persistsToDatabase_countIncreases() {
+        long before = countTrainees();
 
-        List<Trainee> actual = traineeDao.findAll();
+        dao.save(buildTrainee("Test", "User", "Test.User"));
 
-        assertEquals(2, actual.size());
-        assertTrue(actual.contains(trainee));
-        assertTrue(actual.contains(second));
+        assertThat(countTrainees()).isEqualTo(before + 1);
     }
 
-    @Test
-    void findAll_whenStorageIsEmpty_returnsEmptyList() {
-        List<Trainee> actual = traineeDao.findAll();
-
-        assertTrue(actual.isEmpty());
-    }
-
-    @Test
-    void findAll_returnsImmutableList() {
-        storageMap.put(EXISTING_ID, trainee);
-        List<Trainee> actual = traineeDao.findAll();
-
-        assertThrows(UnsupportedOperationException.class, () -> actual.add(trainee));
-    }
-
-    private Trainee buildTrainee(Long id, String firstName, String address) {
-        return Trainee.builder()
-                .userId(id)
+    private Trainee buildTrainee(String firstName, String lastName, String username) {
+        User user = User.builder()
                 .firstName(firstName)
-                .lastName("Hariton")
-                .username("Abdul.Hariton")
-                .password("hashedPassword")
-                .dateOfBirth(LocalDate.of(1990, 1, 1))
-                .address(address)
+                .lastName(lastName)
+                .username(username)
+                .password("pass123")
                 .isActive(true)
                 .build();
+
+        return Trainee.builder()
+                .user(user)
+                .address("Lviv, Ukraine")
+                .dateOfBirth(LocalDate.of(1997, 3, 22))
+                .build();
+    }
+
+    private long countTrainees() {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery("SELECT COUNT(t) FROM Trainee t", Long.class)
+                    .getSingleResult();
+        }
+    }
+
+    private long countTrainings() {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery("SELECT COUNT(t) FROM Training t", Long.class)
+                    .getSingleResult();
+        }
+    }
+
+    @Override
+    protected Class<TraineeDao> getDaoClass() {
+        return TraineeDao.class;
     }
 }

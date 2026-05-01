@@ -1,6 +1,6 @@
-package com.gym.crm.dao.impl;
+package com.gym.crm.dao.legacy.impl;
 
-import com.gym.crm.dao.TrainingDao;
+import com.gym.crm.dao.legacy.TrainingDao;
 import com.gym.crm.model.Training;
 import com.gym.crm.storage.InMemoryStorage;
 import org.slf4j.Logger;

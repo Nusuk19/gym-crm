@@ -1,6 +1,6 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.TrainingDao;
+import com.gym.crm.dao.legacy.TrainingDao;
 import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.Training;
 import com.gym.crm.model.TrainingType;

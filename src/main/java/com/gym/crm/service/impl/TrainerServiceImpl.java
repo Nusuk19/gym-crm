@@ -1,6 +1,6 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.TrainerDao;
+import com.gym.crm.dao.legacy.TrainerDao;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.service.TrainerService;

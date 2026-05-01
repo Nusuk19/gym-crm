@@ -1,6 +1,6 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.TrainingDao;
+import com.gym.crm.dao.legacy.TrainingDao;
 import com.gym.crm.model.Training;
 import com.gym.crm.service.TrainingService;
 import com.gym.crm.validator.EntityValidator;
