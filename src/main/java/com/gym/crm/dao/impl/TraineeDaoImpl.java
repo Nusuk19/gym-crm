@@ -68,7 +68,7 @@ public class TraineeDaoImpl implements TraineeDao {
     @Override
     public List<Trainee> findAll() {
         return transactionHandler.executeReturningWithinTx(session ->
-                session.createQuery("FROM Trainee t JOIN FETCH t.user", Trainee.class).list()
+                session.createQuery("SELECT DISTINCT t FROM Trainee t JOIN FETCH t.user", Trainee.class).list()
         );
     }
 }
