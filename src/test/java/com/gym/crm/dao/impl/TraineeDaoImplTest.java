@@ -6,18 +6,17 @@ import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.User;
 import org.hibernate.Session;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.jdbc.Sql;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
 
-class TraineeDaoImplTest extends AbstractRepositoryTest {
-
-    @Autowired
-    private TraineeDao dao;
+@Sql(scripts = {"/datasets/cleanup.sql", "/datasets/trainee-insert.sql"}, executionPhase = BEFORE_TEST_METHOD)
+class TraineeDaoImplTest extends AbstractRepositoryTest<TraineeDao> {
 
     @Test
     void findByUsername_existingUser_returnsTrainee() {
@@ -176,5 +175,10 @@ class TraineeDaoImplTest extends AbstractRepositoryTest {
             return session.createQuery("SELECT COUNT(t) FROM Training t", Long.class)
                     .getSingleResult();
         }
+    }
+
+    @Override
+    protected Class<TraineeDao> getDaoClass() {
+        return TraineeDao.class;
     }
 }

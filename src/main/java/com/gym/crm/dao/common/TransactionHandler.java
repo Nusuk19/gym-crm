@@ -1,4 +1,4 @@
-package com.gym.crm.util;
+package com.gym.crm.dao.common;
 
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Session;
@@ -11,13 +11,14 @@ import java.util.function.Function;
 
 @Component
 @RequiredArgsConstructor
-public class HibernateUtil {
+public class TransactionHandler {
 
     private final SessionFactory sessionFactory;
 
     public void executeWithinTx(Consumer<Session> sessionConsumer) {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
+
         try {
             sessionConsumer.accept(session);
             tx.commit();
@@ -32,6 +33,7 @@ public class HibernateUtil {
     public <T> T executeReturningWithinTx(Function<Session, T> sessionFunction) {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
+
         try {
             T result = sessionFunction.apply(session);
             tx.commit();
