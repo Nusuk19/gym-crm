@@ -1,6 +1,6 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.legacy.TrainingDao;
+import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.model.Training;
 import com.gym.crm.service.TrainingService;
 import com.gym.crm.validator.EntityValidator;
@@ -32,7 +32,7 @@ public class TrainingServiceImpl implements TrainingService {
     @Override
     public Training create(Training training) {
         log.info("Creating training: name={}, traineeId={}, trainerId={}",
-                training.getTrainingName(), training.getTraineeId(), training.getTrainerId());
+                training.getName(),  training.getTrainee().getUser().getUsername(), training.getTrainer().getUser().getUsername());
         validator.validateTraining(training);
 
         return trainingDao.save(training);

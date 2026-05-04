@@ -12,5 +12,5 @@ public class CreateTraineeRequest {
     private final String lastName;
     private final LocalDate dateOfBirth;
     private final String address;
-    private final boolean isActive;
+    private final Boolean isActive;
 }

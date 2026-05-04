@@ -2,9 +2,9 @@ package com.gym.crm.dao.impl;
 
 import com.gym.crm.dao.AbstractRepositoryTest;
 import com.gym.crm.dao.TrainerDao;
-import com.gym.crm.entity.Trainer;
-import com.gym.crm.entity.TrainingType;
-import com.gym.crm.entity.User;
+import com.gym.crm.model.Trainer;
+import com.gym.crm.model.TrainingType;
+import com.gym.crm.model.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.jdbc.Sql;
 
@@ -25,7 +25,7 @@ class TrainerDaoImplTest extends AbstractRepositoryTest<TrainerDao> {
         assertThat(result.getUser().getLastName()).isEqualTo("Tyson");
         assertThat(result.getUser().getUsername()).isEqualTo("Mike.Tyson");
         assertThat(result.getUser().getPassword()).isEqualTo("hashedPassword32");
-        assertThat(result.getUser().isActive()).isTrue();
+        assertThat(result.getUser().getIsActive()).isTrue();
         assertThat(result.getId()).isNotNull();
         assertThat(result.getSpecialization()).isNotNull();
         assertThat(result.getSpecialization().getTrainingTypeName()).isEqualTo("Boxing");
@@ -69,7 +69,7 @@ class TrainerDaoImplTest extends AbstractRepositoryTest<TrainerDao> {
         assertThat(fromDb.getUser().getUsername()).isEqualTo("Bruce.Lee");
         assertThat(fromDb.getUser().getFirstName()).isEqualTo("Bruce");
         assertThat(fromDb.getUser().getLastName()).isEqualTo("Lee");
-        assertThat(fromDb.getUser().isActive()).isTrue();
+        assertThat(fromDb.getUser().getIsActive()).isTrue();
         assertThat(fromDb.getSpecialization().getTrainingTypeName()).isEqualTo("Boxing");
     }
 

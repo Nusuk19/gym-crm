@@ -1,9 +1,11 @@
 package com.gym.crm.profile;
 
-import com.gym.crm.dao.legacy.TraineeDao;
-import com.gym.crm.dao.legacy.TrainerDao;
+import com.gym.crm.dao.TraineeDao;
+import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
+import com.gym.crm.model.TrainingType;
+import com.gym.crm.model.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -131,18 +133,25 @@ class UsernameGeneratorTest {
     }
 
     private Trainee traineeWithUsername(String username) {
-        return Trainee.builder()
+        User user = User.builder()
                 .username(username)
                 .firstName("Abdul")
                 .lastName("Hariton")
                 .build();
+        return Trainee.builder()
+                .user(user)
+                .build();
     }
 
     private Trainer trainerWithUsername(String username) {
-        return Trainer.builder()
+        User user = User.builder()
                 .username(username)
                 .firstName("Abdul")
                 .lastName("Hariton")
+                .build();
+        return Trainer.builder()
+                .user(user)
+                .specialization(TrainingType.builder().trainingTypeName("BOXING").build())
                 .build();
     }
 }

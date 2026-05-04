@@ -12,5 +12,5 @@ public class TrainerResponse {
     private final String lastName;
     private final String username;
     private final TrainingType specialization;
-    private final boolean isActive;
+    private final Boolean isActive;
 }

@@ -5,6 +5,7 @@ import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.model.Training;
 import com.gym.crm.model.TrainingType;
+import com.gym.crm.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,8 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class EntityValidatorTest {
-
-    private static final Long EXISTING_ID = 1L;
 
     private EntityValidator validator;
 
@@ -39,9 +38,19 @@ class EntityValidatorTest {
     }
 
     @Test
+    void validateTrainee_whenUserIsNull_throwsWithCorrectMessage() {
+        Trainee trainee = Trainee.builder().build();
+
+        EntityValidationException ex = assertThrows(EntityValidationException.class,
+                () -> validator.validateTrainee(trainee));
+
+        assertEquals("User cannot be null", ex.getMessage());
+    }
+
+    @Test
     void validateTrainee_whenFirstNameIsNull_throwsWithCorrectMessage() {
         Trainee trainee = validTrainee().toBuilder()
-                .firstName(null)
+                .user(validUser().toBuilder().firstName(null).build())
                 .build();
 
         EntityValidationException ex = assertThrows(EntityValidationException.class,
@@ -53,7 +62,7 @@ class EntityValidatorTest {
     @Test
     void validateTrainee_whenFirstNameIsBlank_throwsWithCorrectMessage() {
         Trainee trainee = validTrainee().toBuilder()
-                .firstName("   ")
+                .user(validUser().toBuilder().firstName("   ").build())
                 .build();
 
         EntityValidationException ex = assertThrows(EntityValidationException.class,
@@ -65,7 +74,7 @@ class EntityValidatorTest {
     @Test
     void validateTrainee_whenLastNameIsNull_throwsWithCorrectMessage() {
         Trainee trainee = validTrainee().toBuilder()
-                .lastName(null)
+                .user(validUser().toBuilder().lastName(null).build())
                 .build();
 
         EntityValidationException ex = assertThrows(EntityValidationException.class,
@@ -77,7 +86,7 @@ class EntityValidatorTest {
     @Test
     void validateTrainee_whenLastNameIsBlank_throwsWithCorrectMessage() {
         Trainee trainee = validTrainee().toBuilder()
-                .lastName("")
+                .user(validUser().toBuilder().lastName("").build())
                 .build();
 
         EntityValidationException ex = assertThrows(EntityValidationException.class,
@@ -89,8 +98,7 @@ class EntityValidatorTest {
     @Test
     void validateTrainee_whenBothNamesAreNull_throwsOnFirstName() {
         Trainee trainee = validTrainee().toBuilder()
-                .firstName(null)
-                .lastName(null)
+                .user(validUser().toBuilder().firstName(null).lastName(null).build())
                 .build();
 
         EntityValidationException ex = assertThrows(EntityValidationException.class,
@@ -115,7 +123,7 @@ class EntityValidatorTest {
     @Test
     void validateTrainer_whenFirstNameIsBlank_throwsWithCorrectMessage() {
         Trainer trainer = validTrainer().toBuilder()
-                .firstName("")
+                .user(validUser().toBuilder().firstName("").build())
                 .build();
 
         EntityValidationException ex = assertThrows(EntityValidationException.class,
@@ -127,7 +135,7 @@ class EntityValidatorTest {
     @Test
     void validateTrainer_whenLastNameIsBlank_throwsWithCorrectMessage() {
         Trainer trainer = validTrainer().toBuilder()
-                .lastName("  ")
+                .user(validUser().toBuilder().lastName("  ").build())
                 .build();
 
         EntityValidationException ex = assertThrows(EntityValidationException.class,
@@ -139,8 +147,7 @@ class EntityValidatorTest {
     @Test
     void validateTrainer_whenBothNamesAreBlank_throwsOnFirstName() {
         Trainer trainer = validTrainer().toBuilder()
-                .firstName("")
-                .lastName("")
+                .user(validUser().toBuilder().firstName("").lastName("").build())
                 .build();
 
         EntityValidationException ex = assertThrows(EntityValidationException.class,
@@ -165,7 +172,7 @@ class EntityValidatorTest {
     @Test
     void validateTraining_whenTrainingNameIsBlank_throwsWithCorrectMessage() {
         Training training = validTraining().toBuilder()
-                .trainingName("  ")
+                .name("  ")
                 .build();
 
         EntityValidationException ex = assertThrows(EntityValidationException.class,
@@ -175,27 +182,27 @@ class EntityValidatorTest {
     }
 
     @Test
-    void validateTraining_whenTraineeIdIsNull_throwsValidationException() {
+    void validateTraining_whenTraineeIsNull_throwsWithCorrectMessage() {
         Training training = validTraining().toBuilder()
-                .traineeId(null)
+                .trainee(null)
                 .build();
 
         EntityValidationException ex = assertThrows(EntityValidationException.class,
                 () -> validator.validateTraining(training));
 
-        assertEquals("Id must be a positive integer, but was null", ex.getMessage());
+        assertEquals("Trainee cannot be null", ex.getMessage());
     }
 
     @Test
-    void validateTraining_whenTrainerIdIsZero_throwsValidationException() {
+    void validateTraining_whenTrainerIsNull_throwsWithCorrectMessage() {
         Training training = validTraining().toBuilder()
-                .trainerId(0L)
+                .trainer(null)
                 .build();
 
         EntityValidationException ex = assertThrows(EntityValidationException.class,
                 () -> validator.validateTraining(training));
 
-        assertEquals("Id must be a positive integer, but was 0", ex.getMessage());
+        assertEquals("Trainer cannot be null", ex.getMessage());
     }
 
     @Test
@@ -224,7 +231,7 @@ class EntityValidatorTest {
 
     @Test
     void requireValidId_whenPositive_doesNotThrow() {
-        assertDoesNotThrow(() -> validator.requireValidId(EXISTING_ID));
+        assertDoesNotThrow(() -> validator.requireValidId(1L));
     }
 
     @Test
@@ -251,64 +258,34 @@ class EntityValidatorTest {
         assertEquals("Id must be a positive integer, but was -5", ex.getMessage());
     }
 
-    @Test
-    void validateForUpdate_whenEntityAndIdAreValid_doesNotThrow() {
-        assertDoesNotThrow(() -> validator.validateForUpdate(new Object(), EXISTING_ID));
-    }
-
-    @Test
-    void validateForUpdate_whenEntityIsNull_throwsWithCorrectMessage() {
-        EntityValidationException ex = assertThrows(EntityValidationException.class,
-                () -> validator.validateForUpdate(null, EXISTING_ID));
-
-        assertEquals("Entity cannot be null", ex.getMessage());
-    }
-
-    @Test
-    void validateForUpdate_whenIdIsNull_throwsValidationException() {
-        EntityValidationException ex = assertThrows(EntityValidationException.class,
-                () -> validator.validateForUpdate(new Object(), null));
-
-        assertEquals("Id must be a positive integer, but was null", ex.getMessage());
-    }
-
-    @Test
-    void validateForUpdate_whenIdIsZero_throwsValidationException() {
-        EntityValidationException ex = assertThrows(EntityValidationException.class,
-                () -> validator.validateForUpdate(new Object(), 0L));
-
-        assertEquals("Id must be a positive integer, but was 0", ex.getMessage());
-    }
-
-    @Test
-    void validateForUpdate_whenIdIsNegative_throwsValidationException() {
-        EntityValidationException ex = assertThrows(EntityValidationException.class,
-                () -> validator.validateForUpdate(new Object(), -EXISTING_ID));
-
-        assertEquals("Id must be a positive integer, but was -1", ex.getMessage());
-    }
-
-    private Trainee validTrainee() {
-        return Trainee.builder()
+    private User validUser() {
+        return User.builder()
                 .firstName("Abdul")
                 .lastName("Hariton")
                 .build();
     }
 
+    private Trainee validTrainee() {
+        return Trainee.builder()
+                .user(validUser())
+                .build();
+    }
+
     private Trainer validTrainer() {
         return Trainer.builder()
-                .firstName("Mike")
-                .lastName("Tyson")
+                .user(validUser())
+                .specialization(TrainingType.builder().trainingTypeName("BOXING").build())
                 .build();
     }
 
     private Training validTraining() {
         return Training.builder()
-                .trainingName("Boxing basics")
-                .traineeId(EXISTING_ID)
-                .trainerId(EXISTING_ID)
+                .name("Boxing basics")
+                .trainee(validTrainee())
+                .trainer(validTrainer())
                 .trainingDate(LocalDate.now())
-                .trainingType(new TrainingType("BOXING"))
+                .trainingType(TrainingType.builder().trainingTypeName("BOXING").build())
+                .trainingDuration(java.math.BigDecimal.valueOf(60))
                 .build();
     }
 }

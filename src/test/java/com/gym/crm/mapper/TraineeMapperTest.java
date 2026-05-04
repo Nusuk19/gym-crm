@@ -4,8 +4,10 @@ import com.gym.crm.dto.request.CreateTraineeRequest;
 import com.gym.crm.dto.request.UpdateTraineeRequest;
 import com.gym.crm.dto.response.TraineeResponse;
 import com.gym.crm.model.Trainee;
+import com.gym.crm.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 import java.time.LocalDate;
 
@@ -23,7 +25,7 @@ class TraineeMapperTest {
 
     @BeforeEach
     void setUp() {
-        traineeMapper = new TraineeMapper();
+        traineeMapper = Mappers.getMapper(TraineeMapper.class);
     }
 
     @Test
@@ -32,11 +34,11 @@ class TraineeMapperTest {
 
         Trainee actual = traineeMapper.toEntity(request);
 
-        assertEquals("Abdul", actual.getFirstName());
-        assertEquals("Hariton", actual.getLastName());
+        assertEquals("Abdul", actual.getUser().getFirstName());
+        assertEquals("Hariton", actual.getUser().getLastName());
         assertEquals(LocalDate.of(1990, 1, 1), actual.getDateOfBirth());
         assertEquals("Kyiv", actual.getAddress());
-        assertTrue(actual.isActive());
+        assertTrue(actual.getUser().getIsActive());
     }
 
     @Test
@@ -48,9 +50,9 @@ class TraineeMapperTest {
 
         Trainee actual = traineeMapper.toEntity(request);
 
-        assertNull(actual.getUserId());
-        assertNull(actual.getUsername());
-        assertNull(actual.getPassword());
+        assertNull(actual.getId());
+        assertNull(actual.getUser().getUsername());
+        assertNull(actual.getUser().getPassword());
     }
 
     @Test
@@ -59,12 +61,11 @@ class TraineeMapperTest {
 
         Trainee actual = traineeMapper.toEntity(request);
 
-        assertEquals(EXISTING_ID, actual.getUserId());
-        assertEquals("Abdul", actual.getFirstName());
-        assertEquals("Hariton", actual.getLastName());
+        assertEquals("Abdul", actual.getUser().getFirstName());
+        assertEquals("Hariton", actual.getUser().getLastName());
         assertEquals(LocalDate.of(1990, 1, 1), actual.getDateOfBirth());
         assertEquals("Lviv", actual.getAddress());
-        assertFalse(actual.isActive());
+        assertFalse(actual.getUser().getIsActive());
     }
 
     @Test
@@ -79,7 +80,7 @@ class TraineeMapperTest {
         assertEquals("Abdul.Hariton", actual.getUsername());
         assertEquals(LocalDate.of(1990, 1, 1), actual.getDateOfBirth());
         assertEquals("Kyiv", actual.getAddress());
-        assertTrue(actual.isActive());
+        assertTrue(actual.getIsActive());
     }
 
     @Test
@@ -111,15 +112,20 @@ class TraineeMapperTest {
     }
 
     private Trainee buildTrainee() {
-        return Trainee.builder()
-                .userId(EXISTING_ID)
+        User user = User.builder()
+                .id(EXISTING_ID)
                 .firstName("Abdul")
                 .lastName("Hariton")
                 .username("Abdul.Hariton")
                 .password("hashedPassword")
+                .isActive(true)
+                .build();
+
+        return Trainee.builder()
+                .id(EXISTING_ID)
+                .user(user)
                 .dateOfBirth(LocalDate.of(1990, 1, 1))
                 .address("Kyiv")
-                .isActive(true)
                 .build();
     }
 

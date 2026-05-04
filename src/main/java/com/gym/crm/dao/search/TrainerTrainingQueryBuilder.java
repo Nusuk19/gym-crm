@@ -1,7 +1,7 @@
 package com.gym.crm.dao.search;
 
 import com.gym.crm.dao.search.filters.TrainerTrainingSearchFilter;
-import com.gym.crm.entity.Training;
+import com.gym.crm.model.Training;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;

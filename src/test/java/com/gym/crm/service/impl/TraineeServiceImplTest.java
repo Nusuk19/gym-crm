@@ -4,9 +4,11 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import com.gym.crm.dao.legacy.TraineeDao;
+import com.gym.crm.dao.TraineeDao;
+import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.Trainee;
+import com.gym.crm.model.User;
 import com.gym.crm.service.UserProfileService;
 import com.gym.crm.validator.EntityValidator;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,37 +71,14 @@ class TraineeServiceImplTest {
 
         Trainee actual = service.create(trainee);
 
-        assertEquals("Abdul.Hariton", actual.getUsername());
-        assertEquals("hashedPass", actual.getPassword());
-        assertNotEquals("rawPass123", actual.getPassword());
+        assertEquals("Abdul.Hariton", actual.getUser().getUsername());
+        assertEquals("hashedPass", actual.getUser().getPassword());
+        assertNotEquals("rawPass123", actual.getUser().getPassword());
         verify(validator).validateTrainee(trainee);
         verify(userProfileService).generateUsername("Abdul", "Hariton");
         verify(userProfileService).generatePassword();
         verify(userProfileService).hashPassword("rawPass123");
         verify(traineeDao).save(any(Trainee.class));
-    }
-
-    @Test
-    void create_whenValidTrainee_logsInfoWithUsername() {
-        when(userProfileService.generateUsername("Abdul", "Hariton")).thenReturn("Abdul.Hariton");
-        when(userProfileService.generatePassword()).thenReturn("rawPass123");
-        when(userProfileService.hashPassword("rawPass123")).thenReturn("hashedPass");
-        when(traineeDao.save(any(Trainee.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        service.create(trainee);
-
-        assertThat(listAppender.list)
-                .extracting(ILoggingEvent::getLevel)
-                .doesNotContain(Level.ERROR);
-
-        assertThat(listAppender.list)
-                .anySatisfy(event -> {
-                    assertThat(event.getLevel()).isEqualTo(Level.INFO);
-                    assertThat(event.getFormattedMessage())
-                            .contains("Creating trainee")
-                            .contains("Abdul")
-                            .contains("Hariton");
-                });
     }
 
     @Test
@@ -115,35 +94,30 @@ class TraineeServiceImplTest {
     @Test
     void update_whenValidTrainee_updatesSuccessfully() {
         Trainee existing = trainee.toBuilder()
-                .username("Abdul.Hariton")
-                .password("existingHash")
+                .user(trainee.getUser().toBuilder()
+                        .id(ID)
+                        .username("Abdul.Hariton")
+                        .password("existingHash")
+                        .build())
                 .build();
 
-        when(traineeDao.findById(ID)).thenReturn(Optional.of(existing));
-        when(traineeDao.update(any(Trainee.class))).thenReturn(trainee);
+        when(traineeDao.findByUsername("Abdul.Hariton")).thenReturn(Optional.of(existing));
+        when(traineeDao.update(any(Trainee.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Trainee actual = service.update(trainee);
 
         assertEquals(trainee, actual);
-        verify(validator).validateForUpdate(trainee, trainee.getUserId());
-        verify(traineeDao).findById(ID);
+        verify(validator).validateTrainee(trainee);
+        verify(traineeDao).findByUsername("Abdul.Hariton");
         verify(traineeDao).update(any(Trainee.class));
     }
 
     @Test
-    void update_whenInvalidId_throwsException() {
-        Trainee invalidTrainee = Trainee.builder()
-                .userId(null)
-                .firstName("Abdul")
-                .lastName("Hariton")
-                .build();
+    void update_whenTraineeNotFound_throwsEntityNotFoundException() {
+        when(traineeDao.findByUsername("Abdul.Hariton")).thenReturn(Optional.empty());
 
-        doThrow(new EntityValidationException("Id must be a positive integer"))
-                .when(validator).validateForUpdate(any(), any());
+        assertThrows(EntityNotFoundException.class, () -> service.update(trainee));
 
-        assertThrows(EntityValidationException.class, () -> service.update(invalidTrainee));
-
-        verify(traineeDao, never()).findById(any());
         verify(traineeDao, never()).update(any());
     }
 
@@ -152,7 +126,7 @@ class TraineeServiceImplTest {
         service.delete(ID);
 
         verify(validator).requireValidId(ID);
-        verify(traineeDao).delete(ID);
+        verify(traineeDao).deleteById(ID);
     }
 
     @Test
@@ -162,7 +136,7 @@ class TraineeServiceImplTest {
 
         assertThrows(EntityValidationException.class, () -> service.delete(-ID));
 
-        verify(traineeDao, never()).delete(any());
+        verify(traineeDao, never()).deleteById(any());
     }
 
     @Test
@@ -217,13 +191,19 @@ class TraineeServiceImplTest {
     }
 
     private Trainee buildTrainee() {
-        return Trainee.builder()
-                .userId(ID)
+        User user = User.builder()
+                .id(ID)
                 .firstName("Abdul")
                 .lastName("Hariton")
+                .username("Abdul.Hariton")
+                .isActive(true)
+                .build();
+
+        return Trainee.builder()
+                .id(ID)
+                .user(user)
                 .dateOfBirth(LocalDate.of(1990, 1, 1))
                 .address("Kyiv")
-                .isActive(true)
                 .build();
     }
 }

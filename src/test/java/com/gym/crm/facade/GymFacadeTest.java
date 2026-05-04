@@ -11,10 +11,7 @@ import com.gym.crm.dto.response.TrainingResponse;
 import com.gym.crm.mapper.TraineeMapper;
 import com.gym.crm.mapper.TrainerMapper;
 import com.gym.crm.mapper.TrainingMapper;
-import com.gym.crm.model.Trainee;
-import com.gym.crm.model.Trainer;
-import com.gym.crm.model.Training;
-import com.gym.crm.model.TrainingType;
+import com.gym.crm.model.*;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
@@ -24,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -279,37 +277,45 @@ class GymFacadeTest {
     }
 
     private Trainee buildTrainee() {
-        return Trainee.builder()
-                .userId(EXISTING_ID)
+        User user = User.builder()
+                .id(EXISTING_ID)
                 .firstName("Abdul")
                 .lastName("Hariton")
                 .username("Abdul.Hariton")
+                .isActive(true)
+                .build();
+        return Trainee.builder()
+                .id(EXISTING_ID)
+                .user(user)
                 .dateOfBirth(LocalDate.of(1990, 1, 1))
                 .address("Kyiv")
-                .isActive(true)
                 .build();
     }
 
     private Trainer buildTrainer() {
-        return Trainer.builder()
-                .userId(EXISTING_ID)
+        User user = User.builder()
+                .id(EXISTING_ID)
                 .firstName("Mike")
                 .lastName("Tyson")
                 .username("Mike.Tyson")
-                .specialization(new TrainingType("BOXING"))
                 .isActive(true)
+                .build();
+        return Trainer.builder()
+                .id(EXISTING_ID)
+                .user(user)
+                .specialization(TrainingType.builder().trainingTypeName("BOXING").build())
                 .build();
     }
 
     private Training buildTraining() {
         return Training.builder()
-                .trainingId(EXISTING_ID)
-                .traineeId(EXISTING_ID)
-                .trainerId(EXISTING_ID)
-                .trainingName("Boxing basics")
-                .trainingType(new TrainingType("BOXING"))
+                .id(EXISTING_ID)
+                .name("Boxing basics")
+                .trainee(buildTrainee())
+                .trainer(buildTrainer())
+                .trainingType(TrainingType.builder().trainingTypeName("BOXING").build())
                 .trainingDate(LocalDate.of(2024, 5, 1))
-                .trainingDuration(60)
+                .trainingDuration(BigDecimal.valueOf(60))
                 .build();
     }
 
