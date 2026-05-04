@@ -3,6 +3,7 @@ package com.gym.crm.dao.impl;
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.dao.common.TransactionHandler;
+import com.gym.crm.entity.Trainer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -31,6 +32,44 @@ public class TraineeDaoImpl implements TraineeDao {
         log.info("Trainee updated: username={}", result.getUser().getUsername());
 
         return result;
+    }
+
+    @Override
+    public void updateTrainers(String traineeUsername, List<String> trainerUsernames) {
+        transactionHandler.executeWithinTx(session -> {Trainee trainee = session.createQuery(
+                            "SELECT t FROM Trainee t JOIN FETCH t.trainers WHERE t.user.username = :username",
+                            Trainee.class)
+                    .setParameter("username", traineeUsername)
+                    .uniqueResult();
+
+            if (trainee == null) {
+                log.warn("Trainee not found for trainers update: username={}", traineeUsername);
+                return;
+            }
+
+            List<Trainer> newTrainers = session.createQuery(
+                            "SELECT t FROM Trainer t WHERE t.user.username IN :usernames", Trainer.class)
+                    .setParameter("usernames", trainerUsernames)
+                    .getResultList();
+
+            trainee.getTrainers().clear();
+            trainee.getTrainers().addAll(newTrainers);
+
+            log.info("Updated trainers list for trainee: username={}, trainers={}",
+                    traineeUsername, trainerUsernames);
+        });
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        transactionHandler.executeWithinTx(session -> {Trainee trainee = session.get(Trainee.class, id);
+            if (trainee != null) {
+                session.remove(trainee);
+                log.info("Trainee deleted: id={}", id);
+            } else {
+                log.warn("Trainee not found for deletion: id={}", id);
+            }
+        });
     }
 
     @Override
