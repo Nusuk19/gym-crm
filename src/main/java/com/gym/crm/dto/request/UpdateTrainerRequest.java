@@ -11,6 +11,6 @@ public class UpdateTrainerRequest {
     private final String firstName;
     private final String lastName;
     private final TrainingType specialization;
-    private final boolean isActive;
+    private final Boolean isActive;
     private final String username;
 }

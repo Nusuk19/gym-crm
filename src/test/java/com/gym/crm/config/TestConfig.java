@@ -1,10 +1,10 @@
 package com.gym.crm.config;
 
-import com.gym.crm.entity.Trainee;
-import com.gym.crm.entity.Trainer;
-import com.gym.crm.entity.Training;
-import com.gym.crm.entity.TrainingType;
-import com.gym.crm.entity.User;
+import com.gym.crm.model.Trainee;
+import com.gym.crm.model.Trainer;
+import com.gym.crm.model.Training;
+import com.gym.crm.model.TrainingType;
+import com.gym.crm.model.User;
 import liquibase.integration.spring.SpringLiquibase;
 import org.h2.jdbcx.JdbcDataSource;
 import org.hibernate.SessionFactory;

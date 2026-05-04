@@ -4,41 +4,39 @@ import com.gym.crm.dto.request.CreateTraineeRequest;
 import com.gym.crm.dto.request.UpdateTraineeRequest;
 import com.gym.crm.dto.response.TraineeResponse;
 import com.gym.crm.model.Trainee;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-@Component
-public class TraineeMapper {
+@Mapper(componentModel = "spring")
+public interface TraineeMapper {
 
-    public Trainee toEntity(CreateTraineeRequest request) {
-        return Trainee.builder()
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .dateOfBirth(request.getDateOfBirth())
-                .address(request.getAddress())
-                .isActive(request.isActive())
-                .build();
-    }
+    @Mapping(target = "user.firstName", source = "firstName")
+    @Mapping(target = "user.lastName", source = "lastName")
+    @Mapping(target = "user.isActive", source = "isActive")
+    @Mapping(target = "dateOfBirth", source = "dateOfBirth")
+    @Mapping(target = "address", source = "address")
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "trainings", ignore = true)
+    @Mapping(target = "trainers", ignore = true)
+    Trainee toEntity(CreateTraineeRequest request);
 
-    public Trainee toEntity(UpdateTraineeRequest request) {
-        return Trainee.builder()
-                .userId(request.getId())
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .dateOfBirth(request.getDateOfBirth())
-                .address(request.getAddress())
-                .isActive(request.isActive())
-                .build();
-    }
+    @Mapping(target = "user.username", source = "username")
+    @Mapping(target = "user.firstName", source = "firstName")
+    @Mapping(target = "user.lastName", source = "lastName")
+    @Mapping(target = "user.isActive", source = "isActive")
+    @Mapping(target = "dateOfBirth", source = "dateOfBirth")
+    @Mapping(target = "address", source = "address")
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "trainings", ignore = true)
+    @Mapping(target = "trainers", ignore = true)
+    Trainee toEntity(UpdateTraineeRequest request);
 
-    public TraineeResponse toResponse(Trainee trainee) {
-        return TraineeResponse.builder()
-                .id(trainee.getUserId())
-                .firstName(trainee.getFirstName())
-                .lastName(trainee.getLastName())
-                .username(trainee.getUsername())
-                .dateOfBirth(trainee.getDateOfBirth())
-                .address(trainee.getAddress())
-                .isActive(trainee.isActive())
-                .build();
-    }
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "firstName", source = "user.firstName")
+    @Mapping(target = "lastName", source = "user.lastName")
+    @Mapping(target = "username", source = "user.username")
+    @Mapping(target = "isActive", source = "user.isActive")
+    @Mapping(target = "dateOfBirth", source = "dateOfBirth")
+    @Mapping(target = "address", source = "address")
+    TraineeResponse toResponse(Trainee trainee);
 }

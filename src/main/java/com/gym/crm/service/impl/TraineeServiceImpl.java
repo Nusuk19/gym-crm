@@ -1,8 +1,9 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.legacy.TraineeDao;
+import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.model.Trainee;
+import com.gym.crm.model.User;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.UserProfileService;
 import com.gym.crm.validator.EntityValidator;
@@ -41,32 +42,43 @@ public class TraineeServiceImpl implements TraineeService {
     public Trainee create(Trainee trainee) {
         validator.validateTrainee(trainee);
 
-        String username = userProfileService.generateUsername(
-                trainee.getFirstName(), trainee.getLastName());
+        log.info("Creating trainee: firstName={}, lastName={}",
+                trainee.getUser().getFirstName(), trainee.getUser().getLastName());
+
+        String username = userProfileService.generateUsername(trainee.getUser().getFirstName(), trainee.getUser().getLastName());
         String rawPassword = userProfileService.generatePassword();
         String hashedPassword = userProfileService.hashPassword(rawPassword);
 
-        Trainee traineeWithProfile = trainee.toBuilder()
+        User userWithProfile = trainee.getUser().toBuilder()
                 .username(username)
                 .password(hashedPassword)
                 .build();
 
-        log.info("Creating trainee: firstName={}, lastName={}", trainee.getFirstName(), trainee.getLastName());
+        Trainee traineeWithProfile = trainee.toBuilder()
+                .user(userWithProfile)
+                .build();
 
         return traineeDao.save(traineeWithProfile);
     }
 
     @Override
     public Trainee update(Trainee trainee) {
-        log.info("Updating trainee: id={}", trainee.getUserId());
-        validator.validateForUpdate(trainee, trainee.getUserId());
+        String username = trainee.getUser().getUsername();
+        log.info("Updating trainee: username={}", username);
+        validator.validateTrainee(trainee);
 
-        Trainee existing = traineeDao.findById(trainee.getUserId())
-                .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + trainee.getUserId()));
+        Trainee existing = traineeDao.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + username));
+
+        User mergedUser = trainee.getUser().toBuilder()
+                .id(existing.getUser().getId())
+                .username(existing.getUser().getUsername())
+                .password(existing.getUser().getPassword())
+                .build();
 
         Trainee merged = trainee.toBuilder()
-                .username(existing.getUsername())
-                .password(existing.getPassword())
+                .id(existing.getId())
+                .user(mergedUser)
                 .build();
 
         return traineeDao.update(merged);
@@ -77,7 +89,7 @@ public class TraineeServiceImpl implements TraineeService {
         log.info("Deleting trainee: id={}", id);
         validator.requireValidId(id);
 
-        traineeDao.delete(id);
+        traineeDao.deleteById(id);
     }
 
     @Override

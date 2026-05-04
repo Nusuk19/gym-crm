@@ -2,7 +2,7 @@ package com.gym.crm.dao.impl;
 
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.dao.common.TransactionHandler;
-import com.gym.crm.entity.Trainer;
+import com.gym.crm.model.Trainer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;

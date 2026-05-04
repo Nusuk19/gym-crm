@@ -11,21 +11,22 @@ public class EntityValidator {
 
     public void validateTrainee(Trainee trainee) {
         requireNonNull(trainee, "Trainee cannot be null");
-        requireNonBlank(trainee.getFirstName(), "First name cannot be blank");
-        requireNonBlank(trainee.getLastName(), "Last name cannot be blank");
+        requireNonNull(trainee.getUser(), "User cannot be null");
+        requireNonBlank(trainee.getUser().getFirstName(), "First name cannot be blank");
+        requireNonBlank(trainee.getUser().getLastName(), "Last name cannot be blank");
     }
 
     public void validateTrainer(Trainer trainer) {
         requireNonNull(trainer, "Trainer cannot be null");
-        requireNonBlank(trainer.getFirstName(), "First name cannot be blank");
-        requireNonBlank(trainer.getLastName(), "Last name cannot be blank");
+        requireNonBlank(trainer.getUser().getFirstName(), "First name cannot be blank");
+        requireNonBlank(trainer.getUser().getLastName(), "Last name cannot be blank");
     }
 
     public void validateTraining(Training training) {
         requireNonNull(training, "Training cannot be null");
-        requireNonBlank(training.getTrainingName(), "Training name cannot be blank");
-        requireValidId(training.getTraineeId());
-        requireValidId(training.getTrainerId());
+        requireNonBlank(training.getName(), "Training name cannot be blank");
+        requireNonNull(training.getTrainee(), "Trainee cannot be null");
+        requireNonNull(training.getTrainer(), "Trainer cannot be null");
         requireNonNull(training.getTrainingDate(), "Training date cannot be null");
         requireNonNull(training.getTrainingType(), "Training type cannot be null");
     }

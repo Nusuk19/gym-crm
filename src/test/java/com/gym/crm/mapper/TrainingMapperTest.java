@@ -2,11 +2,12 @@ package com.gym.crm.mapper;
 
 import com.gym.crm.dto.request.CreateTrainingRequest;
 import com.gym.crm.dto.response.TrainingResponse;
-import com.gym.crm.model.Training;
-import com.gym.crm.model.TrainingType;
+import com.gym.crm.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,21 +22,20 @@ class TrainingMapperTest {
 
     @BeforeEach
     void setUp() {
-        trainingMapper = new TrainingMapper();
+        trainingMapper = Mappers.getMapper(TrainingMapper.class);
     }
-
     @Test
     void toEntity_fromCreateRequest_mapsAllFieldsCorrectly() {
         CreateTrainingRequest request = buildCreateRequest();
 
         Training actual = trainingMapper.toEntity(request);
 
-        assertEquals(EXISTING_ID, actual.getTraineeId());
-        assertEquals(TRAINEE_ID, actual.getTrainerId());
-        assertEquals("Boxing basics", actual.getTrainingName());
+        assertEquals(EXISTING_ID, actual.getTrainee().getId());
+        assertEquals(TRAINEE_ID, actual.getTrainer().getId());
+        assertEquals("Boxing basics", actual.getName());
         assertEquals("BOXING", actual.getTrainingType().getTrainingTypeName());
         assertEquals(LocalDate.of(2024, 5, 1), actual.getTrainingDate());
-        assertEquals(60, actual.getTrainingDuration());
+        assertEquals(BigDecimal.valueOf(60), actual.getTrainingDuration());
     }
 
     @Test
@@ -44,7 +44,7 @@ class TrainingMapperTest {
 
         Training actual = trainingMapper.toEntity(request);
 
-        assertEquals(null, actual.getTrainingId());
+        assertEquals(null, actual.getId());
     }
 
     @Test
@@ -67,21 +67,34 @@ class TrainingMapperTest {
                 .traineeId(EXISTING_ID)
                 .trainerId(TRAINEE_ID)
                 .trainingName("Boxing basics")
-                .trainingType(new TrainingType("BOXING"))
+                .trainingType(TrainingType.builder().trainingTypeName("BOXING").build())
                 .trainingDate(LocalDate.of(2024, 5, 1))
                 .trainingDuration(60)
                 .build();
     }
 
     private Training buildTraining() {
+        User user = User.builder().build();
+
+        Trainee trainee = Trainee.builder()
+                .id(TRAINEE_ID)
+                .user(user)
+                .build();
+
+        Trainer trainer = Trainer.builder()
+                .id(TRAINER_ID)
+                .user(user)
+                .specialization(TrainingType.builder().trainingTypeName("BOXING").build())
+                .build();
+
         return Training.builder()
-                .trainingId(EXISTING_ID)
-                .traineeId(TRAINEE_ID)
-                .trainerId(TRAINER_ID)
-                .trainingName("Boxing basics")
-                .trainingType(new TrainingType("BOXING"))
+                .id(EXISTING_ID)
+                .name("Boxing basics")
+                .trainee(trainee)
+                .trainer(trainer)
+                .trainingType(TrainingType.builder().trainingTypeName("BOXING").build())
                 .trainingDate(LocalDate.of(2024, 5, 1))
-                .trainingDuration(60)
+                .trainingDuration(BigDecimal.valueOf(60))
                 .build();
     }
 }

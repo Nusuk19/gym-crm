@@ -5,8 +5,10 @@ import com.gym.crm.dto.request.UpdateTrainerRequest;
 import com.gym.crm.dto.response.TrainerResponse;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.model.TrainingType;
+import com.gym.crm.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -22,7 +24,7 @@ class TrainerMapperTest {
 
     @BeforeEach
     void setUp() {
-        trainerMapper = new TrainerMapper();
+        trainerMapper = Mappers.getMapper(TrainerMapper.class);
     }
 
     @Test
@@ -31,10 +33,10 @@ class TrainerMapperTest {
 
         Trainer actual = trainerMapper.toEntity(request);
 
-        assertEquals("Mike", actual.getFirstName());
-        assertEquals("Tyson", actual.getLastName());
+        assertEquals("Mike", actual.getUser().getFirstName());
+        assertEquals("Tyson", actual.getUser().getLastName());
         assertEquals("BOXING", actual.getSpecialization().getTrainingTypeName());
-        assertTrue(actual.isActive());
+        assertTrue(actual.getUser().getIsActive());
     }
 
     @Test
@@ -42,14 +44,14 @@ class TrainerMapperTest {
         CreateTrainerRequest request = CreateTrainerRequest.builder()
                 .firstName("Mike")
                 .lastName("Tyson")
-                .specialization(new TrainingType("BOXING"))
+                .specialization(TrainingType.builder().trainingTypeName("BOXING").build())
                 .build();
 
         Trainer actual = trainerMapper.toEntity(request);
 
-        assertNull(actual.getUserId());
-        assertNull(actual.getUsername());
-        assertNull(actual.getPassword());
+        assertNull(actual.getId());
+        assertNull(actual.getUser().getUsername());
+        assertNull(actual.getUser().getPassword());
     }
 
     @Test
@@ -58,11 +60,10 @@ class TrainerMapperTest {
 
         Trainer actual = trainerMapper.toEntity(request);
 
-        assertEquals(EXISTING_ID, actual.getUserId());
-        assertEquals("Mike", actual.getFirstName());
-        assertEquals("Tyson", actual.getLastName());
+        assertEquals("Mike", actual.getUser().getFirstName());
+        assertEquals("Tyson", actual.getUser().getLastName());
         assertEquals("YOGA", actual.getSpecialization().getTrainingTypeName());
-        assertFalse(actual.isActive());
+        assertFalse(actual.getUser().getIsActive());
     }
 
     @Test
@@ -76,7 +77,7 @@ class TrainerMapperTest {
         assertEquals("Tyson", actual.getLastName());
         assertEquals("Mike.Tyson", actual.getUsername());
         assertEquals("BOXING", actual.getSpecialization().getTrainingTypeName());
-        assertTrue(actual.isActive());
+        assertTrue(actual.getIsActive());
     }
 
     @Test
@@ -89,31 +90,35 @@ class TrainerMapperTest {
         return CreateTrainerRequest.builder()
                 .firstName("Mike")
                 .lastName("Tyson")
-                .specialization(new TrainingType("BOXING"))
+                .specialization(TrainingType.builder().trainingTypeName("BOXING").build())
                 .isActive(true)
                 .build();
     }
 
     private UpdateTrainerRequest buildUpdateRequest() {
         return UpdateTrainerRequest.builder()
-                .id(EXISTING_ID)
+                .username("Mike.Tyson")
                 .firstName("Mike")
                 .lastName("Tyson")
-                .specialization(new TrainingType("YOGA"))
+                .specialization(TrainingType.builder().trainingTypeName("YOGA").build())
                 .isActive(false)
-                .username("Mike.Tyson")
                 .build();
     }
 
     private Trainer buildTrainer() {
-        return Trainer.builder()
-                .userId(EXISTING_ID)
+        User user = User.builder()
+                .id(EXISTING_ID)
                 .firstName("Mike")
                 .lastName("Tyson")
                 .username("Mike.Tyson")
                 .password("hashedPassword")
-                .specialization(new TrainingType("BOXING"))
                 .isActive(true)
+                .build();
+
+        return Trainer.builder()
+                .id(EXISTING_ID)
+                .user(user)
+                .specialization(TrainingType.builder().trainingTypeName("BOXING").build())
                 .build();
     }
 }

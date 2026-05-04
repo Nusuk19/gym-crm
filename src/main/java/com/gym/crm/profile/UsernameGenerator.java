@@ -1,7 +1,7 @@
 package com.gym.crm.profile;
 
-import com.gym.crm.dao.legacy.TraineeDao;
-import com.gym.crm.dao.legacy.TrainerDao;
+import com.gym.crm.dao.TraineeDao;
+import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,8 +45,8 @@ public class UsernameGenerator {
 
     private Set<String> getAllExistingUsernames() {
         return Stream.concat(
-                        traineeDao.findAll().stream().map(Trainee::getUsername),
-                        trainerDao.findAll().stream().map(Trainer::getUsername)
+                        traineeDao.findAll().stream().map(t -> t.getUser().getUsername()),
+                        trainerDao.findAll().stream().map(t -> t.getUser().getUsername())
                 )
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());

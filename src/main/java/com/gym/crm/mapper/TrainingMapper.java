@@ -3,31 +3,22 @@ package com.gym.crm.mapper;
 import com.gym.crm.dto.request.CreateTrainingRequest;
 import com.gym.crm.dto.response.TrainingResponse;
 import com.gym.crm.model.Training;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
-@Component
-public class TrainingMapper {
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface TrainingMapper {
 
-    public Training toEntity(CreateTrainingRequest request) {
-        return Training.builder()
-                .traineeId(request.getTraineeId())
-                .trainerId(request.getTrainerId())
-                .trainingName(request.getTrainingName())
-                .trainingType(request.getTrainingType())
-                .trainingDate(request.getTrainingDate())
-                .trainingDuration(request.getTrainingDuration())
-                .build();
-    }
+    @Mapping(target = "trainee.id", source = "traineeId")
+    @Mapping(target = "trainer.id", source = "trainerId")
+    @Mapping(target = "name", source = "trainingName")
+    @Mapping(target = "trainingType.trainingTypeName", source = "trainingType.trainingTypeName")
+    Training toEntity(CreateTrainingRequest request);
 
-    public TrainingResponse toResponse(Training training) {
-        return TrainingResponse.builder()
-                .id(training.getTrainingId())
-                .traineeId(training.getTraineeId())
-                .trainerId(training.getTrainerId())
-                .trainingName(training.getTrainingName())
-                .trainingType(training.getTrainingType())
-                .trainingDate(training.getTrainingDate())
-                .trainingDuration(training.getTrainingDuration())
-                .build();
-    }
+    @Mapping(target = "traineeId", source = "trainee.id")
+    @Mapping(target = "trainerId", source = "trainer.id")
+    @Mapping(target = "trainingName", source = "name")
+    @Mapping(target = "trainingType", source = "trainingType")
+    TrainingResponse toResponse(Training training);
 }

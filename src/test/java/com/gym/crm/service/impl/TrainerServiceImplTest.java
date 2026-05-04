@@ -1,10 +1,11 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.legacy.TrainerDao;
+import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.model.TrainingType;
+import com.gym.crm.model.User;
 import com.gym.crm.service.UserProfileService;
 import com.gym.crm.validator.EntityValidator;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -32,6 +34,7 @@ class TrainerServiceImplTest {
 
     private static final Long ID = 1L;
     private static final Long NON_EXISTING_ID = 99L;
+    private static final String USERNAME = "Mike.Tyson";
 
     private final Trainer trainer = buildTrainer();
 
@@ -53,9 +56,9 @@ class TrainerServiceImplTest {
 
         Trainer actual = service.create(trainer);
 
-        assertEquals("Mike.Tyson", actual.getUsername());
-        assertEquals("hashedPass", actual.getPassword());
-        assertNotEquals("rawPass123", actual.getPassword());
+        assertEquals("Mike.Tyson", actual.getUser().getUsername());
+        assertEquals("hashedPass", actual.getUser().getPassword());
+        assertNotEquals("rawPass123", actual.getUser().getPassword());
         verify(validator).validateTrainer(trainer);
         verify(userProfileService).generateUsername("Mike", "Tyson");
         verify(userProfileService).generatePassword();
@@ -76,39 +79,23 @@ class TrainerServiceImplTest {
     @Test
     void update_whenValidTrainer_updatesSuccessfully() {
         Trainer existing = trainer.toBuilder()
-                .username("Mike.Tyson")
-                .password("existingHash")
+                .user(trainer.getUser().toBuilder()
+                        .id(ID)
+                        .username(USERNAME)
+                        .password("existingHash")
+                        .build())
                 .build();
 
-        when(trainerDao.findById(ID)).thenReturn(Optional.of(existing));
-        when(trainerDao.update(any(Trainer.class))).thenReturn(trainer);
+        when(trainerDao.findByUsername(USERNAME)).thenReturn(Optional.of(existing));
+        when(trainerDao.update(any(Trainer.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Trainer actual = service.update(trainer);
 
-        assertEquals(trainer, actual);
-        verify(validator).validateForUpdate(trainer, trainer.getUserId());
-        verify(trainerDao).findById(ID);
+        assertThat(actual.getUser().getUsername()).isEqualTo(USERNAME);
+        assertThat(actual.getUser().getPassword()).isEqualTo("existingHash");
+        verify(validator).validateTrainer(trainer);
+        verify(trainerDao).findByUsername(USERNAME);
         verify(trainerDao).update(any(Trainer.class));
-    }
-
-    @Test
-    void update_whenInvalidId_throwsExceptionAndDaoNotCalled() {
-        doThrow(new EntityValidationException("Id must be a positive integer"))
-                .when(validator).validateForUpdate(any(), any());
-
-        assertThrows(EntityValidationException.class, () -> service.update(trainer));
-
-        verify(trainerDao, never()).findById(any());
-        verify(trainerDao, never()).update(any());
-    }
-
-    @Test
-    void update_whenTrainerNotFound_throwsEntityNotFoundException() {
-        when(trainerDao.findById(ID)).thenReturn(Optional.empty());
-
-        assertThrows(EntityNotFoundException.class, () -> service.update(trainer));
-
-        verify(trainerDao, never()).update(any());
     }
 
     @Test
@@ -165,12 +152,20 @@ class TrainerServiceImplTest {
     }
 
     private Trainer buildTrainer() {
-        return Trainer.builder()
-                .userId(ID)
+        User user = User.builder()
+                .id(ID)
                 .firstName("Mike")
                 .lastName("Tyson")
-                .specialization(new TrainingType("BOXING"))
+                .username(USERNAME)
                 .isActive(true)
+                .build();
+
+        return Trainer.builder()
+                .id(ID)
+                .user(user)
+                .specialization(TrainingType.builder()
+                        .trainingTypeName("BOXING")
+                        .build())
                 .build();
     }
 }

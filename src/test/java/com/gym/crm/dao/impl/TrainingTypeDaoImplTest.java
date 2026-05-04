@@ -2,7 +2,7 @@ package com.gym.crm.dao.impl;
 
 import com.gym.crm.dao.AbstractRepositoryTest;
 import com.gym.crm.dao.TrainingTypeDao;
-import com.gym.crm.entity.TrainingType;
+import com.gym.crm.model.TrainingType;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

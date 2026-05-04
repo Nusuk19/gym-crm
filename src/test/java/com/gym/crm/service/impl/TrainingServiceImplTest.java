@@ -1,9 +1,12 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.legacy.TrainingDao;
+import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.exception.EntityValidationException;
+import com.gym.crm.model.Trainee;
+import com.gym.crm.model.Trainer;
 import com.gym.crm.model.Training;
 import com.gym.crm.model.TrainingType;
+import com.gym.crm.model.User;
 import com.gym.crm.validator.EntityValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -115,14 +119,31 @@ class TrainingServiceImplTest {
     }
 
     private Training buildTraining() {
+        User user = User.builder()
+                .firstName("John")
+                .lastName("Doe")
+                .username("John.Doe")
+                .build();
+
+        Trainee trainee = Trainee.builder()
+                .user(user)
+                .build();
+
+        Trainer trainer = Trainer.builder()
+                .user(user)
+                .specialization(TrainingType.builder()
+                        .trainingTypeName("BOXING")
+                        .build())
+                .build();
+
         return Training.builder()
-                .trainingId(ID)
-                .traineeId(ID)
-                .trainerId(ID)
-                .trainingName("Boxing basics")
-                .trainingType(new TrainingType("BOXING"))
+                .id(ID)
+                .name("Boxing basics")
+                .trainee(trainee)
+                .trainer(trainer)
+                .trainingType(TrainingType.builder().trainingTypeName("BOXING").build())
                 .trainingDate(LocalDate.of(2024, 5, 1))
-                .trainingDuration(60)
+                .trainingDuration(BigDecimal.valueOf(60))
                 .build();
     }
 }

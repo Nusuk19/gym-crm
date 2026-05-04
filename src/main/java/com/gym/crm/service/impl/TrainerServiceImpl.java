@@ -1,8 +1,9 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.legacy.TrainerDao;
+import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.model.Trainer;
+import com.gym.crm.model.User;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.UserProfileService;
 import com.gym.crm.validator.EntityValidator;
@@ -39,17 +40,22 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public Trainer create(Trainer trainer) {
-        log.info("Creating trainer: firstName={}, lastName={}", trainer.getFirstName(), trainer.getLastName());
+        log.info("Creating trainer: firstName={}, lastName={}",
+                trainer.getUser().getFirstName(), trainer.getUser().getLastName());
         validator.validateTrainer(trainer);
 
         String username = userProfileService.generateUsername(
-                trainer.getFirstName(), trainer.getLastName());
+                trainer.getUser().getFirstName(), trainer.getUser().getLastName());
         String rawPassword = userProfileService.generatePassword();
         String hashedPassword = userProfileService.hashPassword(rawPassword);
 
-        Trainer trainerWithProfile = trainer.toBuilder()
+        User userWithProfile = trainer.getUser().toBuilder()
                 .username(username)
                 .password(hashedPassword)
+                .build();
+
+        Trainer trainerWithProfile = trainer.toBuilder()
+                .user(userWithProfile)
                 .build();
 
         return trainerDao.save(trainerWithProfile);
@@ -57,15 +63,22 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public Trainer update(Trainer trainer) {
-        log.info("Updating trainer: id={}", trainer.getUserId());
-        validator.validateForUpdate(trainer, trainer.getUserId());
+        String username = trainer.getUser().getUsername();
+        log.info("Updating trainer: username={}", username);
+        validator.validateTrainer(trainer);
 
-        Trainer existing = trainerDao.findById(trainer.getUserId())
-                .orElseThrow(() -> new EntityNotFoundException("Trainer not found: " + trainer.getUserId()));
+        Trainer existing = trainerDao.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Trainer not found: " + username));
+
+        User mergedUser = trainer.getUser().toBuilder()
+                .id(existing.getUser().getId())
+                .username(existing.getUser().getUsername())
+                .password(existing.getUser().getPassword())
+                .build();
 
         Trainer merged = trainer.toBuilder()
-                .username(existing.getUsername())
-                .password(existing.getPassword())
+                .id(existing.getId())
+                .user(mergedUser)
                 .build();
 
         return trainerDao.update(merged);
