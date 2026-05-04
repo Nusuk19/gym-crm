@@ -295,9 +295,7 @@ class TrainingDaoImplTest extends AbstractRepositoryTest<TrainingDao> {
 
     @ParameterizedTest
     @MethodSource("traineeFilterProvider")
-    void findByTraineeCriteria_parametrized_returnsExpectedCount(
-            TraineeTrainingSearchFilter filter, int expectedCount) {
-
+    void findByTraineeCriteria_parametrized_returnsExpectedCount(TraineeTrainingSearchFilter filter, int expectedCount) {
         List<Training> result = dao.findByTraineeCriteria(filter);
 
         assertThat(result).hasSize(expectedCount);
@@ -305,38 +303,30 @@ class TrainingDaoImplTest extends AbstractRepositoryTest<TrainingDao> {
 
     static Stream<Arguments> traineeFilterProvider() {
         return Stream.of(
-                Arguments.of(
-                        TraineeTrainingSearchFilter.builder()
+                Arguments.of(TraineeTrainingSearchFilter.builder()
                                 .username("Abdul.Hariton")
                                 .build(), 2),
-                Arguments.of(
-                        TraineeTrainingSearchFilter.builder()
+                Arguments.of(TraineeTrainingSearchFilter.builder()
                                 .username("Abdul.Hariton")
                                 .fromDate(LocalDate.of(2024, 8, 1))
                                 .build(), 1),
-                Arguments.of(
-                        TraineeTrainingSearchFilter.builder()
+                Arguments.of(TraineeTrainingSearchFilter.builder()
                                 .username("Abdul.Hariton")
                                 .trainingTypeName("Yoga")
                                 .build(), 0),
-                Arguments.of(
-                        TraineeTrainingSearchFilter.builder()
+                Arguments.of(TraineeTrainingSearchFilter.builder()
                                 .username("John.Smith")
                                 .trainingTypeName("Yoga")
                                 .build(), 1),
-                Arguments.of(
-                        TraineeTrainingSearchFilter.builder()
+                Arguments.of(TraineeTrainingSearchFilter.builder()
                                 .username("Abdul.Hariton")
                                 .trainerFullName("Mike Tyson")
-                                .build(), 2)
-        );
+                                .build(), 2));
     }
 
     @ParameterizedTest
     @MethodSource("trainerFilterProvider")
-    void findByTrainerCriteria_parametrized_returnsExpectedCount(
-            TrainerTrainingSearchFilter filter, int expectedCount) {
-
+    void findByTrainerCriteria_parametrized_returnsExpectedCount(TrainerTrainingSearchFilter filter, int expectedCount) {
         List<Training> result = dao.findByTrainerCriteria(filter);
 
         assertThat(result).hasSize(expectedCount);
@@ -344,30 +334,24 @@ class TrainingDaoImplTest extends AbstractRepositoryTest<TrainingDao> {
 
     static Stream<Arguments> trainerFilterProvider() {
         return Stream.of(
-                Arguments.of(
-                        TrainerTrainingSearchFilter.builder()
+                Arguments.of(TrainerTrainingSearchFilter.builder()
                                 .username("Mike.Tyson")
                                 .build(), 2),
-                Arguments.of(
-                        TrainerTrainingSearchFilter.builder()
+                Arguments.of(TrainerTrainingSearchFilter.builder()
                                 .username("Anna.Jones")
                                 .build(), 1),
-                Arguments.of(
-                        TrainerTrainingSearchFilter.builder()
+                Arguments.of(TrainerTrainingSearchFilter.builder()
                                 .username("Mike.Tyson")
                                 .fromDate(LocalDate.of(2024, 8, 1))
                                 .build(), 1),
-                Arguments.of(
-                        TrainerTrainingSearchFilter.builder()
+                Arguments.of(TrainerTrainingSearchFilter.builder()
                                 .username("Mike.Tyson")
                                 .traineeFullName("Abdul Hariton")
                                 .build(), 2),
-                Arguments.of(
-                        TrainerTrainingSearchFilter.builder()
+                Arguments.of(TrainerTrainingSearchFilter.builder()
                                 .username("Anna.Jones")
                                 .fromDate(LocalDate.of(2025, 1, 1))
-                                .build(), 0)
-        );
+                                .build(), 0));
     }
 
     private Long getTrainingId(String trainingName) {
@@ -388,8 +372,7 @@ class TrainingDaoImplTest extends AbstractRepositoryTest<TrainingDao> {
 
     private Trainer findTrainerByUsername(String username) {
         try (var session = sessionFactory.openSession()) {
-            return session.createQuery(
-                            "FROM Trainer t JOIN FETCH t.user JOIN FETCH t.specialization WHERE t.user.username = :username",
+            return session.createQuery("FROM Trainer t JOIN FETCH t.user JOIN FETCH t.specialization WHERE t.user.username = :username",
                             Trainer.class)
                     .setParameter("username", username)
                     .getSingleResult();

@@ -49,10 +49,10 @@ public abstract class TrainingQueryBuilder<F extends TrainingSearchFilter> {
 
     protected void addDateRange(CriteriaBuilder cb, Root<Training> root, F criteria, List<Predicate> predicates) {
         Optional.ofNullable(criteria.getFromDate())
-                .ifPresent(from -> predicates.add(cb.greaterThanOrEqualTo(root.get(TrainingPaths.TRAINING_DATE), from)));
+                .ifPresent(from -> predicates.add(cb.greaterThanOrEqualTo(root.get(TrainingAttribute.TRAINING_DATE), from)));
 
         Optional.ofNullable(criteria.getToDate())
-                .ifPresent(to -> predicates.add(cb.lessThanOrEqualTo(root.get(TrainingPaths.TRAINING_DATE), to)));
+                .ifPresent(to -> predicates.add(cb.lessThanOrEqualTo(root.get(TrainingAttribute.TRAINING_DATE), to)));
     }
 
     protected void addFullNameLikePredicate(CriteriaBuilder cb, Root<Training> root, List<Predicate> predicates,
@@ -63,8 +63,8 @@ public abstract class TrainingQueryBuilder<F extends TrainingSearchFilter> {
                     Join<?, ?> userJoin = resolveJoinPath(root, userPathPrefix, joinCache);
 
                     Expression<String> fullNameExpr = cb.concat(
-                            cb.concat(userJoin.get(TrainingPaths.FIRST_NAME), " "),
-                            userJoin.get(TrainingPaths.LAST_NAME)
+                            cb.concat(userJoin.get(TrainingAttribute.FIRST_NAME), " "),
+                            userJoin.get(TrainingAttribute.LAST_NAME)
                     );
 
                     predicates.add(cb.like(cb.lower(fullNameExpr), "%" + name.toLowerCase() + "%"));

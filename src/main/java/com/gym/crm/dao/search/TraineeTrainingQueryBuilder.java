@@ -25,14 +25,14 @@ public class TraineeTrainingQueryBuilder extends TrainingQueryBuilder<TraineeTra
     @Override
     protected Predicate getUsernamePredicate(CriteriaBuilder cb, Root<Training> root, String username,
                                              Map<String, Join<?, ?>> joinCache) {
-        Join<?, ?> userJoin = resolveJoinPath(root, TrainingPaths.TRAINEE_USER, joinCache);
+        Join<?, ?> userJoin = resolveJoinPath(root, TrainingAttribute.TRAINEE_USER, joinCache);
 
-        return cb.equal(userJoin.get(TrainingPaths.USERNAME), username);
+        return cb.equal(userJoin.get(TrainingAttribute.USERNAME), username);
     }
 
     private void addTrainerFullNamePredicate(CriteriaBuilder cb, Root<Training> root, TraineeTrainingSearchFilter criteria,
                                              List<Predicate> predicates, Map<String, Join<?, ?>> joinCache) {
-        addFullNameLikePredicate(cb, root, predicates, criteria.getTrainerFullName(), TrainingPaths.TRAINER_USER, joinCache);
+        addFullNameLikePredicate(cb, root, predicates, criteria.getTrainerFullName(), TrainingAttribute.TRAINER_USER, joinCache);
     }
 
     private void addTrainingTypePredicate(CriteriaBuilder cb, Root<Training> root,
@@ -40,6 +40,6 @@ public class TraineeTrainingQueryBuilder extends TrainingQueryBuilder<TraineeTra
         Optional.ofNullable(criteria.getTrainingTypeName())
                 .filter(name -> !name.isBlank())
                 .ifPresent(typeName -> predicates.add(
-                        cb.equal(root.get("trainingType").get(TrainingPaths.TRAINING_TYPE_NAME), typeName)));
+                        cb.equal(root.get("trainingType").get(TrainingAttribute.TRAINING_TYPE_NAME), typeName)));
     }
 }
