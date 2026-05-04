@@ -36,7 +36,8 @@ public class TraineeDaoImpl implements TraineeDao {
 
     @Override
     public void updateTrainers(String traineeUsername, List<String> trainerUsernames) {
-        transactionHandler.executeWithinTx(session -> {Trainee trainee = session.createQuery(
+        transactionHandler.executeWithinTx(session -> {
+            Trainee trainee = session.createQuery(
                             "SELECT t FROM Trainee t JOIN FETCH t.trainers WHERE t.user.username = :username",
                             Trainee.class)
                     .setParameter("username", traineeUsername)
@@ -62,7 +63,8 @@ public class TraineeDaoImpl implements TraineeDao {
 
     @Override
     public void deleteById(Long id) {
-        transactionHandler.executeWithinTx(session -> {Trainee trainee = session.get(Trainee.class, id);
+        transactionHandler.executeWithinTx(session -> {
+            Trainee trainee = session.get(Trainee.class, id);
             if (trainee != null) {
                 session.remove(trainee);
                 log.info("Trainee deleted: id={}", id);
