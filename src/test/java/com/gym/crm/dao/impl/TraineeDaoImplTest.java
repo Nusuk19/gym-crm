@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
 import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
 
 @Sql(scripts = {"/datasets/cleanup.sql", "/datasets/trainee-insert.sql"}, executionPhase = BEFORE_TEST_METHOD)
@@ -86,6 +87,68 @@ class TraineeDaoImplTest extends AbstractRepositoryTest<TraineeDao> {
 
         Trainee result = dao.findByUsername("Abdul.Hariton").orElseThrow();
         assertThat(result.getAddress()).isEqualTo("New Address 456");
+    }
+
+    @Test
+    void updateTrainers_withEmptyList_clearsAllTrainers() {
+        dao.updateTrainers("Abdul.Hariton", List.of());
+
+        Trainee result = dao.findByUsername("Abdul.Hariton").orElseThrow();
+        assertThat(result.getTrainers()).isEmpty();
+    }
+
+    @Test
+    void updateTrainers_nonExistingTrainee_doesNotThrow() {
+        assertThatCode(() -> dao.updateTrainers("ghost.user", List.of("Mike.Tyson"))).doesNotThrowAnyException();
+    }
+
+    @Test
+    void updateTrainers_clearsExistingAndAssignsMultiple() {
+        dao.updateTrainers("Abdul.Hariton", List.of("Mike.Tyson", "Anna.Hural"));
+
+        Trainee result = dao.findByUsername("Abdul.Hariton").orElseThrow();
+        assertThat(result.getTrainers()).hasSize(2);
+        assertThat(result.getTrainers())
+                .extracting(t -> t.getUser().getUsername())
+                .containsExactlyInAnyOrder("Mike.Tyson", "Anna.Hural");
+    }
+
+    @Test
+    void updateTrainers_replacesExistingTrainerWithNew() {
+        dao.updateTrainers("Abdul.Hariton", List.of("Anna.Hural"));
+
+        Trainee result = dao.findByUsername("Abdul.Hariton").orElseThrow();
+        assertThat(result.getTrainers()).hasSize(1);
+        assertThat(result.getTrainers().getFirst().getUser().getUsername()).isEqualTo("Anna.Hural");
+    }
+
+    @Test
+    void deleteById_existingId_removesTrainee() {
+        Long id = dao.findByUsername("Abdul.Hariton").orElseThrow().getId();
+
+        dao.deleteById(id);
+
+        assertThat(dao.findById(id)).isEmpty();
+        assertThat(dao.findAll()).isEmpty();
+    }
+
+    @Test
+    void deleteById_nonExistingId_doesNotThrow() {
+        dao.deleteById(999L);
+
+        assertThat(dao.findAll()).hasSize(1);
+    }
+
+    @Test
+    void deleteById_cascadesTrainings() {
+        Long id = dao.findByUsername("Abdul.Hariton").orElseThrow().getId();
+
+        assertThat(countTrainings()).isEqualTo(1);
+
+        dao.deleteById(id);
+
+        assertThat(dao.findById(id)).isEmpty();
+        assertThat(countTrainings()).isZero();
     }
 
     @Test

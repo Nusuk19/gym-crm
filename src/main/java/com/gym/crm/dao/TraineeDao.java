@@ -11,6 +11,10 @@ public interface TraineeDao {
 
     Trainee update(Trainee trainee);
 
+    void updateTrainers(String traineeUsername, List<String> trainerUsernames);
+
+    void deleteById(Long id);
+
     void deleteByUsername(String username);
 
     Optional<Trainee> findById(Long id);
