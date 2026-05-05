@@ -1,11 +1,15 @@
 package com.gym.crm.service.impl;
 
+import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
+import com.gym.crm.dto.request.ActivationRequest;
+import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.model.User;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.UserProfileService;
+import com.gym.crm.service.UserService;
 import com.gym.crm.validator.EntityValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,12 +24,19 @@ public class TrainerServiceImpl implements TrainerService {
     private static final Logger log = LoggerFactory.getLogger(TrainerServiceImpl.class);
 
     private TrainerDao trainerDao;
+    private TraineeDao traineeDao;
     private EntityValidator validator;
     private UserProfileService userProfileService;
+    private UserService userService;
 
     @Autowired
     public void setTrainerDao(TrainerDao trainerDao) {
         this.trainerDao = trainerDao;
+    }
+
+    @Autowired
+    public void setTraineeDao(TraineeDao traineeDao) {
+        this.traineeDao = traineeDao;
     }
 
     @Autowired
@@ -36,6 +47,11 @@ public class TrainerServiceImpl implements TrainerService {
     @Autowired
     public void setUserProfileService(UserProfileService userProfileService) {
         this.userProfileService = userProfileService;
+    }
+
+    @Autowired
+    public void setUserService(UserService userService) {
+        this.userService = userService;
     }
 
     @Override
@@ -92,7 +108,53 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
+    public Optional<Trainer> findByUsername(String username) {
+        validator.requireNonBlank(username, "Username cannot be blank");
+        log.debug("Looking up trainer by username={}", username);
+
+        return trainerDao.findByUsername(username);
+    }
+
+    @Override
     public List<Trainer> findAll() {
         return trainerDao.findAll();
+    }
+
+    @Override
+    public List<Trainer> findAllNotAssignedToTrainee(String traineeUsername) {
+        validator.requireNonBlank(traineeUsername, "Username cannot be blank");
+
+        traineeDao.findByUsername(traineeUsername)
+                .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + traineeUsername));
+
+        return trainerDao.findAllNotAssignedToTrainee(traineeUsername);
+    }
+
+    @Override
+    public void changePassword(ChangePasswordRequest request) {
+        requireTrainerByUsername(request.getUsername());
+
+        userService.changePassword(request);
+    }
+
+    @Override
+    public void activate(ActivationRequest request) {
+        requireTrainerByUsername(request.getUsername());
+
+        userService.activate(request);
+    }
+
+    @Override
+    public void deactivate(ActivationRequest request) {
+        requireTrainerByUsername(request.getUsername());
+
+        userService.deactivate(request);
+    }
+
+    private Trainer requireTrainerByUsername(String username) {
+        validator.requireNonBlank(username, "Username cannot be blank");
+
+        return trainerDao.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Trainer not found: " + username));
     }
 }

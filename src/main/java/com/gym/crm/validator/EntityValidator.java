@@ -42,13 +42,13 @@ public class EntityValidator {
         }
     }
 
-    private void requireNonBlank(String value, String message) {
+    public void requireNonBlank(String value, String message) {
         if (value == null || value.isBlank()) {
             throw new EntityValidationException(message);
         }
     }
 
-    private void requireNonNull(Object value, String message) {
+    public void requireNonNull(Object value, String message) {
         if (value == null) {
             throw new EntityValidationException(message);
         }

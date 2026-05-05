@@ -1,6 +1,8 @@
 package com.gym.crm.service.impl;
 
 import com.gym.crm.dao.TrainingDao;
+import com.gym.crm.dao.search.filters.TraineeTrainingSearchFilter;
+import com.gym.crm.dao.search.filters.TrainerTrainingSearchFilter;
 import com.gym.crm.model.Training;
 import com.gym.crm.service.TrainingService;
 import com.gym.crm.validator.EntityValidator;
@@ -32,7 +34,7 @@ public class TrainingServiceImpl implements TrainingService {
     @Override
     public Training create(Training training) {
         log.info("Creating training: name={}, traineeId={}, trainerId={}",
-                training.getName(),  training.getTrainee().getUser().getUsername(), training.getTrainer().getUser().getUsername());
+                training.getName(), training.getTrainee().getUser().getUsername(), training.getTrainer().getUser().getUsername());
         validator.validateTraining(training);
 
         return trainingDao.save(training);
@@ -48,5 +50,21 @@ public class TrainingServiceImpl implements TrainingService {
     @Override
     public List<Training> findAll() {
         return trainingDao.findAll();
+    }
+
+    @Override
+    public List<Training> findByTraineeCriteria(TraineeTrainingSearchFilter filter) {
+        validator.requireNonNull(filter, "Search filter cannot be null");
+        log.debug("Searching trainings by trainee criteria: {}", filter);
+
+        return trainingDao.findByTraineeCriteria(filter);
+    }
+
+    @Override
+    public List<Training> findByTrainerCriteria(TrainerTrainingSearchFilter filter) {
+        validator.requireNonNull(filter, "Search filter cannot be null");
+        log.debug("Searching trainings by trainer criteria: {}", filter);
+
+        return trainingDao.findByTrainerCriteria(filter);
     }
 }
