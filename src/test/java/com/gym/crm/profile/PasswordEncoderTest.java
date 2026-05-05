@@ -3,6 +3,7 @@ package com.gym.crm.profile;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -45,5 +46,35 @@ class PasswordEncoderTest {
         String secondHash = passwordEncoder.encode(RAW_PASSWORD);
 
         assertNotEquals(firstHash, secondHash);
+    }
+
+    @Test
+    void matches_correctPassword_returnsTrue() {
+        String encoded = passwordEncoder.encode(RAW_PASSWORD);
+
+        assertTrue(passwordEncoder.matches(RAW_PASSWORD, encoded));
+    }
+
+    @Test
+    void matches_wrongPassword_returnsFalse() {
+        String encoded = passwordEncoder.encode(RAW_PASSWORD);
+
+        assertFalse(passwordEncoder.matches("wrongPassword", encoded));
+    }
+
+    @Test
+    void matches_emptyPassword_returnsFalse() {
+        String encoded = passwordEncoder.encode(RAW_PASSWORD);
+
+        assertFalse(passwordEncoder.matches("", encoded));
+    }
+
+    @Test
+    void matches_differentHashesOfSamePassword_bothReturnTrue() {
+        String firstHash = passwordEncoder.encode(RAW_PASSWORD);
+        String secondHash = passwordEncoder.encode(RAW_PASSWORD);
+
+        assertTrue(passwordEncoder.matches(RAW_PASSWORD, firstHash));
+        assertTrue(passwordEncoder.matches(RAW_PASSWORD, secondHash));
     }
 }

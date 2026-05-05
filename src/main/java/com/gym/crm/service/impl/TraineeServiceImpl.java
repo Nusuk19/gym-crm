@@ -1,11 +1,15 @@
 package com.gym.crm.service.impl;
 
 import com.gym.crm.dao.TraineeDao;
+import com.gym.crm.dto.request.ActivationRequest;
+import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.model.User;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.UserProfileService;
+import com.gym.crm.service.UserService;
 import com.gym.crm.validator.EntityValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,10 +26,11 @@ public class TraineeServiceImpl implements TraineeService {
     private TraineeDao traineeDao;
     private EntityValidator validator;
     private UserProfileService userProfileService;
+    private UserService userService;
 
     @Autowired
     public void setTraineeDao(TraineeDao traineeDao) {
-        this.traineeDao = traineeDao;
+                this.traineeDao = traineeDao;
     }
 
     @Autowired
@@ -36,6 +41,11 @@ public class TraineeServiceImpl implements TraineeService {
     @Autowired
     public void setUserProfileService(UserProfileService userProfileService) {
         this.userProfileService = userProfileService;
+    }
+
+    @Autowired
+    public void setUserService(UserService userService) {
+        this.userService = userService;
     }
 
     @Override
@@ -85,11 +95,33 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
-    public void delete(Long id) {
+    public void updateTrainers(String traineeUsername, List<String> trainerUsernames) {
+        validator.requireNonBlank(traineeUsername, "Username cannot be blank");
+        validator.requireNonNull(trainerUsernames, "Trainer usernames list cannot be null");
+
+        log.info("Updating trainers list for trainee: username={}, trainers={}", traineeUsername, trainerUsernames);
+
+        if (traineeDao.findByUsername(traineeUsername).isEmpty()) {
+            throw new EntityNotFoundException("Trainee not found: " + traineeUsername);
+        }
+
+        traineeDao.updateTrainers(traineeUsername, trainerUsernames);
+    }
+
+    @Override
+    public void deleteById(Long id) {
         log.info("Deleting trainee: id={}", id);
         validator.requireValidId(id);
 
         traineeDao.deleteById(id);
+    }
+
+    @Override
+    public void deleteByUsername(String username) {
+        log.info("Deleting trainee: username={}", username);
+        validator.requireNonBlank(username, "Username cannot be blank");
+
+        traineeDao.deleteByUsername(username);
     }
 
     @Override
@@ -100,7 +132,43 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
+    public Optional<Trainee> findByUsername(String username) {
+        validator.requireNonBlank(username, "Username cannot be blank");
+        log.debug("Looking up trainee by username={}", username);
+
+        return traineeDao.findByUsername(username);
+    }
+
+    @Override
     public List<Trainee> findAll() {
         return traineeDao.findAll();
+    }
+
+    @Override
+    public void changePassword(ChangePasswordRequest request) {
+        requireTraineeByUsername(request.getUsername());
+
+        userService.changePassword(request);
+    }
+
+    @Override
+    public void activate(ActivationRequest request) {
+        requireTraineeByUsername(request.getUsername());
+
+        userService.activate(request);
+    }
+
+    @Override
+    public void deactivate(ActivationRequest request) {
+        requireTraineeByUsername(request.getUsername());
+
+        userService.deactivate(request);
+    }
+
+    private Trainee requireTraineeByUsername(String username) {
+        validator.requireNonBlank(username, "Username cannot be blank");
+
+        return traineeDao.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + username));
     }
 }

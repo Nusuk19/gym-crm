@@ -1,6 +1,8 @@
 package com.gym.crm.service.impl;
 
 import com.gym.crm.dao.TrainingDao;
+import com.gym.crm.dao.search.filters.TraineeTrainingSearchFilter;
+import com.gym.crm.dao.search.filters.TrainerTrainingSearchFilter;
 import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
@@ -34,6 +36,8 @@ class TrainingServiceImplTest {
 
     private static final Long ID = 1L;
     private static final Long NON_EXISTING_ID = 99L;
+    private static final String TRAINEE_USERNAME = "John.Doe";
+    private static final String TRAINER_USERNAME = "Mike.Tyson";
 
     private final Training training = buildTraining();
 
@@ -117,6 +121,86 @@ class TrainingServiceImplTest {
         assertTrue(actual.isEmpty());
         verify(trainingDao).findAll();
     }
+
+    @Test
+    void findByTraineeCriteria_whenFilterValid_returnsMatchingTrainings() {
+        TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
+                .username(TRAINEE_USERNAME)
+                .build();
+        when(trainingDao.findByTraineeCriteria(filter)).thenReturn(List.of(training));
+
+        List<Training> actual = service.findByTraineeCriteria(filter);
+
+        assertEquals(1, actual.size());
+        assertEquals(training, actual.get(0));
+        verify(validator).requireNonNull(filter, "Search filter cannot be null");
+        verify(trainingDao).findByTraineeCriteria(filter);
+    }
+
+    @Test
+    void findByTraineeCriteria_whenNoResults_returnsEmptyList() {
+        TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
+                .username(TRAINEE_USERNAME)
+                .fromDate(LocalDate.of(2030, 1, 1))
+                .build();
+        when(trainingDao.findByTraineeCriteria(filter)).thenReturn(List.of());
+
+        List<Training> actual = service.findByTraineeCriteria(filter);
+
+        assertTrue(actual.isEmpty());
+        verify(trainingDao).findByTraineeCriteria(filter);
+    }
+
+    @Test
+    void findByTrainerCriteria_whenFilterValid_returnsMatchingTrainings() {
+        TrainerTrainingSearchFilter filter = TrainerTrainingSearchFilter.builder()
+                .username(TRAINER_USERNAME)
+                .build();
+        when(trainingDao.findByTrainerCriteria(filter)).thenReturn(List.of(training));
+
+        List<Training> actual = service.findByTrainerCriteria(filter);
+
+        assertEquals(1, actual.size());
+        assertEquals(training, actual.get(0));
+        verify(validator).requireNonNull(filter, "Search filter cannot be null");
+        verify(trainingDao).findByTrainerCriteria(filter);
+    }
+
+    @Test
+    void findByTrainerCriteria_whenNoResults_returnsEmptyList() {
+        TrainerTrainingSearchFilter filter = TrainerTrainingSearchFilter.builder()
+                .username(TRAINER_USERNAME)
+                .fromDate(LocalDate.of(2030, 1, 1))
+                .build();
+        when(trainingDao.findByTrainerCriteria(filter)).thenReturn(List.of());
+
+        List<Training> actual = service.findByTrainerCriteria(filter);
+
+        assertTrue(actual.isEmpty());
+        verify(trainingDao).findByTrainerCriteria(filter);
+    }
+
+    @Test
+    void findByTrainerCriteria_whenFilterNull_throwsEntityValidationException() {
+        doThrow(new EntityValidationException("Search filter cannot be null"))
+                .when(validator).requireNonNull(null, "Search filter cannot be null");
+
+        assertThrows(EntityValidationException.class, () -> service.findByTrainerCriteria(null));
+
+        verify(trainingDao, never()).findByTrainerCriteria(any());
+    }
+
+
+    @Test
+    void findByTraineeCriteria_whenFilterNull_throwsEntityValidationException() {
+        doThrow(new EntityValidationException("Search filter cannot be null"))
+                .when(validator).requireNonNull(null, "Search filter cannot be null");
+
+        assertThrows(EntityValidationException.class, () -> service.findByTraineeCriteria(null));
+
+        verify(trainingDao, never()).findByTraineeCriteria(any());
+    }
+
 
     private Training buildTraining() {
         User user = User.builder()

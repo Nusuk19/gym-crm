@@ -1,5 +1,7 @@
 package com.gym.crm.service;
 
+import com.gym.crm.dto.request.ActivationRequest;
+import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.model.Trainee;
 
 import java.util.List;
@@ -10,9 +12,21 @@ public interface TraineeService {
 
     Trainee update(Trainee trainee);
 
-    void delete(Long id);
+    void updateTrainers(String traineeUsername, List<String> trainerUsernames);
+
+    void deleteById(Long id);
+
+    void deleteByUsername(String username);
 
     Optional<Trainee> findById(Long id);
 
+    Optional<Trainee> findByUsername(String username);
+
     List<Trainee> findAll();
+
+    void changePassword(ChangePasswordRequest request);
+
+    void activate(ActivationRequest request);
+
+    void deactivate(ActivationRequest request);
 }

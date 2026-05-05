@@ -1,15 +1,17 @@
 package com.gym.crm.service.impl;
 
-import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.gym.crm.dao.TraineeDao;
+import com.gym.crm.dto.request.ActivationRequest;
+import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.model.User;
 import com.gym.crm.service.UserProfileService;
+import com.gym.crm.service.UserService;
 import com.gym.crm.validator.EntityValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +25,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -40,6 +41,7 @@ class TraineeServiceImplTest {
 
     private static final Long ID = 1L;
     private static final Long NON_EXISTING_ID = 99L;
+    private static final String USERNAME = "Abdul.Hariton";
 
     private final Trainee trainee = buildTrainee();
 
@@ -49,6 +51,8 @@ class TraineeServiceImplTest {
     private EntityValidator validator;
     @Mock
     private UserProfileService userProfileService;
+    @Mock
+    private UserService userService;
     @InjectMocks
     private TraineeServiceImpl service;
 
@@ -123,7 +127,7 @@ class TraineeServiceImplTest {
 
     @Test
     void delete_whenValidId_deletesSuccessfully() {
-        service.delete(ID);
+        service.deleteById(ID);
 
         verify(validator).requireValidId(ID);
         verify(traineeDao).deleteById(ID);
@@ -134,9 +138,27 @@ class TraineeServiceImplTest {
         doThrow(new EntityValidationException("Id must be a positive integer"))
                 .when(validator).requireValidId(any());
 
-        assertThrows(EntityValidationException.class, () -> service.delete(-ID));
+        assertThrows(EntityValidationException.class, () -> service.deleteById(-ID));
 
         verify(traineeDao, never()).deleteById(any());
+    }
+
+    @Test
+    void deleteByUsername_whenValidUsername_deletesSuccessfully() {
+        service.deleteByUsername(USERNAME);
+
+        verify(validator).requireNonBlank(USERNAME, "Username cannot be blank");
+        verify(traineeDao).deleteByUsername(USERNAME);
+    }
+
+    @Test
+    void deleteByUsername_whenBlankUsername_throwsException() {
+        doThrow(new EntityValidationException("Username cannot be blank"))
+                .when(validator).requireNonBlank(any(), any());
+
+        assertThrows(EntityValidationException.class, () -> service.deleteByUsername(" "));
+
+        verify(traineeDao, never()).deleteByUsername(any());
     }
 
     @Test
@@ -171,6 +193,36 @@ class TraineeServiceImplTest {
     }
 
     @Test
+    void findByUsername_whenExists_returnsTrainee() {
+        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.of(trainee));
+
+        Optional<Trainee> actual = service.findByUsername(USERNAME);
+
+        assertTrue(actual.isPresent());
+        assertEquals(trainee, actual.get());
+        verify(validator).requireNonBlank(USERNAME, "Username cannot be blank");
+    }
+
+    @Test
+    void findByUsername_whenNotExists_returnsEmpty() {
+        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.empty());
+
+        Optional<Trainee> actual = service.findByUsername(USERNAME);
+
+        assertFalse(actual.isPresent());
+    }
+
+    @Test
+    void findByUsername_whenBlankUsername_throwsException() {
+        doThrow(new EntityValidationException("Username cannot be blank"))
+                .when(validator).requireNonBlank(any(), any());
+
+        assertThrows(EntityValidationException.class, () -> service.findByUsername(" "));
+
+        verify(traineeDao, never()).findByUsername(any());
+    }
+
+    @Test
     void findAll_returnsAllTrainees() {
         List<Trainee> trainees = List.of(trainee);
         when(traineeDao.findAll()).thenReturn(trainees);
@@ -188,6 +240,108 @@ class TraineeServiceImplTest {
         List<Trainee> actual = service.findAll();
 
         assertTrue(actual.isEmpty());
+    }
+
+    @Test
+    void updateTrainers_whenValidRequest_delegatesToDao() {
+        List<String> trainerUsernames = List.of("Mike.Tyson", "John.Doe");
+        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.of(trainee));
+
+        service.updateTrainers(USERNAME, trainerUsernames);
+
+        verify(traineeDao).updateTrainers(USERNAME, trainerUsernames);
+    }
+
+    @Test
+    void updateTrainers_whenTraineeNotFound_throwsEntityNotFoundException() {
+        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> service.updateTrainers(USERNAME, List.of()));
+
+        verify(traineeDao, never()).updateTrainers(any(), any());
+    }
+
+    @Test
+    void updateTrainers_whenNullList_throwsEntityValidationException() {
+        assertThrows(EntityNotFoundException.class, () -> service.updateTrainers(USERNAME, null));
+
+        verify(traineeDao, never()).updateTrainers(any(), any());
+    }
+
+    @Test
+    void changePassword_whenTraineeExists_delegatesToUserService() {
+        ChangePasswordRequest request = ChangePasswordRequest.builder()
+                .username(USERNAME)
+                .oldPassword("oldPass123")
+                .newPassword("newPass456")
+                .build();
+        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.of(trainee));
+
+        service.changePassword(request);
+
+        verify(userService).changePassword(request);
+    }
+
+    @Test
+    void changePassword_whenTraineeNotFound_throwsEntityNotFoundException() {
+        ChangePasswordRequest request = ChangePasswordRequest.builder()
+                .username(USERNAME)
+                .oldPassword("oldPass123")
+                .newPassword("newPass456")
+                .build();
+        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> service.changePassword(request));
+
+        verify(userService, never()).changePassword(any());
+    }
+
+    @Test
+    void activate_whenTraineeExists_delegatesToUserService() {
+        ActivationRequest request = ActivationRequest.builder()
+                .username(USERNAME)
+                .build();
+        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.of(trainee));
+
+        service.activate(request);
+
+        verify(userService).activate(request);
+    }
+
+    @Test
+    void activate_whenTraineeNotFound_throwsEntityNotFoundException() {
+        ActivationRequest request = ActivationRequest.builder()
+                .username(USERNAME)
+                .build();
+        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> service.activate(request));
+
+        verify(userService, never()).activate(any());
+    }
+
+    @Test
+    void deactivate_whenTraineeExists_delegatesToUserService() {
+        ActivationRequest request = ActivationRequest.builder()
+                .username(USERNAME)
+                .build();
+        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.of(trainee));
+
+        service.deactivate(request);
+
+        verify(userService).deactivate(request);
+    }
+
+    @Test
+    void deactivate_whenTraineeNotFound_throwsEntityNotFoundException() {
+        ActivationRequest request = ActivationRequest.builder()
+                .username(USERNAME)
+                .build();
+        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> service.deactivate(request));
+
+        verify(userService, never()).deactivate(any());
     }
 
     private Trainee buildTrainee() {

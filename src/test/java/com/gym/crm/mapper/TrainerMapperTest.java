@@ -35,7 +35,7 @@ class TrainerMapperTest {
 
         assertEquals("Mike", actual.getUser().getFirstName());
         assertEquals("Tyson", actual.getUser().getLastName());
-        assertEquals("BOXING", actual.getSpecialization().getTrainingTypeName());
+        assertEquals(EXISTING_ID, actual.getSpecialization().getId());
         assertTrue(actual.getUser().getIsActive());
     }
 
@@ -44,7 +44,7 @@ class TrainerMapperTest {
         CreateTrainerRequest request = CreateTrainerRequest.builder()
                 .firstName("Mike")
                 .lastName("Tyson")
-                .specialization(TrainingType.builder().trainingTypeName("BOXING").build())
+                .specializationId(EXISTING_ID)
                 .build();
 
         Trainer actual = trainerMapper.toEntity(request);
@@ -62,7 +62,7 @@ class TrainerMapperTest {
 
         assertEquals("Mike", actual.getUser().getFirstName());
         assertEquals("Tyson", actual.getUser().getLastName());
-        assertEquals("YOGA", actual.getSpecialization().getTrainingTypeName());
+        assertEquals(EXISTING_ID, actual.getSpecialization().getId());
         assertFalse(actual.getUser().getIsActive());
     }
 
@@ -90,7 +90,7 @@ class TrainerMapperTest {
         return CreateTrainerRequest.builder()
                 .firstName("Mike")
                 .lastName("Tyson")
-                .specialization(TrainingType.builder().trainingTypeName("BOXING").build())
+                .specializationId(EXISTING_ID)
                 .isActive(true)
                 .build();
     }
@@ -100,7 +100,7 @@ class TrainerMapperTest {
                 .username("Mike.Tyson")
                 .firstName("Mike")
                 .lastName("Tyson")
-                .specialization(TrainingType.builder().trainingTypeName("YOGA").build())
+                .specializationId(EXISTING_ID)
                 .isActive(false)
                 .build();
     }
