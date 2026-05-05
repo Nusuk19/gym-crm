@@ -11,9 +11,9 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class ValidationServiceTest {
+class CoreValidatorTest {
 
-    private ValidationService validationService;
+    private CoreValidator coreValidator;
 
     @BeforeEach
     void setUp() {
@@ -23,7 +23,7 @@ class ValidationServiceTest {
                 .buildValidatorFactory()
                 .getValidator();
 
-        validationService = new ValidationService(validator);
+        coreValidator = new CoreValidator(validator);
     }
 
     @Test
@@ -34,7 +34,7 @@ class ValidationServiceTest {
                 .newPassword("newPassword123")
                 .build();
 
-        assertThatCode(() -> validationService.validate(request)).doesNotThrowAnyException();
+        assertThatCode(() -> coreValidator.validate(request)).doesNotThrowAnyException();
     }
 
     @Test
@@ -45,7 +45,7 @@ class ValidationServiceTest {
                 .newPassword("newPassword123")
                 .build();
 
-        assertThatThrownBy(() -> validationService.validate(request))
+        assertThatThrownBy(() -> coreValidator.validate(request))
                 .isInstanceOf(EntityValidationException.class)
                 .hasMessageContaining("Validation failed")
                 .hasMessageContaining("username");
@@ -59,7 +59,7 @@ class ValidationServiceTest {
                 .newPassword("newPassword123")
                 .build();
 
-        assertThatThrownBy(() -> validationService.validate(request))
+        assertThatThrownBy(() -> coreValidator.validate(request))
                 .isInstanceOf(EntityValidationException.class)
                 .hasMessageContaining("username");
     }
@@ -72,7 +72,7 @@ class ValidationServiceTest {
                 .newPassword("newPassword123")
                 .build();
 
-        assertThatThrownBy(() -> validationService.validate(request))
+        assertThatThrownBy(() -> coreValidator.validate(request))
                 .isInstanceOf(EntityValidationException.class)
                 .hasMessageContaining("username")
                 .hasMessageContaining("Username must be between 3 and 110 characters long");
@@ -86,7 +86,7 @@ class ValidationServiceTest {
                 .newPassword("newPassword123")
                 .build();
 
-        assertThatThrownBy(() -> validationService.validate(request))
+        assertThatThrownBy(() -> coreValidator.validate(request))
                 .isInstanceOf(EntityValidationException.class)
                 .hasMessageContaining("username")
                 .hasMessageContaining("Username must be between 3 and 110 characters long");
@@ -100,7 +100,7 @@ class ValidationServiceTest {
                 .newPassword("newPassword123")
                 .build();
 
-        assertThatThrownBy(() -> validationService.validate(request))
+        assertThatThrownBy(() -> coreValidator.validate(request))
                 .isInstanceOf(EntityValidationException.class)
                 .hasMessageContaining("oldPassword")
                 .hasMessageContaining("Old password is required");
@@ -114,7 +114,7 @@ class ValidationServiceTest {
                 .newPassword("newPassword123")
                 .build();
 
-        assertThatThrownBy(() -> validationService.validate(request))
+        assertThatThrownBy(() -> coreValidator.validate(request))
                 .isInstanceOf(EntityValidationException.class)
                 .hasMessageContaining("oldPassword");
     }
@@ -127,7 +127,7 @@ class ValidationServiceTest {
                 .newPassword("")
                 .build();
 
-        assertThatThrownBy(() -> validationService.validate(request))
+        assertThatThrownBy(() -> coreValidator.validate(request))
                 .isInstanceOf(EntityValidationException.class)
                 .hasMessageContaining("newPassword")
                 .hasMessageContaining("New password is required");
@@ -141,7 +141,7 @@ class ValidationServiceTest {
                 .newPassword("short")
                 .build();
 
-        assertThatThrownBy(() -> validationService.validate(request))
+        assertThatThrownBy(() -> coreValidator.validate(request))
                 .isInstanceOf(EntityValidationException.class)
                 .hasMessageContaining("newPassword")
                 .hasMessageContaining("New password must be between 10 and 100 characters");
@@ -155,7 +155,7 @@ class ValidationServiceTest {
                 .newPassword("a".repeat(101))
                 .build();
 
-        assertThatThrownBy(() -> validationService.validate(request))
+        assertThatThrownBy(() -> coreValidator.validate(request))
                 .isInstanceOf(EntityValidationException.class)
                 .hasMessageContaining("newPassword")
                 .hasMessageContaining("New password must be between 10 and 100 characters");
@@ -169,7 +169,7 @@ class ValidationServiceTest {
                 .newPassword("")
                 .build();
 
-        assertThatThrownBy(() -> validationService.validate(request))
+        assertThatThrownBy(() -> coreValidator.validate(request))
                 .isInstanceOf(EntityValidationException.class)
                 .hasMessageContaining("Validation failed")
                 .hasMessageContaining("username")
@@ -185,7 +185,7 @@ class ValidationServiceTest {
                 .newPassword("newPassword123")
                 .build();
 
-        assertThatCode(() -> validationService.validate(request)).doesNotThrowAnyException();
+        assertThatCode(() -> coreValidator.validate(request)).doesNotThrowAnyException();
     }
 
     @Test
@@ -196,7 +196,7 @@ class ValidationServiceTest {
                 .newPassword("newPassword123")
                 .build();
 
-        assertThatCode(() -> validationService.validate(request)).doesNotThrowAnyException();
+        assertThatCode(() -> coreValidator.validate(request)).doesNotThrowAnyException();
     }
 
     @Test
@@ -207,7 +207,7 @@ class ValidationServiceTest {
                 .newPassword("1234567890")
                 .build();
 
-        assertThatCode(() -> validationService.validate(request)).doesNotThrowAnyException();
+        assertThatCode(() -> coreValidator.validate(request)).doesNotThrowAnyException();
     }
 
     @Test
@@ -218,6 +218,6 @@ class ValidationServiceTest {
                 .newPassword("a".repeat(100))
                 .build();
 
-        assertThatCode(() -> validationService.validate(request)).doesNotThrowAnyException();
+        assertThatCode(() -> coreValidator.validate(request)).doesNotThrowAnyException();
     }
 }

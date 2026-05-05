@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class ValidationService {
+public class CoreValidator {
 
     private final Validator validator;
 

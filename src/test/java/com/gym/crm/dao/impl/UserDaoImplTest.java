@@ -56,7 +56,6 @@ class UserDaoImplTest extends AbstractRepositoryTest<UserDao> {
     @Test
     void update_firstName_updatesInDB() {
         User user = dao.findByUsername("Abdul.Hariton").orElseThrow();
-
         User updated = user.toBuilder()
                 .firstName("UpdatedName")
                 .build();
@@ -73,7 +72,6 @@ class UserDaoImplTest extends AbstractRepositoryTest<UserDao> {
     @Test
     void update_lastName_updatesInDB() {
         User user = dao.findByUsername("Abdul.Hariton").orElseThrow();
-
         User updated = user.toBuilder()
                 .lastName("UpdatedLastName")
                 .build();
@@ -88,7 +86,6 @@ class UserDaoImplTest extends AbstractRepositoryTest<UserDao> {
     @Test
     void update_password_updatesInDB() {
         User user = dao.findByUsername("Abdul.Hariton").orElseThrow();
-
         User updated = user.toBuilder()
                 .password("newHashedPassword")
                 .build();
@@ -132,7 +129,6 @@ class UserDaoImplTest extends AbstractRepositoryTest<UserDao> {
     @Test
     void update_allFields_updatesAllInDB() {
         User user = dao.findByUsername("Abdul.Hariton").orElseThrow();
-
         User updated = user.toBuilder()
                 .firstName("NewFirst")
                 .lastName("NewLast")
@@ -158,7 +154,6 @@ class UserDaoImplTest extends AbstractRepositoryTest<UserDao> {
     @Test
     void update_returnsUpdatedEntity() {
         User user = dao.findByUsername("Abdul.Hariton").orElseThrow();
-
         User updated = user.toBuilder()
                 .firstName("ReturnedName")
                 .build();

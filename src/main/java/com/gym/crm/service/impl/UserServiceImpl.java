@@ -8,7 +8,7 @@ import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.User;
 import com.gym.crm.profile.PasswordEncoder;
 import com.gym.crm.service.UserService;
-import com.gym.crm.service.common.ValidationService;
+import com.gym.crm.service.common.CoreValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
 
     private UserDao userDao;
-    private ValidationService validationService;
+    private CoreValidator coreValidator;
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -29,8 +29,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Autowired
-    public void setValidationService(ValidationService validationService) {
-        this.validationService = validationService;
+    public void setValidationService(CoreValidator coreValidator) {
+        this.coreValidator = coreValidator;
     }
 
     @Autowired
@@ -45,7 +45,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void changePassword(ChangePasswordRequest request) {
-        validationService.validate(request);
+        coreValidator.validate(request);
         log.info("Changing password for user: username={}", request.getUsername());
 
         User user = requireUserByUsername(request.getUsername());

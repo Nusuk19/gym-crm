@@ -18,7 +18,7 @@ import com.gym.crm.mapper.TrainingMapper;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
-import com.gym.crm.service.common.ValidationService;
+import com.gym.crm.service.common.CoreValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -35,7 +35,7 @@ public class GymFacade {
     private TraineeMapper traineeMapper;
     private TrainerMapper trainerMapper;
     private TrainingMapper trainingMapper;
-    private ValidationService validationService;
+    private CoreValidator coreValidator;
 
     public GymFacade(TraineeService traineeService,
                      TrainerService trainerService,
@@ -61,18 +61,18 @@ public class GymFacade {
     }
 
     @Autowired
-    public void setValidationService(ValidationService validationService) {
-        this.validationService = validationService;
+    public void setValidationService(CoreValidator coreValidator) {
+        this.coreValidator = coreValidator;
     }
 
     public TraineeResponse createTrainee(CreateTraineeRequest request) {
-        validationService.validate(request);
+        coreValidator.validate(request);
 
         return traineeMapper.toResponse(traineeService.create(traineeMapper.toEntity(request)));
     }
 
     public TraineeResponse updateTrainee(UpdateTraineeRequest request) {
-        validationService.validate(request);
+        coreValidator.validate(request);
 
         return traineeMapper.toResponse(traineeService.update(traineeMapper.toEntity(request)));
     }
@@ -104,31 +104,31 @@ public class GymFacade {
     }
 
     public void changeTraineePassword(ChangePasswordRequest request) {
-        validationService.validate(request);
+        coreValidator.validate(request);
 
         traineeService.changePassword(request);
     }
 
     public void activateTrainee(ActivationRequest request) {
-        validationService.validate(request);
+        coreValidator.validate(request);
 
         traineeService.activate(request);
     }
 
     public void deactivateTrainee(ActivationRequest request) {
-        validationService.validate(request);
+        coreValidator.validate(request);
 
         traineeService.deactivate(request);
     }
 
     public TrainerResponse createTrainer(CreateTrainerRequest request) {
-        validationService.validate(request);
+        coreValidator.validate(request);
 
         return trainerMapper.toResponse(trainerService.create(trainerMapper.toEntity(request)));
     }
 
     public TrainerResponse updateTrainer(UpdateTrainerRequest request) {
-        validationService.validate(request);
+        coreValidator.validate(request);
 
         return trainerMapper.toResponse(trainerService.update(trainerMapper.toEntity(request)));
     }
@@ -154,25 +154,25 @@ public class GymFacade {
     }
 
     public void changeTrainerPassword(ChangePasswordRequest request) {
-        validationService.validate(request);
+        coreValidator.validate(request);
 
         trainerService.changePassword(request);
     }
 
     public void activateTrainer(ActivationRequest request) {
-        validationService.validate(request);
+        coreValidator.validate(request);
 
         trainerService.activate(request);
     }
 
     public void deactivateTrainer(ActivationRequest request) {
-        validationService.validate(request);
+        coreValidator.validate(request);
 
         trainerService.deactivate(request);
     }
 
     public TrainingResponse createTraining(CreateTrainingRequest request) {
-        validationService.validate(request);
+        coreValidator.validate(request);
 
         return trainingMapper.toResponse(trainingService.create(trainingMapper.toEntity(request)));
     }

@@ -2,7 +2,11 @@ package com.gym.crm.mapper;
 
 import com.gym.crm.dto.request.CreateTrainingRequest;
 import com.gym.crm.dto.response.TrainingResponse;
-import com.gym.crm.model.*;
+import com.gym.crm.model.Trainee;
+import com.gym.crm.model.Trainer;
+import com.gym.crm.model.Training;
+import com.gym.crm.model.TrainingType;
+import com.gym.crm.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;

@@ -23,7 +23,7 @@ import com.gym.crm.model.User;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
-import com.gym.crm.service.common.ValidationService;
+import com.gym.crm.service.common.CoreValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -62,7 +62,7 @@ class GymFacadeTest {
     @Mock
     private TrainingMapper trainingMapper;
     @Mock
-    private ValidationService validationService;
+    private CoreValidator coreValidator;
 
     private GymFacade facade;
     private Trainee trainee;
@@ -78,7 +78,7 @@ class GymFacadeTest {
         facade.setTraineeMapper(traineeMapper);
         facade.setTrainerMapper(trainerMapper);
         facade.setTrainingMapper(trainingMapper);
-        facade.setValidationService(validationService);
+        facade.setValidationService(coreValidator);
 
         trainee = buildTrainee();
         trainer = buildTrainer();
@@ -120,7 +120,7 @@ class GymFacadeTest {
         TraineeResponse actual = facade.updateTrainee(request);
 
         assertEquals(traineeResponse, actual);
-        verify(validationService).validate(request);
+        verify(coreValidator).validate(request);
         verify(traineeMapper).toEntity(request);
         verify(traineeService).update(trainee);
         verify(traineeMapper).toResponse(trainee);
@@ -214,7 +214,7 @@ class GymFacadeTest {
 
         facade.changeTraineePassword(request);
 
-        verify(validationService).validate(request);
+        verify(coreValidator).validate(request);
         verify(traineeService).changePassword(request);
     }
 
@@ -226,7 +226,7 @@ class GymFacadeTest {
 
         facade.activateTrainee(request);
 
-        verify(validationService).validate(request);
+        verify(coreValidator).validate(request);
         verify(traineeService).activate(request);
     }
 
@@ -238,7 +238,7 @@ class GymFacadeTest {
 
         facade.deactivateTrainee(request);
 
-        verify(validationService).validate(request);
+        verify(coreValidator).validate(request);
         verify(traineeService).deactivate(request);
     }
 
@@ -256,7 +256,7 @@ class GymFacadeTest {
         TrainerResponse actual = facade.createTrainer(request);
 
         assertEquals(trainerResponse, actual);
-        verify(validationService).validate(request);
+        verify(coreValidator).validate(request);
         verify(trainerMapper).toEntity(request);
         verify(trainerService).create(trainer);
         verify(trainerMapper).toResponse(trainer);
@@ -278,7 +278,7 @@ class GymFacadeTest {
         TrainerResponse actual = facade.updateTrainer(request);
 
         assertEquals(trainerResponse, actual);
-        verify(validationService).validate(request);
+        verify(coreValidator).validate(request);
         verify(trainerMapper).toEntity(request);
         verify(trainerService).update(trainer);
         verify(trainerMapper).toResponse(trainer);
@@ -361,7 +361,7 @@ class GymFacadeTest {
 
         facade.changeTrainerPassword(request);
 
-        verify(validationService).validate(request);
+        verify(coreValidator).validate(request);
         verify(trainerService).changePassword(request);
     }
 
@@ -373,7 +373,7 @@ class GymFacadeTest {
 
         facade.activateTrainer(request);
 
-        verify(validationService).validate(request);
+        verify(coreValidator).validate(request);
         verify(trainerService).activate(request);
     }
 
@@ -385,7 +385,7 @@ class GymFacadeTest {
 
         facade.deactivateTrainer(request);
 
-        verify(validationService).validate(request);
+        verify(coreValidator).validate(request);
         verify(trainerService).deactivate(request);
     }
 
@@ -403,7 +403,7 @@ class GymFacadeTest {
         TrainingResponse actual = facade.createTraining(request);
 
         assertEquals(trainingResponse, actual);
-        verify(validationService).validate(request);
+        verify(coreValidator).validate(request);
         verify(trainingMapper).toEntity(request);
         verify(trainingService).create(training);
         verify(trainingMapper).toResponse(training);

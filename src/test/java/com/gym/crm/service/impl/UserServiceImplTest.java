@@ -7,7 +7,7 @@ import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.User;
 import com.gym.crm.profile.PasswordEncoder;
-import com.gym.crm.service.common.ValidationService;
+import com.gym.crm.service.common.CoreValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,15 +32,15 @@ class UserServiceImplTest {
     @Mock
     private PasswordEncoder passwordEncoder;
     @Mock
-    private ValidationService validationService;
+    private CoreValidator coreValidator;
     @InjectMocks
-    private UserServiceImpl userService;
+    private UserServiceImpl service;
 
     @Test
     void findByUsername_existingUser_returnsUser() {
         when(userDao.findByUsername("Abdul.Hariton")).thenReturn(Optional.of(buildActiveUser()));
 
-        Optional<User> result = userService.findByUsername("Abdul.Hariton");
+        Optional<User> result = service.findByUsername("Abdul.Hariton");
 
         assertThat(result).isPresent();
         assertThat(result.get().getUsername()).isEqualTo("Abdul.Hariton");
@@ -54,7 +54,7 @@ class UserServiceImplTest {
     void findByUsername_nonExistingUser_returnsEmpty() {
         when(userDao.findByUsername("ghost.user")).thenReturn(Optional.empty());
 
-        Optional<User> result = userService.findByUsername("ghost.user");
+        Optional<User> result = service.findByUsername("ghost.user");
 
         assertThat(result).isEmpty();
         verify(userDao).findByUsername("ghost.user");
@@ -69,7 +69,7 @@ class UserServiceImplTest {
         when(passwordEncoder.encode("newPassword123")).thenReturn("newEncodedPassword");
         when(userDao.update(any(User.class))).thenReturn(buildActiveUser());
 
-        userService.changePassword(request);
+        service.changePassword(request);
 
         verify(userDao).findByUsername("Abdul.Hariton");
         verify(passwordEncoder).matches("rawOldPassword", "encodedPassword");
@@ -84,7 +84,7 @@ class UserServiceImplTest {
         when(userDao.findByUsername("Abdul.Hariton")).thenReturn(Optional.of(buildActiveUser()));
         when(passwordEncoder.matches("wrongOldPassword", "encodedPassword")).thenReturn(false);
 
-        assertThatThrownBy(() -> userService.changePassword(request))
+        assertThatThrownBy(() -> service.changePassword(request))
                 .isInstanceOf(EntityValidationException.class)
                 .hasMessageContaining("Old password does not match")
                 .hasMessageContaining("Abdul.Hariton");
@@ -99,7 +99,7 @@ class UserServiceImplTest {
 
         when(userDao.findByUsername("ghost.user")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.changePassword(request))
+        assertThatThrownBy(() -> service.changePassword(request))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("User not found")
                 .hasMessageContaining("ghost.user");
@@ -115,7 +115,7 @@ class UserServiceImplTest {
         when(userDao.findByUsername("Mike.Tyson")).thenReturn(Optional.of(buildInactiveUser()));
         when(userDao.update(any(User.class))).thenReturn(buildInactiveUser());
 
-        userService.activate(request);
+        service.activate(request);
 
         verify(userDao).findByUsername("Mike.Tyson");
         verify(userDao).update(any(User.class));
@@ -127,7 +127,7 @@ class UserServiceImplTest {
 
         when(userDao.findByUsername("Abdul.Hariton")).thenReturn(Optional.of(buildActiveUser()));
 
-        assertThatThrownBy(() -> userService.activate(request))
+        assertThatThrownBy(() -> service.activate(request))
                 .isInstanceOf(EntityValidationException.class)
                 .hasMessageContaining("User is already active")
                 .hasMessageContaining("Abdul.Hariton");
@@ -141,7 +141,7 @@ class UserServiceImplTest {
 
         when(userDao.findByUsername("ghost.user")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.activate(request))
+        assertThatThrownBy(() -> service.activate(request))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("User not found")
                 .hasMessageContaining("ghost.user");
@@ -156,7 +156,7 @@ class UserServiceImplTest {
         when(userDao.findByUsername("Abdul.Hariton")).thenReturn(Optional.of(buildActiveUser()));
         when(userDao.update(any(User.class))).thenReturn(buildActiveUser());
 
-        userService.deactivate(request);
+        service.deactivate(request);
 
         verify(userDao).findByUsername("Abdul.Hariton");
         verify(userDao).update(any(User.class));
@@ -168,7 +168,7 @@ class UserServiceImplTest {
 
         when(userDao.findByUsername("Mike.Tyson")).thenReturn(Optional.of(buildInactiveUser()));
 
-        assertThatThrownBy(() -> userService.deactivate(request))
+        assertThatThrownBy(() -> service.deactivate(request))
                 .isInstanceOf(EntityValidationException.class)
                 .hasMessageContaining("User is already inactive")
                 .hasMessageContaining("Mike.Tyson");
@@ -182,7 +182,7 @@ class UserServiceImplTest {
 
         when(userDao.findByUsername("ghost.user")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.deactivate(request))
+        assertThatThrownBy(() -> service.deactivate(request))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("User not found")
                 .hasMessageContaining("ghost.user");
