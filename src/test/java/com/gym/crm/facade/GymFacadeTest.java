@@ -9,6 +9,7 @@ import com.gym.crm.dto.request.CreateTrainerRequest;
 import com.gym.crm.dto.request.CreateTrainingRequest;
 import com.gym.crm.dto.request.UpdateTraineeRequest;
 import com.gym.crm.dto.request.UpdateTrainerRequest;
+import com.gym.crm.dto.request.UserCredentials;
 import com.gym.crm.dto.response.TraineeResponse;
 import com.gym.crm.dto.response.TrainerResponse;
 import com.gym.crm.dto.response.TrainingResponse;
@@ -20,6 +21,7 @@ import com.gym.crm.model.Trainer;
 import com.gym.crm.model.Training;
 import com.gym.crm.model.TrainingType;
 import com.gym.crm.model.User;
+import com.gym.crm.service.AuthenticationService;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
@@ -63,6 +65,8 @@ class GymFacadeTest {
     private TrainingMapper trainingMapper;
     @Mock
     private CoreValidator coreValidator;
+    @Mock
+    private AuthenticationService authenticationService;
 
     private GymFacade facade;
     private Trainee trainee;
@@ -79,6 +83,7 @@ class GymFacadeTest {
         facade.setTrainerMapper(trainerMapper);
         facade.setTrainingMapper(trainingMapper);
         facade.setValidationService(coreValidator);
+        facade.setAuthenticationService(authenticationService);
 
         trainee = buildTrainee();
         trainer = buildTrainer();
@@ -101,6 +106,7 @@ class GymFacadeTest {
         TraineeResponse actual = facade.createTrainee(request);
 
         assertEquals(traineeResponse, actual);
+        verify(coreValidator).validate(request);
         verify(traineeMapper).toEntity(request);
         verify(traineeService).create(trainee);
         verify(traineeMapper).toResponse(trainee);
@@ -112,15 +118,20 @@ class GymFacadeTest {
                 .id(EXISTING_ID)
                 .firstName("Abdul")
                 .lastName("Hariton")
+                .username(USERNAME)
                 .build();
+        UserCredentials credentials = buildTraineeCredentials();
+
         when(traineeMapper.toEntity(request)).thenReturn(trainee);
         when(traineeService.update(trainee)).thenReturn(trainee);
         when(traineeMapper.toResponse(trainee)).thenReturn(traineeResponse);
 
-        TraineeResponse actual = facade.updateTrainee(request);
+        TraineeResponse actual = facade.updateTrainee(request, credentials);
 
         assertEquals(traineeResponse, actual);
         verify(coreValidator).validate(request);
+        verify(coreValidator).validate(credentials);
+        verify(authenticationService).validateTraineeCredentials(credentials);
         verify(traineeMapper).toEntity(request);
         verify(traineeService).update(trainee);
         verify(traineeMapper).toResponse(trainee);
@@ -128,35 +139,48 @@ class GymFacadeTest {
 
     @Test
     void deleteTrainee_whenValidId_callsService() {
-        facade.deleteTrainee(EXISTING_ID);
+        UserCredentials credentials = buildTraineeCredentials();
 
+        facade.deleteTrainee(EXISTING_ID, credentials);
+
+        verify(coreValidator).validate(credentials);
+        verify(authenticationService).validateTraineeCredentials(credentials);
         verify(traineeService).deleteById(EXISTING_ID);
     }
 
     @Test
     void deleteTraineeByUsername_callsService() {
-        facade.deleteTraineeByUsername(USERNAME);
+        UserCredentials credentials = buildTraineeCredentials();
 
+        facade.deleteTraineeByUsername(USERNAME, credentials);
+
+        verify(coreValidator).validate(credentials);
+        verify(authenticationService).validateTraineeCredentials(credentials);
         verify(traineeService).deleteByUsername(USERNAME);
     }
 
     @Test
     void findTraineeById_whenTraineeExists_returnsResponse() {
+        UserCredentials credentials = buildTraineeCredentials();
+
         when(traineeService.findById(EXISTING_ID)).thenReturn(Optional.of(trainee));
         when(traineeMapper.toResponse(trainee)).thenReturn(traineeResponse);
 
-        Optional<TraineeResponse> actual = facade.findTraineeById(EXISTING_ID);
+        Optional<TraineeResponse> actual = facade.findTraineeById(EXISTING_ID, credentials);
 
         assertTrue(actual.isPresent());
         assertEquals(traineeResponse, actual.get());
+        verify(authenticationService).validateTraineeCredentials(credentials);
         verify(traineeService).findById(EXISTING_ID);
     }
 
     @Test
     void findTraineeById_whenTraineeNotExists_returnsEmpty() {
+        UserCredentials credentials = buildTraineeCredentials();
+
         when(traineeService.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
 
-        Optional<TraineeResponse> actual = facade.findTraineeById(NON_EXISTING_ID);
+        Optional<TraineeResponse> actual = facade.findTraineeById(NON_EXISTING_ID, credentials);
 
         assertFalse(actual.isPresent());
         verify(traineeService).findById(NON_EXISTING_ID);
@@ -164,10 +188,12 @@ class GymFacadeTest {
 
     @Test
     void findTraineeByUsername_whenExists_returnsResponse() {
+        UserCredentials credentials = buildTraineeCredentials();
+
         when(traineeService.findByUsername(USERNAME)).thenReturn(Optional.of(trainee));
         when(traineeMapper.toResponse(trainee)).thenReturn(traineeResponse);
 
-        Optional<TraineeResponse> actual = facade.findTraineeByUsername(USERNAME);
+        Optional<TraineeResponse> actual = facade.findTraineeByUsername(USERNAME, credentials);
 
         assertTrue(actual.isPresent());
         assertEquals(traineeResponse, actual.get());
@@ -176,19 +202,23 @@ class GymFacadeTest {
 
     @Test
     void findTraineeByUsername_whenNotExists_returnsEmpty() {
+        UserCredentials credentials = buildTraineeCredentials();
+
         when(traineeService.findByUsername(USERNAME)).thenReturn(Optional.empty());
 
-        Optional<TraineeResponse> actual = facade.findTraineeByUsername(USERNAME);
+        Optional<TraineeResponse> actual = facade.findTraineeByUsername(USERNAME, credentials);
 
         assertFalse(actual.isPresent());
     }
 
     @Test
     void findAllTrainees_returnsAllTraineeResponses() {
+        UserCredentials credentials = buildTraineeCredentials();
+
         when(traineeService.findAll()).thenReturn(List.of(trainee));
         when(traineeMapper.toResponse(trainee)).thenReturn(traineeResponse);
 
-        List<TraineeResponse> actual = facade.findAllTrainees();
+        List<TraineeResponse> actual = facade.findAllTrainees(credentials);
 
         assertEquals(1, actual.size());
         assertEquals(traineeResponse, actual.get(0));
@@ -198,9 +228,12 @@ class GymFacadeTest {
     @Test
     void updateTraineeTrainers_callsService() {
         List<String> trainerUsernames = List.of("Mike.Tyson", "John.Doe");
+        UserCredentials credentials = buildTraineeCredentials();
 
-        facade.updateTraineeTrainers(USERNAME, trainerUsernames);
+        facade.updateTraineeTrainers(USERNAME, trainerUsernames, credentials);
 
+        verify(coreValidator).validate(credentials);
+        verify(authenticationService).validateTraineeCredentials(credentials);
         verify(traineeService).updateTrainers(USERNAME, trainerUsernames);
     }
 
@@ -211,10 +244,13 @@ class GymFacadeTest {
                 .oldPassword("oldPass123")
                 .newPassword("newPass456")
                 .build();
+        UserCredentials credentials = buildTraineeCredentials();
 
-        facade.changeTraineePassword(request);
+        facade.changeTraineePassword(request, credentials);
 
         verify(coreValidator).validate(request);
+        verify(coreValidator).validate(credentials);
+        verify(authenticationService).validateTraineeCredentials(credentials);
         verify(traineeService).changePassword(request);
     }
 
@@ -223,11 +259,15 @@ class GymFacadeTest {
         ActivationRequest request = ActivationRequest.builder()
                 .username(USERNAME)
                 .build();
+        UserCredentials credentials = buildTraineeCredentials();
 
-        facade.activateTrainee(request);
+        facade.activateTrainee(request, credentials);
 
         verify(coreValidator).validate(request);
+        verify(coreValidator).validate(credentials);
+        verify(authenticationService).validateTraineeCredentials(credentials);
         verify(traineeService).activate(request);
+        ;
     }
 
     @Test
@@ -235,10 +275,13 @@ class GymFacadeTest {
         ActivationRequest request = ActivationRequest.builder()
                 .username(USERNAME)
                 .build();
+        UserCredentials credentials = buildTraineeCredentials();
 
-        facade.deactivateTrainee(request);
+        facade.deactivateTrainee(request, credentials);
 
         verify(coreValidator).validate(request);
+        verify(coreValidator).validate(credentials);
+        verify(authenticationService).validateTraineeCredentials(credentials);
         verify(traineeService).deactivate(request);
     }
 
@@ -271,14 +314,18 @@ class GymFacadeTest {
                 .username(TRAINER_USERNAME)
                 .specializationId(EXISTING_ID)
                 .build();
+        UserCredentials credentials = buildTrainerCredentials();
+
         when(trainerMapper.toEntity(request)).thenReturn(trainer);
         when(trainerService.update(trainer)).thenReturn(trainer);
         when(trainerMapper.toResponse(trainer)).thenReturn(trainerResponse);
 
-        TrainerResponse actual = facade.updateTrainer(request);
+        TrainerResponse actual = facade.updateTrainer(request, credentials);
 
         assertEquals(trainerResponse, actual);
         verify(coreValidator).validate(request);
+        verify(coreValidator).validate(credentials);
+        verify(authenticationService).validateTrainerCredentials(credentials);
         verify(trainerMapper).toEntity(request);
         verify(trainerService).update(trainer);
         verify(trainerMapper).toResponse(trainer);
@@ -286,21 +333,26 @@ class GymFacadeTest {
 
     @Test
     void findTrainerById_whenTrainerExists_returnsResponse() {
+        UserCredentials credentials = buildTrainerCredentials();
+
         when(trainerService.findById(EXISTING_ID)).thenReturn(Optional.of(trainer));
         when(trainerMapper.toResponse(trainer)).thenReturn(trainerResponse);
 
-        Optional<TrainerResponse> actual = facade.findTrainerById(EXISTING_ID);
+        Optional<TrainerResponse> actual = facade.findTrainerById(EXISTING_ID, credentials);
 
         assertTrue(actual.isPresent());
         assertEquals(trainerResponse, actual.get());
+        verify(authenticationService).validateTrainerCredentials(credentials);
         verify(trainerService).findById(EXISTING_ID);
     }
 
     @Test
     void findTrainerById_whenTrainerNotExists_returnsEmpty() {
+        UserCredentials credentials = buildTrainerCredentials();
+
         when(trainerService.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
 
-        Optional<TrainerResponse> actual = facade.findTrainerById(NON_EXISTING_ID);
+        Optional<TrainerResponse> actual = facade.findTrainerById(NON_EXISTING_ID, credentials);
 
         assertFalse(actual.isPresent());
         verify(trainerService).findById(NON_EXISTING_ID);
@@ -308,10 +360,12 @@ class GymFacadeTest {
 
     @Test
     void findTrainerByUsername_whenExists_returnsResponse() {
+        UserCredentials credentials = buildTrainerCredentials();
+
         when(trainerService.findByUsername(TRAINER_USERNAME)).thenReturn(Optional.of(trainer));
         when(trainerMapper.toResponse(trainer)).thenReturn(trainerResponse);
 
-        Optional<TrainerResponse> actual = facade.findTrainerByUsername(TRAINER_USERNAME);
+        Optional<TrainerResponse> actual = facade.findTrainerByUsername(TRAINER_USERNAME, credentials);
 
         assertTrue(actual.isPresent());
         assertEquals(trainerResponse, actual.get());
@@ -320,19 +374,23 @@ class GymFacadeTest {
 
     @Test
     void findTrainerByUsername_whenNotExists_returnsEmpty() {
+        UserCredentials credentials = buildTrainerCredentials();
+
         when(trainerService.findByUsername(TRAINER_USERNAME)).thenReturn(Optional.empty());
 
-        Optional<TrainerResponse> actual = facade.findTrainerByUsername(TRAINER_USERNAME);
+        Optional<TrainerResponse> actual = facade.findTrainerByUsername(TRAINER_USERNAME, credentials);
 
         assertFalse(actual.isPresent());
     }
 
     @Test
     void findAllTrainers_returnsAllTrainerResponses() {
+        UserCredentials credentials = buildTrainerCredentials();
+
         when(trainerService.findAll()).thenReturn(List.of(trainer));
         when(trainerMapper.toResponse(trainer)).thenReturn(trainerResponse);
 
-        List<TrainerResponse> actual = facade.findAllTrainers();
+        List<TrainerResponse> actual = facade.findAllTrainers(credentials);
 
         assertEquals(1, actual.size());
         assertEquals(trainerResponse, actual.get(0));
@@ -341,13 +399,16 @@ class GymFacadeTest {
 
     @Test
     void findAllTrainersNotAssignedToTrainee_returnsFilteredList() {
+        UserCredentials credentials = buildTraineeCredentials();
+
         when(trainerService.findAllNotAssignedToTrainee(USERNAME)).thenReturn(List.of(trainer));
         when(trainerMapper.toResponse(trainer)).thenReturn(trainerResponse);
 
-        List<TrainerResponse> actual = facade.findAllTrainersNotAssignedToTrainee(USERNAME);
+        List<TrainerResponse> actual = facade.findAllTrainersNotAssignedToTrainee(USERNAME, credentials);
 
         assertEquals(1, actual.size());
         assertEquals(trainerResponse, actual.get(0));
+        verify(authenticationService).validateTraineeCredentials(credentials);
         verify(trainerService).findAllNotAssignedToTrainee(USERNAME);
     }
 
@@ -358,10 +419,13 @@ class GymFacadeTest {
                 .oldPassword("oldPass123")
                 .newPassword("newPass456")
                 .build();
+        UserCredentials credentials = buildTrainerCredentials();
 
-        facade.changeTrainerPassword(request);
+        facade.changeTrainerPassword(request, credentials);
 
         verify(coreValidator).validate(request);
+        verify(coreValidator).validate(credentials);
+        verify(authenticationService).validateTrainerCredentials(credentials);
         verify(trainerService).changePassword(request);
     }
 
@@ -370,10 +434,13 @@ class GymFacadeTest {
         ActivationRequest request = ActivationRequest.builder()
                 .username(TRAINER_USERNAME)
                 .build();
+        UserCredentials credentials = buildTrainerCredentials();
 
-        facade.activateTrainer(request);
+        facade.activateTrainer(request, credentials);
 
         verify(coreValidator).validate(request);
+        verify(coreValidator).validate(credentials);
+        verify(authenticationService).validateTrainerCredentials(credentials);
         verify(trainerService).activate(request);
     }
 
@@ -382,10 +449,13 @@ class GymFacadeTest {
         ActivationRequest request = ActivationRequest.builder()
                 .username(TRAINER_USERNAME)
                 .build();
+        UserCredentials credentials = buildTrainerCredentials();
 
-        facade.deactivateTrainer(request);
+        facade.deactivateTrainer(request, credentials);
 
         verify(coreValidator).validate(request);
+        verify(coreValidator).validate(credentials);
+        verify(authenticationService).validateTrainerCredentials(credentials);
         verify(trainerService).deactivate(request);
     }
 
@@ -396,14 +466,18 @@ class GymFacadeTest {
                 .trainerId(EXISTING_ID)
                 .trainingName("Boxing basics")
                 .build();
+        UserCredentials credentials = buildTrainerCredentials();
+
         when(trainingMapper.toEntity(request)).thenReturn(training);
         when(trainingService.create(training)).thenReturn(training);
         when(trainingMapper.toResponse(training)).thenReturn(trainingResponse);
 
-        TrainingResponse actual = facade.createTraining(request);
+        TrainingResponse actual = facade.createTraining(request, credentials);
 
         assertEquals(trainingResponse, actual);
         verify(coreValidator).validate(request);
+        verify(coreValidator).validate(credentials);
+        verify(authenticationService).validateTrainerCredentials(credentials);
         verify(trainingMapper).toEntity(request);
         verify(trainingService).create(training);
         verify(trainingMapper).toResponse(training);
@@ -411,21 +485,26 @@ class GymFacadeTest {
 
     @Test
     void findTrainingById_whenTrainingExists_returnsResponse() {
+        UserCredentials credentials = buildTraineeCredentials();
+
         when(trainingService.findById(EXISTING_ID)).thenReturn(Optional.of(training));
         when(trainingMapper.toResponse(training)).thenReturn(trainingResponse);
 
-        Optional<TrainingResponse> actual = facade.findTrainingById(EXISTING_ID);
+        Optional<TrainingResponse> actual = facade.findTrainingById(EXISTING_ID, credentials);
 
         assertTrue(actual.isPresent());
         assertEquals(trainingResponse, actual.get());
+        verify(authenticationService).validateCredentials(credentials);
         verify(trainingService).findById(EXISTING_ID);
     }
 
     @Test
     void findTrainingById_whenTrainingNotExists_returnsEmpty() {
+        UserCredentials credentials = buildTraineeCredentials();
+
         when(trainingService.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
 
-        Optional<TrainingResponse> actual = facade.findTrainingById(NON_EXISTING_ID);
+        Optional<TrainingResponse> actual = facade.findTrainingById(NON_EXISTING_ID, credentials);
 
         assertFalse(actual.isPresent());
         verify(trainingService).findById(NON_EXISTING_ID);
@@ -433,13 +512,16 @@ class GymFacadeTest {
 
     @Test
     void findAllTrainings_returnsAllTrainingResponses() {
+        UserCredentials credentials = buildTraineeCredentials();
+
         when(trainingService.findAll()).thenReturn(List.of(training));
         when(trainingMapper.toResponse(training)).thenReturn(trainingResponse);
 
-        List<TrainingResponse> actual = facade.findAllTrainings();
+        List<TrainingResponse> actual = facade.findAllTrainings(credentials);
 
         assertEquals(1, actual.size());
         assertEquals(trainingResponse, actual.get(0));
+        verify(authenticationService).validateCredentials(credentials);
         verify(trainingService).findAll();
     }
 
@@ -448,13 +530,16 @@ class GymFacadeTest {
         TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
                 .username(USERNAME)
                 .build();
+        UserCredentials credentials = buildTraineeCredentials();
+
         when(trainingService.findByTraineeCriteria(filter)).thenReturn(List.of(training));
         when(trainingMapper.toResponse(training)).thenReturn(trainingResponse);
 
-        List<TrainingResponse> actual = facade.findTrainingsByTraineeCriteria(filter);
+        List<TrainingResponse> actual = facade.findTrainingsByTraineeCriteria(filter, credentials);
 
         assertEquals(1, actual.size());
         assertEquals(trainingResponse, actual.get(0));
+        verify(authenticationService).validateTraineeCredentials(credentials);
         verify(trainingService).findByTraineeCriteria(filter);
     }
 
@@ -463,14 +548,31 @@ class GymFacadeTest {
         TrainerTrainingSearchFilter filter = TrainerTrainingSearchFilter.builder()
                 .username(TRAINER_USERNAME)
                 .build();
+        UserCredentials credentials = buildTrainerCredentials();
+
         when(trainingService.findByTrainerCriteria(filter)).thenReturn(List.of(training));
         when(trainingMapper.toResponse(training)).thenReturn(trainingResponse);
 
-        List<TrainingResponse> actual = facade.findTrainingsByTrainerCriteria(filter);
+        List<TrainingResponse> actual = facade.findTrainingsByTrainerCriteria(filter, credentials);
 
         assertEquals(1, actual.size());
         assertEquals(trainingResponse, actual.get(0));
+        verify(authenticationService).validateTrainerCredentials(credentials);
         verify(trainingService).findByTrainerCriteria(filter);
+    }
+
+    private UserCredentials buildTraineeCredentials() {
+        return UserCredentials.builder()
+                .username(USERNAME)
+                .password("password123")
+                .build();
+    }
+
+    private UserCredentials buildTrainerCredentials() {
+        return UserCredentials.builder()
+                .username(TRAINER_USERNAME)
+                .password("password123")
+                .build();
     }
 
     private Trainee buildTrainee() {
