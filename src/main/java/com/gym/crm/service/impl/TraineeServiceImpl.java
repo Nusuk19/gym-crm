@@ -1,10 +1,10 @@
 package com.gym.crm.service.impl;
 
+import com.gym.crm.annotation.PersistenceTx;
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dto.request.ActivationRequest;
 import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.exception.EntityNotFoundException;
-import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.model.User;
 import com.gym.crm.service.TraineeService;
@@ -49,6 +49,7 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
+    @PersistenceTx
     public Trainee create(Trainee trainee) {
         validator.validateTrainee(trainee);
 
@@ -72,6 +73,7 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
+    @PersistenceTx
     public Trainee update(Trainee trainee) {
         String username = trainee.getUser().getUsername();
         log.info("Updating trainee: username={}", username);
@@ -95,6 +97,7 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
+    @PersistenceTx
     public void updateTrainers(String traineeUsername, List<String> trainerUsernames) {
         validator.requireNonBlank(traineeUsername, "Username cannot be blank");
         validator.requireNonNull(trainerUsernames, "Trainer usernames list cannot be null");
@@ -109,6 +112,7 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
+    @PersistenceTx
     public void deleteById(Long id) {
         log.info("Deleting trainee: id={}", id);
         validator.requireValidId(id);
@@ -117,6 +121,7 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
+    @PersistenceTx
     public void deleteByUsername(String username) {
         log.info("Deleting trainee: username={}", username);
         validator.requireNonBlank(username, "Username cannot be blank");

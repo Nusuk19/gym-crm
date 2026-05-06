@@ -1,5 +1,6 @@
 package com.gym.crm.service.impl;
 
+import com.gym.crm.annotation.PersistenceTx;
 import com.gym.crm.dao.UserDao;
 import com.gym.crm.dto.request.ActivationRequest;
 import com.gym.crm.dto.request.ChangePasswordRequest;
@@ -44,6 +45,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @PersistenceTx
     public void changePassword(ChangePasswordRequest request) {
         coreValidator.validate(request);
         log.info("Changing password for user: username={}", request.getUsername());
@@ -63,6 +65,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @PersistenceTx
     public void activate(ActivationRequest request) {
         log.info("Activating user: username={}", request.getUsername());
 
@@ -77,6 +80,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @PersistenceTx
     public void deactivate(ActivationRequest request) {
         log.info("Deactivating user: username={}", request.getUsername());
 

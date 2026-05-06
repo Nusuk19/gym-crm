@@ -30,6 +30,7 @@ public class HibernateConfig {
         properties.put(AvailableSettings.SHOW_SQL, "true");
         properties.put(AvailableSettings.FORMAT_SQL, "true");
         properties.put(AvailableSettings.HBM2DDL_AUTO, "validate");
+        properties.put(AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS, "thread");
 
         return  new org.hibernate.cfg.Configuration()
                 .addProperties(properties)

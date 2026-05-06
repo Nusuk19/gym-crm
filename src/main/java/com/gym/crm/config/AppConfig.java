@@ -4,10 +4,12 @@ import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 @Configuration
+@EnableAspectJAutoProxy
 @ComponentScan("com.gym.crm")
 @PropertySource("classpath:application.properties")
 public class AppConfig {
