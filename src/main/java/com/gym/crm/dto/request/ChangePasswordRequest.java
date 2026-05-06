@@ -19,6 +19,7 @@ public class ChangePasswordRequest {
 
     @NotBlank(message = "Old password is required")
     @Size(max = 100, message = "Old password must not exceed 100 characters")
+    @ToString.Exclude
     private final String oldPassword;
 
     @NotBlank(message = "New password is required")
