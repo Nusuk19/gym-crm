@@ -150,6 +150,7 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
+    @PersistenceTx
     public void changePassword(ChangePasswordRequest request) {
         requireTraineeByUsername(request.getUsername());
 
@@ -157,6 +158,7 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
+    @PersistenceTx
     public void activate(ActivationRequest request) {
         requireTraineeByUsername(request.getUsername());
 
@@ -164,6 +166,7 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
+    @PersistenceTx
     public void deactivate(ActivationRequest request) {
         requireTraineeByUsername(request.getUsername());
 

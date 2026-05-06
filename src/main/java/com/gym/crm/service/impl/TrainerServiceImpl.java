@@ -124,6 +124,7 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
+    @PersistenceTx
     public List<Trainer> findAllNotAssignedToTrainee(String traineeUsername) {
         validator.requireNonBlank(traineeUsername, "Username cannot be blank");
 
@@ -134,6 +135,7 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
+    @PersistenceTx
     public void changePassword(ChangePasswordRequest request) {
         requireTrainerByUsername(request.getUsername());
 
@@ -141,6 +143,7 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
+    @PersistenceTx
     public void activate(ActivationRequest request) {
         requireTrainerByUsername(request.getUsername());
 
@@ -148,6 +151,7 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
+    @PersistenceTx
     public void deactivate(ActivationRequest request) {
         requireTrainerByUsername(request.getUsername());
 

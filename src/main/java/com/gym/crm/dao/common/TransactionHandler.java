@@ -1,9 +1,9 @@
 package com.gym.crm.dao.common;
 
+import com.gym.crm.transaction.TransactionScope;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -16,33 +16,23 @@ public class TransactionHandler {
     private final SessionFactory sessionFactory;
 
     public void executeWithinTx(Consumer<Session> sessionConsumer) {
-        Session session = sessionFactory.openSession();
-        Transaction tx = session.beginTransaction();
-
-        try {
+        executeReturningWithinTx(session -> {
             sessionConsumer.accept(session);
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw e;
-        } finally {
-            session.close();
-        }
+
+            return null;
+        });
     }
 
     public <T> T executeReturningWithinTx(Function<Session, T> sessionFunction) {
-        Session session = sessionFactory.openSession();
-        Transaction tx = session.beginTransaction();
+        try (TransactionScope scope = TransactionScope.open(sessionFactory, false)) {
 
-        try {
-            T result = sessionFunction.apply(session);
-            tx.commit();
-            return result;
-        } catch (Exception e) {
-            tx.rollback();
-            throw e;
-        } finally {
-            session.close();
+            try {
+                return sessionFunction.apply(scope.session());
+            } catch (RuntimeException e) {
+                scope.markFailed();
+
+                throw e;
+            }
         }
     }
 }

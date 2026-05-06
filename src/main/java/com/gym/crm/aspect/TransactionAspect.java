@@ -1,14 +1,13 @@
 package com.gym.crm.aspect;
 
 import com.gym.crm.annotation.PersistenceTx;
+import com.gym.crm.transaction.TransactionScope;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -21,29 +20,16 @@ public class TransactionAspect {
 
     @Around("@annotation(persistenceTx)")
     public Object handleTransaction(ProceedingJoinPoint joinPoint, PersistenceTx persistenceTx) throws Throwable {
-        Session session = sessionFactory.getCurrentSession();
-        Transaction transaction = null;
+        try (TransactionScope scope = TransactionScope.open(sessionFactory, persistenceTx.readOnly())) {
 
-        try {
-            transaction = session.beginTransaction();
-
-            if (persistenceTx.readOnly()) {
-                session.setDefaultReadOnly(true);
+            try {
+                return joinPoint.proceed();
+            } catch (Throwable e) {
+                scope.markFailed();
+                log.warn("Transaction rolled back for {}: {}", joinPoint.getSignature().toShortString(), e.getMessage());
+                
+                throw e;
             }
-
-            Object result = joinPoint.proceed();
-
-            transaction.commit();
-            log.debug("Transaction committed for: {}", joinPoint.getSignature().toShortString());
-
-            return result;
-        } catch (Exception e) {
-            if (transaction != null && transaction.isActive()) {
-                transaction.rollback();
-                log.warn("Transaction rolled back for: {} due to: {}", joinPoint.getSignature().toShortString(), e.getMessage());
-            }
-
-            throw e;
         }
     }
 }
