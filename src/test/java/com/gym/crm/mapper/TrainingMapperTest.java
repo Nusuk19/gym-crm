@@ -73,7 +73,7 @@ class TrainingMapperTest {
                 .trainingName("Boxing basics")
                 .trainingType(TrainingType.builder().trainingTypeName("BOXING").build())
                 .trainingDate(LocalDate.of(2024, 5, 1))
-                .trainingDuration(60)
+                .trainingDuration(BigDecimal.valueOf(60))
                 .build();
     }
 
