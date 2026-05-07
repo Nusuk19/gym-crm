@@ -2,6 +2,7 @@ package com.gym.crm.service.profile;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -16,7 +17,7 @@ class PasswordEncoderTest {
 
     @BeforeEach
     void setUp() {
-        passwordEncoder = new PasswordEncoder();
+        passwordEncoder = new PasswordEncoder(new BCryptPasswordEncoder());
     }
 
     @Test
