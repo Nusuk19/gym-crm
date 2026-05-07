@@ -1,4 +1,4 @@
-package com.gym.crm.profile;
+package com.gym.crm.service.profile;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;

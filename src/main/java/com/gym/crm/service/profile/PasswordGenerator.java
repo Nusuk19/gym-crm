@@ -1,4 +1,4 @@
-package com.gym.crm.profile;
+package com.gym.crm.service.profile;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;

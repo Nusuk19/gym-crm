@@ -1,9 +1,9 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.profile.PasswordEncoder;
-import com.gym.crm.profile.PasswordGenerator;
-import com.gym.crm.profile.UsernameGenerator;
 import com.gym.crm.service.UserProfileService;
+import com.gym.crm.service.profile.PasswordEncoder;
+import com.gym.crm.service.profile.PasswordGenerator;
+import com.gym.crm.service.profile.UsernameGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

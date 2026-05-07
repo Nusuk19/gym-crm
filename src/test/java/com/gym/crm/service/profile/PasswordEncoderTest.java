@@ -1,4 +1,4 @@
-package com.gym.crm.profile;
+package com.gym.crm.service.profile;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

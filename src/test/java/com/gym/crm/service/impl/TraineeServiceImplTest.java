@@ -12,7 +12,7 @@ import com.gym.crm.model.Trainee;
 import com.gym.crm.model.User;
 import com.gym.crm.service.UserProfileService;
 import com.gym.crm.service.UserService;
-import com.gym.crm.validator.EntityValidator;
+import com.gym.crm.service.common.EntityValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

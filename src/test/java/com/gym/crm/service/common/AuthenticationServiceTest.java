@@ -1,4 +1,4 @@
-package com.gym.crm.service.impl;
+package com.gym.crm.service.common;
 
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
@@ -10,7 +10,7 @@ import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.model.TrainingType;
 import com.gym.crm.model.User;
-import com.gym.crm.profile.PasswordEncoder;
+import com.gym.crm.service.profile.PasswordEncoder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class AuthenticationServiceImplTest {
+class AuthenticationServiceTest {
 
     @Mock
     private TraineeDao traineeDao;
@@ -40,7 +40,7 @@ class AuthenticationServiceImplTest {
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
-    private AuthenticationServiceImpl service;
+    private AuthenticationService service;
 
     @Test
     void validateTraineeCredentials_validCredentials_doesNotThrow() {

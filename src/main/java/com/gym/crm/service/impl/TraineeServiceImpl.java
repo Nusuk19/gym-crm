@@ -10,7 +10,7 @@ import com.gym.crm.model.User;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.UserProfileService;
 import com.gym.crm.service.UserService;
-import com.gym.crm.validator.EntityValidator;
+import com.gym.crm.service.common.EntityValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +30,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Autowired
     public void setTraineeDao(TraineeDao traineeDao) {
-                this.traineeDao = traineeDao;
+        this.traineeDao = traineeDao;
     }
 
     @Autowired
