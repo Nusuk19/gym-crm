@@ -5,7 +5,7 @@ import com.gym.crm.dao.search.filters.TraineeTrainingSearchFilter;
 import com.gym.crm.dao.search.filters.TrainerTrainingSearchFilter;
 import com.gym.crm.model.Training;
 import com.gym.crm.service.TrainingService;
-import com.gym.crm.validator.EntityValidator;
+import com.gym.crm.service.common.EntityValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,9 +1,7 @@
-package com.gym.crm.profile;
+package com.gym.crm.service.profile;
 
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
-import com.gym.crm.model.Trainee;
-import com.gym.crm.model.Trainer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

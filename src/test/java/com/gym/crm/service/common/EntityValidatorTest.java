@@ -1,4 +1,4 @@
-package com.gym.crm.validator;
+package com.gym.crm.service.common;
 
 import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.Trainee;

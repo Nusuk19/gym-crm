@@ -1,4 +1,4 @@
-package com.gym.crm.validator;
+package com.gym.crm.service.common;
 
 import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.Trainee;
@@ -18,6 +18,7 @@ public class EntityValidator {
 
     public void validateTrainer(Trainer trainer) {
         requireNonNull(trainer, "Trainer cannot be null");
+        requireNonNull(trainer.getUser(), "User cannot be null");
         requireNonBlank(trainer.getUser().getFirstName(), "First name cannot be blank");
         requireNonBlank(trainer.getUser().getLastName(), "Last name cannot be blank");
     }

@@ -1,4 +1,4 @@
-package com.gym.crm.profile;
+package com.gym.crm.service.profile;
 
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
