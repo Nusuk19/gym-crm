@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
@@ -33,5 +34,5 @@ public class CreateTrainingRequest {
     private final LocalDate trainingDate;
 
     @Positive(message = "Training duration must be a positive number")
-    private final int trainingDuration;
+    private final BigDecimal trainingDuration;
 }

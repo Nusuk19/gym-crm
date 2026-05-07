@@ -1,5 +1,6 @@
 package com.gym.crm.service.impl;
 
+import com.gym.crm.annotation.PersistenceTx;
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.dto.request.ActivationRequest;
@@ -55,6 +56,7 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
+    @PersistenceTx
     public Trainer create(Trainer trainer) {
         log.info("Creating trainer: firstName={}, lastName={}",
                 trainer.getUser().getFirstName(), trainer.getUser().getLastName());
@@ -78,6 +80,7 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
+    @PersistenceTx
     public Trainer update(Trainer trainer) {
         String username = trainer.getUser().getUsername();
         log.info("Updating trainer: username={}", username);
@@ -121,6 +124,7 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
+    @PersistenceTx
     public List<Trainer> findAllNotAssignedToTrainee(String traineeUsername) {
         validator.requireNonBlank(traineeUsername, "Username cannot be blank");
 
@@ -131,6 +135,7 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
+    @PersistenceTx
     public void changePassword(ChangePasswordRequest request) {
         requireTrainerByUsername(request.getUsername());
 
@@ -138,6 +143,7 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
+    @PersistenceTx
     public void activate(ActivationRequest request) {
         requireTrainerByUsername(request.getUsername());
 
@@ -145,6 +151,7 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
+    @PersistenceTx
     public void deactivate(ActivationRequest request) {
         requireTrainerByUsername(request.getUsername());
 
