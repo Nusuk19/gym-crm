@@ -21,7 +21,6 @@ public class TransactionAspect {
     @Around("@annotation(persistenceTx)")
     public Object handleTransaction(ProceedingJoinPoint joinPoint, PersistenceTx persistenceTx) throws Throwable {
         try (TransactionScope scope = TransactionScope.open(sessionFactory, persistenceTx.readOnly())) {
-
             try {
                 return joinPoint.proceed();
             } catch (Throwable e) {

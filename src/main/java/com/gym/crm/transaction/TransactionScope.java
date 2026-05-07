@@ -12,7 +12,7 @@ public final class TransactionScope implements AutoCloseable {
     private final Transaction transaction;
     private final boolean ownsTransaction;
 
-    private boolean failed = false;
+    private boolean isTransactionFailed = false;
 
     private TransactionScope(Session session, Transaction transaction, boolean ownsTransaction) {
         this.session = session;
@@ -45,7 +45,7 @@ public final class TransactionScope implements AutoCloseable {
     }
 
     public void markFailed() {
-        this.failed = true;
+        this.isTransactionFailed = true;
     }
 
     @Override
@@ -53,14 +53,14 @@ public final class TransactionScope implements AutoCloseable {
         if (!ownsTransaction) {
             return;
         }
-        if (failed) {
-            if (transaction.isActive()) {
+
+        if (isTransactionFailed && transaction.isActive()) {
                 transaction.rollback();
                 log.debug("Transaction rolled back");
-            }
-        } else {
-            transaction.commit();
-            log.debug("Transaction committed");
+                return;
         }
+
+        transaction.commit();
+        log.debug("Transaction committed");
     }
 }
