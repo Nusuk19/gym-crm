@@ -16,6 +16,8 @@ import java.util.Optional;
 @Repository("traineeDao")
 public class TraineeDaoImpl implements TraineeDao {
 
+    private static final String USERNAME = "username";
+
     private final TransactionHandler transactionHandler;
 
     @Override
@@ -40,7 +42,7 @@ public class TraineeDaoImpl implements TraineeDao {
             Trainee trainee = session.createQuery(
                             "SELECT t FROM Trainee t JOIN FETCH t.trainers WHERE t.user.username = :username",
                             Trainee.class)
-                    .setParameter("username", traineeUsername)
+                    .setParameter(USERNAME, traineeUsername)
                     .uniqueResult();
 
             if (trainee == null) {
@@ -80,7 +82,7 @@ public class TraineeDaoImpl implements TraineeDao {
             Trainee trainee = session.createQuery(
                             "FROM Trainee t JOIN FETCH t.user WHERE t.user.username = :username",
                             Trainee.class)
-                    .setParameter("username", username)
+                    .setParameter(USERNAME, username)
                     .uniqueResult();
 
             if (trainee != null) {
@@ -101,7 +103,7 @@ public class TraineeDaoImpl implements TraineeDao {
                 session.createQuery(
                                 "FROM Trainee t JOIN FETCH t.user LEFT JOIN FETCH t.trainers WHERE t.user.username = :username",
                                 Trainee.class)
-                        .setParameter("username", username)
+                        .setParameter(USERNAME, username)
                         .uniqueResultOptional()
         );
     }

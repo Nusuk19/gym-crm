@@ -23,7 +23,7 @@ public abstract class TrainingQueryBuilder<F extends TrainingSearchFilter> {
         CriteriaQuery<Training> query = cb.createQuery(Training.class);
         Root<Training> root = query.from(Training.class);
         List<Predicate> predicates = new ArrayList<>();
-        Map<String, Join<?, ?>> joinCache = new HashMap<>();
+        Map<String, Join<Object, Object>> joinCache = new HashMap<>();
 
         addUsernamePredicate(cb, root, criteria, predicates, joinCache);
         addDateRange(cb, root, criteria, predicates);
@@ -35,13 +35,13 @@ public abstract class TrainingQueryBuilder<F extends TrainingSearchFilter> {
     }
 
     protected abstract void addSpecificPredicates(CriteriaBuilder cb, Root<Training> root, F criteria,
-                                                  List<Predicate> predicates, Map<String, Join<?, ?>> joinCache);
+                                                  List<Predicate> predicates, Map<String, Join<Object, Object>> joinCache);
 
     protected abstract Predicate getUsernamePredicate(CriteriaBuilder cb, Root<Training> root,
-                                                      String username, Map<String, Join<?, ?>> joinCache);
+                                                      String username, Map<String, Join<Object, Object>> joinCache);
 
     protected void addUsernamePredicate(CriteriaBuilder cb, Root<Training> root, F criteria,
-                                        List<Predicate> predicates, Map<String, Join<?, ?>> joinCache) {
+                                        List<Predicate> predicates, Map<String, Join<Object, Object>> joinCache) {
         Optional.ofNullable(criteria.getUsername())
                 .filter(name -> !name.isBlank())
                 .ifPresent(username -> predicates.add(getUsernamePredicate(cb, root, username, joinCache)));
@@ -56,11 +56,11 @@ public abstract class TrainingQueryBuilder<F extends TrainingSearchFilter> {
     }
 
     protected void addFullNameLikePredicate(CriteriaBuilder cb, Root<Training> root, List<Predicate> predicates,
-                                            String fullName, String userPathPrefix, Map<String, Join<?, ?>> joinCache) {
+                                            String fullName, String userPathPrefix, Map<String, Join<Object, Object>> joinCache) {
         Optional.ofNullable(fullName)
                 .filter(name -> !name.isBlank())
                 .ifPresent(name -> {
-                    Join<?, ?> userJoin = resolveJoinPath(root, userPathPrefix, joinCache);
+                    Join<Object, Object> userJoin = resolveJoinPath(root, userPathPrefix, joinCache);
 
                     Expression<String> fullNameExpr = cb.concat(
                             cb.concat(userJoin.get(TrainingAttribute.FIRST_NAME), " "),
@@ -71,16 +71,16 @@ public abstract class TrainingQueryBuilder<F extends TrainingSearchFilter> {
                 });
     }
 
-    protected Join<?, ?> resolveJoinPath(Root<Training> root, String path, Map<String, Join<?, ?>> joinCache) {
+    protected Join<Object, Object> resolveJoinPath(Root<Training> root, String path, Map<String, Join<Object, Object>> joinCache) {
         String[] parts = path.split("\\.");
 
-        Join<?, ?> current = root.join(parts[0], JoinType.LEFT);
+        Join<Object, Object> current = root.join(parts[0], JoinType.LEFT);
         joinCache.putIfAbsent(parts[0], current);
 
         for (int i = 1; i < parts.length; i++) {
             String subPath = String.join(".", Arrays.copyOfRange(parts, 0, i + 1));
 
-            final Join<?, ?> parent = current;
+            final Join<Object, Object> parent = current;
             final String segment = parts[i];
 
             current = joinCache.computeIfAbsent(subPath, ignored -> parent.join(segment, JoinType.LEFT));

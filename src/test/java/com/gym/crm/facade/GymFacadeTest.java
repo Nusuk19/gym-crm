@@ -267,7 +267,6 @@ class GymFacadeTest {
         verify(coreValidator).validate(credentials);
         verify(authenticationService).validateTraineeCredentials(credentials);
         verify(traineeService).activate(request);
-        ;
     }
 
     @Test
