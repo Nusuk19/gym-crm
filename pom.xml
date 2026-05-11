@@ -18,7 +18,7 @@
         <sonar.coverage.exclusions>
             **/config/**,
             **/dto/**,
-            **/filter/**
+            **/filters/**
         </sonar.coverage.exclusions>
         <sonar.exclusions>**/config/**</sonar.exclusions>
         <junit.version>5.10.0</junit.version>
@@ -178,7 +178,7 @@
                     <excludes>
                         <exclude>**/config/**</exclude>
                         <exclude>**/dto/**</exclude>
-                        <exclude>**/filter/**</exclude>
+                        <exclude>**/filters/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
