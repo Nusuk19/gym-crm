@@ -5,7 +5,6 @@ import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.dao.UserDao;
 import com.gym.crm.dto.request.UserCredentials;
 import com.gym.crm.exception.AuthenticationException;
-import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.model.TrainingType;
@@ -75,7 +74,7 @@ class AuthenticationServiceTest {
 
         assertThatThrownBy(() -> service.validateTraineeCredentials(credentials))
                 .isInstanceOf(AuthenticationException.class)
-                .hasMessageContaining("Invalid credentials");;
+                .hasMessageContaining("Invalid credentials");
     }
 
     @Test

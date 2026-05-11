@@ -22,6 +22,7 @@ import java.util.Optional;
 @Service
 public class TraineeServiceImpl implements TraineeService {
     private static final Logger log = LoggerFactory.getLogger(TraineeServiceImpl.class);
+    private static final String USERNAME_BLANK_MSG = "Username cannot be blank";
 
     private TraineeDao traineeDao;
     private EntityValidator validator;
@@ -99,7 +100,7 @@ public class TraineeServiceImpl implements TraineeService {
     @Override
     @PersistenceTx
     public void updateTrainers(String traineeUsername, List<String> trainerUsernames) {
-        validator.requireNonBlank(traineeUsername, "Username cannot be blank");
+        validator.requireNonBlank(traineeUsername, USERNAME_BLANK_MSG);
         validator.requireNonNull(trainerUsernames, "Trainer usernames list cannot be null");
 
         log.info("Updating trainers list for trainee: username={}, trainers={}", traineeUsername, trainerUsernames);
@@ -124,7 +125,7 @@ public class TraineeServiceImpl implements TraineeService {
     @PersistenceTx
     public void deleteByUsername(String username) {
         log.info("Deleting trainee: username={}", username);
-        validator.requireNonBlank(username, "Username cannot be blank");
+        validator.requireNonBlank(username, USERNAME_BLANK_MSG);
 
         traineeDao.deleteByUsername(username);
     }
@@ -138,7 +139,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     public Optional<Trainee> findByUsername(String username) {
-        validator.requireNonBlank(username, "Username cannot be blank");
+        validator.requireNonBlank(username, USERNAME_BLANK_MSG);
         log.debug("Looking up trainee by username={}", username);
 
         return traineeDao.findByUsername(username);
@@ -174,7 +175,7 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     private Trainee requireTraineeByUsername(String username) {
-        validator.requireNonBlank(username, "Username cannot be blank");
+        validator.requireNonBlank(username, USERNAME_BLANK_MSG);
 
         return traineeDao.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + username));
