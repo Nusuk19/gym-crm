@@ -64,20 +64,18 @@ class AuthenticationServiceTest {
 
         assertThatThrownBy(() -> service.validateTraineeCredentials(credentials))
                 .isInstanceOf(AuthenticationException.class)
-                .hasMessageContaining("Invalid credentials for trainee")
-                .hasMessageContaining("Abdul.Hariton");
+                .hasMessageContaining("Invalid credentials");
     }
 
     @Test
-    void validateTraineeCredentials_traineeNotFound_throwsEntityNotFoundException() {
+    void validateTraineeCredentials_traineeNotFound_throwsAuthenticationException() {
         UserCredentials credentials = buildCredentials("ghost.user", "password123");
 
         when(traineeDao.findByUsername("ghost.user")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.validateTraineeCredentials(credentials))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("Trainee not found")
-                .hasMessageContaining("ghost.user");
+                .isInstanceOf(AuthenticationException.class)
+                .hasMessageContaining("Invalid credentials");;
     }
 
     @Test
@@ -102,20 +100,18 @@ class AuthenticationServiceTest {
 
         assertThatThrownBy(() -> service.validateTrainerCredentials(credentials))
                 .isInstanceOf(AuthenticationException.class)
-                .hasMessageContaining("Invalid credentials for trainer")
-                .hasMessageContaining("Mike.Tyson");
+                .hasMessageContaining("Invalid credentials");
     }
 
     @Test
-    void validateTrainerCredentials_trainerNotFound_throwsEntityNotFoundException() {
+    void validateTrainerCredentials_trainerNotFound_throwsAuthenticationException() {
         UserCredentials credentials = buildCredentials("ghost.user", "password123");
 
         when(trainerDao.findByUsername("ghost.user")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.validateTrainerCredentials(credentials))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("Trainer not found")
-                .hasMessageContaining("ghost.user");
+                .isInstanceOf(AuthenticationException.class)
+                .hasMessageContaining("Invalid credentials");
     }
 
     @Test
@@ -140,20 +136,18 @@ class AuthenticationServiceTest {
 
         assertThatThrownBy(() -> service.validateCredentials(credentials))
                 .isInstanceOf(AuthenticationException.class)
-                .hasMessageContaining("Invalid credentials")
-                .hasMessageContaining("Abdul.Hariton");
+                .hasMessageContaining("Invalid credentials");
     }
 
     @Test
-    void validateCredentials_userNotFound_throwsEntityNotFoundException() {
+    void validateCredentials_userNotFound_throwsAuthenticationException() {
         UserCredentials credentials = buildCredentials("ghost.user", "password123");
 
         when(userDao.findByUsername("ghost.user")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.validateCredentials(credentials))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("User not found")
-                .hasMessageContaining("ghost.user");
+                .isInstanceOf(AuthenticationException.class)
+                .hasMessageContaining("Invalid credentials");
     }
 
     private UserCredentials buildCredentials(String username, String password) {
