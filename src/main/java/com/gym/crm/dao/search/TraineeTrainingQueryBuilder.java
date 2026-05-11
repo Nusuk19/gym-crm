@@ -17,21 +17,21 @@ public class TraineeTrainingQueryBuilder extends TrainingQueryBuilder<TraineeTra
 
     @Override
     protected void addSpecificPredicates(CriteriaBuilder cb, Root<Training> root, TraineeTrainingSearchFilter criteria,
-                                         List<Predicate> predicates, Map<String, Join<?, ?>> joinCache) {
+                                         List<Predicate> predicates, Map<String, Join<Object, Object>> joinCache) {
         addTrainerFullNamePredicate(cb, root, criteria, predicates, joinCache);
         addTrainingTypePredicate(cb, root, criteria, predicates);
     }
 
     @Override
     protected Predicate getUsernamePredicate(CriteriaBuilder cb, Root<Training> root, String username,
-                                             Map<String, Join<?, ?>> joinCache) {
-        Join<?, ?> userJoin = resolveJoinPath(root, TrainingAttribute.TRAINEE_USER, joinCache);
+                                             Map<String, Join<Object, Object>> joinCache) {
+        Join<Object, Object> userJoin = resolveJoinPath(root, TrainingAttribute.TRAINEE_USER, joinCache);
 
         return cb.equal(userJoin.get(TrainingAttribute.USERNAME), username);
     }
 
     private void addTrainerFullNamePredicate(CriteriaBuilder cb, Root<Training> root, TraineeTrainingSearchFilter criteria,
-                                             List<Predicate> predicates, Map<String, Join<?, ?>> joinCache) {
+                                             List<Predicate> predicates, Map<String, Join<Object, Object>> joinCache) {
         addFullNameLikePredicate(cb, root, predicates, criteria.getTrainerFullName(), TrainingAttribute.TRAINER_USER, joinCache);
     }
 
