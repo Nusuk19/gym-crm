@@ -32,6 +32,8 @@ jobs:
       - name: Build, test and analyze with SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
           mvn clean verify sonar:sonar \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
