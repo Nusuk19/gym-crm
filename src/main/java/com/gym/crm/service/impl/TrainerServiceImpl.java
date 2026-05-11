@@ -23,6 +23,7 @@ import java.util.Optional;
 @Service
 public class TrainerServiceImpl implements TrainerService {
     private static final Logger log = LoggerFactory.getLogger(TrainerServiceImpl.class);
+    private static final String USERNAME_BLANK_MSG = "Username cannot be blank";
 
     private TrainerDao trainerDao;
     private TraineeDao traineeDao;
@@ -112,7 +113,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public Optional<Trainer> findByUsername(String username) {
-        validator.requireNonBlank(username, "Username cannot be blank");
+        validator.requireNonBlank(username, USERNAME_BLANK_MSG);
         log.debug("Looking up trainer by username={}", username);
 
         return trainerDao.findByUsername(username);
@@ -126,7 +127,7 @@ public class TrainerServiceImpl implements TrainerService {
     @Override
     @PersistenceTx
     public List<Trainer> findAllNotAssignedToTrainee(String traineeUsername) {
-        validator.requireNonBlank(traineeUsername, "Username cannot be blank");
+        validator.requireNonBlank(traineeUsername, USERNAME_BLANK_MSG);
 
         traineeDao.findByUsername(traineeUsername)
                 .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + traineeUsername));
@@ -159,7 +160,7 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     private Trainer requireTrainerByUsername(String username) {
-        validator.requireNonBlank(username, "Username cannot be blank");
+        validator.requireNonBlank(username, USERNAME_BLANK_MSG);
 
         return trainerDao.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("Trainer not found: " + username));
