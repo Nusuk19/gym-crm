@@ -961,20 +961,24 @@ components:
               type: string
               description: Training type name
               example: Cardio
-            traineeName:
-              type: string
-              description: Trainee's username
-              example: ricardo.milos
+    GetTraineeTrainingResponse:
+      allOf:
+        - $ref: '#/components/schemas/TrainingDefinition'
+        - type: object
+          properties:
             trainerName:
               type: string
               description: Trainer username
               example: ronnie.coleman
-    GetTraineeTrainingResponse:
-      allOf:
-        - $ref: '#/components/schemas/TrainingDefinition'
     GetTrainerTrainingResponse:
       allOf:
         - $ref: '#/components/schemas/TrainingDefinition'
+        - type: object
+          properties:
+            traineeName:
+              type: string
+              description: Trainee username
+              example: billy.herrington
     TrainerCreateRequest:
       allOf:
         - $ref: '#/components/schemas/Trainer'
