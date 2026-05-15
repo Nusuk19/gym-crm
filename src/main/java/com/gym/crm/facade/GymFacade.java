@@ -19,6 +19,7 @@ import com.gym.crm.mapper.TrainingMapper;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
+import com.gym.crm.service.UserService;
 import com.gym.crm.service.common.AuthenticationService;
 import com.gym.crm.service.common.CoreValidator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,7 @@ public class GymFacade {
     private final TraineeService traineeService;
     private final TrainerService trainerService;
     private final TrainingService trainingService;
+    private final UserService userService;
 
     private TraineeMapper traineeMapper;
     private TrainerMapper trainerMapper;
@@ -42,10 +44,12 @@ public class GymFacade {
 
     public GymFacade(TraineeService traineeService,
                      TrainerService trainerService,
-                     TrainingService trainingService) {
+                     TrainingService trainingService,
+                     UserService userService) {
         this.traineeService = traineeService;
         this.trainerService = trainerService;
         this.trainingService = trainingService;
+        this.userService = userService;
     }
 
     @Autowired
@@ -71,6 +75,23 @@ public class GymFacade {
     @Autowired
     public void setAuthenticationService(AuthenticationService authenticationService) {
         this.authenticationService = authenticationService;
+    }
+
+    public void login(UserCredentials credentials) {
+        coreValidator.validate(credentials);
+        authenticationService.validateCredentials(credentials);
+    }
+
+    public void changePassword(ChangePasswordRequest request) {
+        coreValidator.validate(request);
+
+        UserCredentials credentials = UserCredentials.builder()
+                .username(request.getUsername())
+                .password(request.getOldPassword())
+                .build();
+
+        authenticationService.validateCredentials(credentials);
+        userService.changePassword(request);
     }
 
     public TraineeResponse createTrainee(CreateTraineeRequest request) {

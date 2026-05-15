@@ -24,11 +24,13 @@ import com.gym.crm.model.User;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
+import com.gym.crm.service.UserService;
 import com.gym.crm.service.common.AuthenticationService;
 import com.gym.crm.service.common.CoreValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -37,6 +39,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -58,6 +61,8 @@ class GymFacadeTest {
     @Mock
     private TrainingService trainingService;
     @Mock
+    private UserService userService;
+    @Mock
     private TraineeMapper traineeMapper;
     @Mock
     private TrainerMapper trainerMapper;
@@ -78,7 +83,7 @@ class GymFacadeTest {
 
     @BeforeEach
     void setUp() {
-        facade = new GymFacade(traineeService, trainerService, trainingService);
+        facade = new GymFacade(traineeService, trainerService, trainingService, userService);
         facade.setTraineeMapper(traineeMapper);
         facade.setTrainerMapper(trainerMapper);
         facade.setTrainingMapper(trainingMapper);
@@ -91,6 +96,38 @@ class GymFacadeTest {
         traineeResponse = buildTraineeResponse();
         trainerResponse = buildTrainerResponse();
         trainingResponse = buildTrainingResponse();
+    }
+
+    @Test
+    void login_validatesCredentialsAndAuthenticates() {
+        UserCredentials credentials = UserCredentials.builder()
+                .username(USERNAME)
+                .password("oldpassword1")
+                .build();
+
+        facade.login(credentials);
+
+        verify(coreValidator).validate(credentials);
+        verify(authenticationService).validateCredentials(credentials);
+    }
+
+    @Test
+    void changePassword_validatesRequestThenAuthenticatesThenChanges() {
+        ChangePasswordRequest request = ChangePasswordRequest.builder()
+                .username(USERNAME)
+                .oldPassword("oldpassword1")
+                .newPassword("newpassword1")
+                .build();
+
+        facade.changePassword(request);
+
+        verify(coreValidator).validate(request);
+        ArgumentCaptor<UserCredentials> captor = ArgumentCaptor.forClass(UserCredentials.class);
+
+        verify(authenticationService).validateCredentials(captor.capture());
+        verify(userService).changePassword(request);
+        assertThat(captor.getValue().getUsername()).isEqualTo(USERNAME);
+        assertThat(captor.getValue().getPassword()).isEqualTo("oldpassword1");
     }
 
     @Test
