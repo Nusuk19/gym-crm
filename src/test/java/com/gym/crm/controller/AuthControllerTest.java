@@ -35,7 +35,6 @@ class AuthControllerTest {
     @Mock
     private GymFacade facade;
 
-
     @BeforeEach
     void setUp() {
         LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
