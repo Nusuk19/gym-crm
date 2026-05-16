@@ -1,5 +1,7 @@
 package com.gym.crm.facade;
 
+import com.gia.openapi.model.LoginChangeRequest;
+import com.gia.openapi.model.LoginRequest;
 import com.gym.crm.dao.search.filters.TraineeTrainingSearchFilter;
 import com.gym.crm.dao.search.filters.TrainerTrainingSearchFilter;
 import com.gym.crm.dto.request.ActivationRequest;
@@ -13,6 +15,7 @@ import com.gym.crm.dto.request.UserCredentials;
 import com.gym.crm.dto.response.TraineeResponse;
 import com.gym.crm.dto.response.TrainerResponse;
 import com.gym.crm.dto.response.TrainingResponse;
+import com.gym.crm.mapper.AuthMapper;
 import com.gym.crm.mapper.TraineeMapper;
 import com.gym.crm.mapper.TrainerMapper;
 import com.gym.crm.mapper.TrainingMapper;
@@ -39,6 +42,7 @@ public class GymFacade {
     private TraineeMapper traineeMapper;
     private TrainerMapper trainerMapper;
     private TrainingMapper trainingMapper;
+    private AuthMapper authMapper;
     private CoreValidator coreValidator;
     private AuthenticationService authenticationService;
 
@@ -55,6 +59,11 @@ public class GymFacade {
     @Autowired
     public void setTraineeMapper(TraineeMapper traineeMapper) {
         this.traineeMapper = traineeMapper;
+    }
+
+    @Autowired
+    public void setAuthMapper(AuthMapper authMapper) {
+        this.authMapper = authMapper;
     }
 
     @Autowired
@@ -77,21 +86,21 @@ public class GymFacade {
         this.authenticationService = authenticationService;
     }
 
-    public void login(UserCredentials credentials) {
-        coreValidator.validate(credentials);
-        authenticationService.validateCredentials(credentials);
+    public void login(LoginRequest request) {
+        authenticationService.validateCredentials(authMapper.toCredentials(request));
     }
 
-    public void changePassword(ChangePasswordRequest request) {
-        coreValidator.validate(request);
+    public void changePassword(LoginChangeRequest request) {
+        ChangePasswordRequest changeRequest = authMapper.toChangePassword(request);
+        coreValidator.validate(changeRequest);
 
         UserCredentials credentials = UserCredentials.builder()
-                .username(request.getUsername())
-                .password(request.getOldPassword())
+                .username(changeRequest.getUsername())
+                .password(changeRequest.getOldPassword())
                 .build();
 
         authenticationService.validateCredentials(credentials);
-        userService.changePassword(request);
+        userService.changePassword(changeRequest);
     }
 
     public TraineeResponse createTrainee(CreateTraineeRequest request) {

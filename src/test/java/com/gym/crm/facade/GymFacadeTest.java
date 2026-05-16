@@ -1,5 +1,7 @@
 package com.gym.crm.facade;
 
+import com.gia.openapi.model.LoginChangeRequest;
+import com.gia.openapi.model.LoginRequest;
 import com.gym.crm.dao.search.filters.TraineeTrainingSearchFilter;
 import com.gym.crm.dao.search.filters.TrainerTrainingSearchFilter;
 import com.gym.crm.dto.request.ActivationRequest;
@@ -13,6 +15,7 @@ import com.gym.crm.dto.request.UserCredentials;
 import com.gym.crm.dto.response.TraineeResponse;
 import com.gym.crm.dto.response.TrainerResponse;
 import com.gym.crm.dto.response.TrainingResponse;
+import com.gym.crm.mapper.AuthMapper;
 import com.gym.crm.mapper.TraineeMapper;
 import com.gym.crm.mapper.TrainerMapper;
 import com.gym.crm.mapper.TrainingMapper;
@@ -69,6 +72,8 @@ class GymFacadeTest {
     @Mock
     private TrainingMapper trainingMapper;
     @Mock
+    private AuthMapper authMapper;
+    @Mock
     private CoreValidator coreValidator;
     @Mock
     private AuthenticationService authenticationService;
@@ -87,6 +92,7 @@ class GymFacadeTest {
         facade.setTraineeMapper(traineeMapper);
         facade.setTrainerMapper(trainerMapper);
         facade.setTrainingMapper(trainingMapper);
+        facade.setAuthMapper(authMapper);
         facade.setValidationService(coreValidator);
         facade.setAuthenticationService(authenticationService);
 
@@ -100,32 +106,36 @@ class GymFacadeTest {
 
     @Test
     void login_validatesCredentialsAndAuthenticates() {
+        LoginRequest request = new LoginRequest(USERNAME, "oldpassword1");
         UserCredentials credentials = UserCredentials.builder()
                 .username(USERNAME)
                 .password("oldpassword1")
                 .build();
+        when(authMapper.toCredentials(request)).thenReturn(credentials);
 
-        facade.login(credentials);
+        facade.login(request);
 
-        verify(coreValidator).validate(credentials);
+        verify(authMapper).toCredentials(request);
         verify(authenticationService).validateCredentials(credentials);
     }
 
     @Test
     void changePassword_validatesRequestThenAuthenticatesThenChanges() {
-        ChangePasswordRequest request = ChangePasswordRequest.builder()
+        LoginChangeRequest request = new LoginChangeRequest(USERNAME, "oldpassword1", "newpassword1");
+        ChangePasswordRequest changeRequest = ChangePasswordRequest.builder()
                 .username(USERNAME)
                 .oldPassword("oldpassword1")
                 .newPassword("newpassword1")
                 .build();
+        when(authMapper.toChangePassword(request)).thenReturn(changeRequest);
 
         facade.changePassword(request);
 
-        verify(coreValidator).validate(request);
+        verify(authMapper).toChangePassword(request);
+        verify(coreValidator).validate(changeRequest);
         ArgumentCaptor<UserCredentials> captor = ArgumentCaptor.forClass(UserCredentials.class);
-
         verify(authenticationService).validateCredentials(captor.capture());
-        verify(userService).changePassword(request);
+        verify(userService).changePassword(changeRequest);
         assertThat(captor.getValue().getUsername()).isEqualTo(USERNAME);
         assertThat(captor.getValue().getPassword()).isEqualTo("oldpassword1");
     }

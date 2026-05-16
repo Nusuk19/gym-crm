@@ -1,92 +1,99 @@
 package com.gym.crm.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
-import com.gym.crm.dto.request.ChangePasswordRequest;
-import com.gym.crm.dto.request.UserCredentials;
 import com.gym.crm.facade.GymFacade;
-import com.gym.crm.mapper.AuthMapper;
-import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("AuthController")
 class AuthControllerTest {
 
-    @Mock
-    private GymFacade gymFacade;
+    private static final String USERNAME = "john.doe";
+    private static final String PASSWORD = "password123";
+    private static final String NEW_PASSWORD = "newPassword123";
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private MockMvc mockMvc;
 
     @Mock
-    private AuthMapper authMapper;
+    private GymFacade facade;
 
-    @InjectMocks
-    private AuthController authController;
 
-    @Test
-    void login_validRequest_returns200AndCallsFacade() {
-        LoginRequest request = buildLoginRequest();
-        UserCredentials credentials = buildUserCredentials();
+    @BeforeEach
+    void setUp() {
+        LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
+        validator.afterPropertiesSet();
 
-        when(authMapper.toCredentials(request)).thenReturn(credentials);
-
-        ResponseEntity<Void> response = authController.login(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(gymFacade).login(credentials);
-    }
-
-    @Test
-    void changePassword_validRequest_returns200AndCallsFacade() {
-        LoginChangeRequest request = buildLoginChangeRequest();
-        ChangePasswordRequest changeRequest = buildChangePasswordRequest();
-
-        when(authMapper.toChangePassword(request)).thenReturn(changeRequest);
-
-        ResponseEntity<Void> response = authController.changePassword(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(gymFacade).changePassword(changeRequest);
-    }
-
-    private LoginRequest buildLoginRequest() {
-        LoginRequest request = new LoginRequest();
-        request.setUsername("john.doe");
-        request.setPassword("securePass1");
-
-        return request;
-    }
-
-    private LoginChangeRequest buildLoginChangeRequest() {
-        LoginChangeRequest request = new LoginChangeRequest();
-        request.setUsername("john.doe");
-        request.setOldPassword("oldPassword1");
-        request.setNewPassword("newPassword123");
-
-        return request;
-    }
-
-    private UserCredentials buildUserCredentials() {
-        return UserCredentials.builder()
-                .username("john.doe")
-                .password("securePass1")
+        mockMvc = MockMvcBuilders.standaloneSetup(new AuthController(facade))
+                .setValidator(validator)
                 .build();
     }
 
-    private ChangePasswordRequest buildChangePasswordRequest() {
-        return ChangePasswordRequest.builder()
-                .username("john.doe")
-                .oldPassword("oldPassword1")
-                .newPassword("newPassword123")
-                .build();
+    @Test
+    void login_validRequest_returns200() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginRequest(USERNAME, PASSWORD))))
+                .andExpect(status().isOk());
+
+        verify(facade).login(any(LoginRequest.class));
+    }
+
+    @Test
+    void login_nullUsername_returns400() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginRequest(null, PASSWORD))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(facade);
+    }
+
+    @Test
+    void login_nullPassword_returns400() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginRequest(USERNAME, null))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(facade);
+    }
+
+    @Test
+    void changePassword_validRequest_returns200() throws Exception {
+        mockMvc.perform(put("/api/v1/auth/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginChangeRequest(USERNAME, PASSWORD, NEW_PASSWORD))))
+                .andExpect(status().isOk());
+
+        verify(facade).changePassword(any(LoginChangeRequest.class));
+    }
+
+    @Test
+    void changePassword_nullUsername_returns400() throws Exception {
+        mockMvc.perform(put("/api/v1/auth/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginChangeRequest(null, PASSWORD, NEW_PASSWORD))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(facade);
     }
 }
