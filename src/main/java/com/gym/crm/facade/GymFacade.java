@@ -1,5 +1,7 @@
 package com.gym.crm.facade;
 
+import com.gia.openapi.model.LoginChangeRequest;
+import com.gia.openapi.model.LoginRequest;
 import com.gym.crm.dao.search.filters.TraineeTrainingSearchFilter;
 import com.gym.crm.dao.search.filters.TrainerTrainingSearchFilter;
 import com.gym.crm.dto.request.ActivationRequest;
@@ -13,12 +15,14 @@ import com.gym.crm.dto.request.UserCredentials;
 import com.gym.crm.dto.response.TraineeResponse;
 import com.gym.crm.dto.response.TrainerResponse;
 import com.gym.crm.dto.response.TrainingResponse;
+import com.gym.crm.mapper.AuthMapper;
 import com.gym.crm.mapper.TraineeMapper;
 import com.gym.crm.mapper.TrainerMapper;
 import com.gym.crm.mapper.TrainingMapper;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
+import com.gym.crm.service.UserService;
 import com.gym.crm.service.common.AuthenticationService;
 import com.gym.crm.service.common.CoreValidator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,24 +37,33 @@ public class GymFacade {
     private final TraineeService traineeService;
     private final TrainerService trainerService;
     private final TrainingService trainingService;
+    private final UserService userService;
 
     private TraineeMapper traineeMapper;
     private TrainerMapper trainerMapper;
     private TrainingMapper trainingMapper;
+    private AuthMapper authMapper;
     private CoreValidator coreValidator;
     private AuthenticationService authenticationService;
 
     public GymFacade(TraineeService traineeService,
                      TrainerService trainerService,
-                     TrainingService trainingService) {
+                     TrainingService trainingService,
+                     UserService userService) {
         this.traineeService = traineeService;
         this.trainerService = trainerService;
         this.trainingService = trainingService;
+        this.userService = userService;
     }
 
     @Autowired
     public void setTraineeMapper(TraineeMapper traineeMapper) {
         this.traineeMapper = traineeMapper;
+    }
+
+    @Autowired
+    public void setAuthMapper(AuthMapper authMapper) {
+        this.authMapper = authMapper;
     }
 
     @Autowired
@@ -71,6 +84,23 @@ public class GymFacade {
     @Autowired
     public void setAuthenticationService(AuthenticationService authenticationService) {
         this.authenticationService = authenticationService;
+    }
+
+    public void login(LoginRequest request) {
+        authenticationService.validateCredentials(authMapper.toCredentials(request));
+    }
+
+    public void changePassword(LoginChangeRequest request) {
+        ChangePasswordRequest changeRequest = authMapper.toChangePassword(request);
+        coreValidator.validate(changeRequest);
+
+        UserCredentials credentials = UserCredentials.builder()
+                .username(changeRequest.getUsername())
+                .password(changeRequest.getOldPassword())
+                .build();
+
+        authenticationService.validateCredentials(credentials);
+        userService.changePassword(changeRequest);
     }
 
     public TraineeResponse createTrainee(CreateTraineeRequest request) {
