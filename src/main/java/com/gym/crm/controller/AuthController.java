@@ -18,20 +18,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
-public class AuthController implements AuthApi {
+public class AuthController{
 
-    private final GymFacade gymFacade;
+    private final GymFacade facade;
 
     @PostMapping("/login")
     public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest request) {
-        gymFacade.login(request);
+        facade.login(request);
 
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/password")
     public ResponseEntity<Void> changePassword(@Valid @RequestBody LoginChangeRequest request) {
-        gymFacade.changePassword(request);
+        facade.changePassword(request);
 
         return ResponseEntity.ok().build();
     }

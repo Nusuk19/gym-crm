@@ -111,6 +111,7 @@ class GymFacadeTest {
                 .username(USERNAME)
                 .password("oldpassword1")
                 .build();
+
         when(authMapper.toCredentials(request)).thenReturn(credentials);
 
         facade.login(request);
@@ -127,6 +128,7 @@ class GymFacadeTest {
                 .oldPassword("oldpassword1")
                 .newPassword("newpassword1")
                 .build();
+
         when(authMapper.toChangePassword(request)).thenReturn(changeRequest);
 
         facade.changePassword(request);
