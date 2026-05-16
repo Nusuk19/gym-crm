@@ -1,6 +1,5 @@
 package com.gym.crm.controller;
 
-import com.gia.openapi.api.AuthApi;
 import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
 import com.gym.crm.facade.GymFacade;
@@ -18,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
-public class AuthController{
+public class AuthController {
 
     private final GymFacade facade;
 
