@@ -222,8 +222,7 @@ class TraineeControllerTest {
 
     @Test
     void updateTraineeTrainers_shouldReturnUpdatedList_whenRequestIsValid() throws Exception {
-        TraineeAssignedTrainersUpdateRequest request =
-                new TraineeAssignedTrainersUpdateRequest(List.of(TRAINER_USERNAME));
+        TraineeAssignedTrainersUpdateRequest request = new TraineeAssignedTrainersUpdateRequest(List.of(TRAINER_USERNAME));
         TraineeAssignedTrainersUpdateResponse response = buildAssignedTrainersUpdateResponse();
 
         when(facade.updateTraineeTrainers(eq(USERNAME), any(TraineeAssignedTrainersUpdateRequest.class)))
@@ -245,8 +244,7 @@ class TraineeControllerTest {
     void getTraineeTrainings_shouldReturnList_whenNoFilters() throws Exception {
         List<GetTraineeTrainingResponse> response = List.of(buildTrainingResponse());
 
-        when(facade.findTrainingsByTraineeCriteria(
-                eq(USERNAME), isNull(), isNull(), isNull(), isNull()))
+        when(facade.findTrainingsByTraineeCriteria(USERNAME, null, null, null, null))
                 .thenReturn(response);
 
         mockMvc.perform(get(BASE_URL + "/" + USERNAME + "/trainings"))
@@ -256,7 +254,7 @@ class TraineeControllerTest {
                 .andExpect(jsonPath("$[0].trainingType").value(SPECIALIZATION))
                 .andExpect(jsonPath("$[0].trainerName").value(TRAINER_USERNAME));
 
-        verify(facade).findTrainingsByTraineeCriteria(eq(USERNAME), isNull(), isNull(), isNull(), isNull());
+        verify(facade).findTrainingsByTraineeCriteria(USERNAME, null, null, null, null);
     }
 
     @Test
@@ -265,7 +263,7 @@ class TraineeControllerTest {
         LocalDate to = LocalDate.of(2024, 12, 31);
 
         when(facade.findTrainingsByTraineeCriteria(
-                eq(USERNAME), eq(from), eq(to), eq(TRAINER_USERNAME), eq(SPECIALIZATION)))
+                USERNAME, from, to, TRAINER_USERNAME, SPECIALIZATION))
                 .thenReturn(List.of());
 
         mockMvc.perform(get(BASE_URL + "/" + USERNAME + "/trainings")
@@ -276,7 +274,7 @@ class TraineeControllerTest {
                 .andExpect(status().isOk());
 
         verify(facade).findTrainingsByTraineeCriteria(
-                eq(USERNAME), eq(from), eq(to), eq(TRAINER_USERNAME), eq(SPECIALIZATION));
+                USERNAME, from, to, TRAINER_USERNAME, SPECIALIZATION);
     }
 
     @Test

@@ -24,6 +24,7 @@ import java.util.Optional;
 public class TraineeServiceImpl implements TraineeService {
     private static final Logger log = LoggerFactory.getLogger(TraineeServiceImpl.class);
     private static final String USERNAME_BLANK_MSG = "Username cannot be blank";
+    private static final String TRAINEE_NOT_FOUND = "Trainee not found: ";
 
     private TraineeDao traineeDao;
     private EntityValidator validator;
@@ -84,7 +85,7 @@ public class TraineeServiceImpl implements TraineeService {
         validator.validateTrainee(trainee);
 
         Trainee existing = traineeDao.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + username));
+                .orElseThrow(() -> new EntityNotFoundException(TRAINEE_NOT_FOUND + username));
 
         User mergedUser = trainee.getUser().toBuilder()
                 .id(existing.getUser().getId())
@@ -109,7 +110,7 @@ public class TraineeServiceImpl implements TraineeService {
         log.info("Updating trainers list for trainee: username={}, trainers={}", traineeUsername, trainerUsernames);
 
         Trainee trainee = traineeDao.findByUsername(traineeUsername)
-                .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + traineeUsername));
+                .orElseThrow(() -> new EntityNotFoundException(TRAINEE_NOT_FOUND + traineeUsername));
 
         traineeDao.updateTrainers(traineeUsername, trainerUsernames);
 
@@ -182,6 +183,6 @@ public class TraineeServiceImpl implements TraineeService {
         validator.requireNonBlank(username, USERNAME_BLANK_MSG);
 
         return traineeDao.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + username));
+                .orElseThrow(() -> new EntityNotFoundException(TRAINEE_NOT_FOUND + username));
     }
 }
