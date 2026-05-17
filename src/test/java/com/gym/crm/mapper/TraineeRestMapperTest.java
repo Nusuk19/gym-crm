@@ -196,14 +196,6 @@ class TraineeRestMapperTest {
                 .address("Kyiv");
     }
 
-    private TraineeUpdateRequest baseUpdateRequest() {
-        return new TraineeUpdateRequest()
-                .firstName("Abdul")
-                .lastName("Hariton")
-                .dateOfBirth(LocalDate.of(1990, 1, 1))
-                .address("Lviv");
-    }
-
     private TraineeProfileResponse buildProfile() {
         AssignedTrainerInfo trainer = AssignedTrainerInfo.builder()
                 .username("Mike.Tyson")
