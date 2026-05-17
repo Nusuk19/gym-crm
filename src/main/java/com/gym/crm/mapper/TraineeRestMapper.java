@@ -16,8 +16,6 @@ import com.gym.crm.dto.response.AssignedTrainerInfo;
 import com.gym.crm.dto.response.TraineeCreatedResponse;
 import com.gym.crm.dto.response.TraineeProfileResponse;
 import com.gym.crm.dto.response.TrainingResponse;
-import com.gym.crm.model.TrainingType;
-import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
