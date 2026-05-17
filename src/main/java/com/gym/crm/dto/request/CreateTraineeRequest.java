@@ -25,6 +25,4 @@ public class CreateTraineeRequest {
 
     @Size(max = 100, message = "Address must not exceed 100 characters")
     private final String address;
-
-    private final Boolean isActive;
 }

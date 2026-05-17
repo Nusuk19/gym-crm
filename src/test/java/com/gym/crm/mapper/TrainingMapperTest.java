@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class TrainingMapperTest {
 
@@ -48,7 +49,7 @@ class TrainingMapperTest {
 
         Training actual = trainingMapper.toEntity(request);
 
-        assertEquals(null, actual.getId());
+        assertNull(actual.getId());
     }
 
     @Test
@@ -63,7 +64,18 @@ class TrainingMapperTest {
         assertEquals("Boxing basics", actual.getTrainingName());
         assertEquals("BOXING", actual.getTrainingType().getTrainingTypeName());
         assertEquals(LocalDate.of(2024, 5, 1), actual.getTrainingDate());
-        assertEquals(60, actual.getTrainingDuration());
+        assertEquals(BigDecimal.valueOf(60), actual.getTrainingDuration());
+    }
+
+    @Test
+    void toResponse_populatesDenormalizedFields() {
+        Training training = buildTraining();
+
+        TrainingResponse actual = trainingMapper.toResponse(training);
+
+        assertEquals("BOXING", actual.getTrainingTypeName());
+        assertEquals("trainer.user", actual.getTrainerUsername());
+        assertEquals("trainee.user", actual.getTraineeUsername());
     }
 
     private CreateTrainingRequest buildCreateRequest() {
@@ -78,16 +90,22 @@ class TrainingMapperTest {
     }
 
     private Training buildTraining() {
-        User user = User.builder().build();
+        User traineeUser = User.builder()
+                .username("trainee.user")
+                .build();
+
+        User trainerUser = User.builder()
+                .username("trainer.user")
+                .build();
 
         Trainee trainee = Trainee.builder()
                 .id(TRAINEE_ID)
-                .user(user)
+                .user(traineeUser)
                 .build();
 
         Trainer trainer = Trainer.builder()
                 .id(TRAINER_ID)
-                .user(user)
+                .user(trainerUser)
                 .specialization(TrainingType.builder().trainingTypeName("BOXING").build())
                 .build();
 

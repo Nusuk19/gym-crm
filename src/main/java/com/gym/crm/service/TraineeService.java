@@ -3,6 +3,7 @@ package com.gym.crm.service;
 import com.gym.crm.dto.request.ActivationRequest;
 import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.model.Trainee;
+import com.gym.crm.model.Trainer;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,7 +13,7 @@ public interface TraineeService {
 
     Trainee update(Trainee trainee);
 
-    void updateTrainers(String traineeUsername, List<String> trainerUsernames);
+    List<Trainer> updateTrainers(String traineeUsername, List<String> trainerUsernames);
 
     void deleteById(Long id);
 

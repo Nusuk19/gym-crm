@@ -22,6 +22,4 @@ public class CreateTrainerRequest {
     @NotNull(message = "Specialization is required")
     @Positive(message = "Specialization id must be a positive number")
     private final Long specializationId;
-
-    private final Boolean isActive;
 }

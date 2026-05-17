@@ -2,13 +2,19 @@ package com.gym.crm.mapper;
 
 import com.gym.crm.dto.request.CreateTrainerRequest;
 import com.gym.crm.dto.request.UpdateTrainerRequest;
-import com.gym.crm.dto.response.TrainerResponse;
+import com.gym.crm.dto.response.AssignedTraineeInfo;
+import com.gym.crm.dto.response.TrainerCreatedResponse;
+import com.gym.crm.dto.response.TrainerProfileResponse;
+import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.model.TrainingType;
 import com.gym.crm.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
+
+import java.time.LocalDate;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -36,7 +42,6 @@ class TrainerMapperTest {
         assertEquals("Mike", actual.getUser().getFirstName());
         assertEquals("Tyson", actual.getUser().getLastName());
         assertEquals(EXISTING_ID, actual.getSpecialization().getId());
-        assertTrue(actual.getUser().getIsActive());
     }
 
     @Test
@@ -52,6 +57,7 @@ class TrainerMapperTest {
         assertNull(actual.getId());
         assertNull(actual.getUser().getUsername());
         assertNull(actual.getUser().getPassword());
+        assertNull(actual.getUser().getIsActive());
     }
 
     @Test
@@ -60,6 +66,7 @@ class TrainerMapperTest {
 
         Trainer actual = trainerMapper.toEntity(request);
 
+        assertEquals("Mike.Tyson", actual.getUser().getUsername());
         assertEquals("Mike", actual.getUser().getFirstName());
         assertEquals("Tyson", actual.getUser().getLastName());
         assertEquals(EXISTING_ID, actual.getSpecialization().getId());
@@ -67,10 +74,20 @@ class TrainerMapperTest {
     }
 
     @Test
-    void toResponse_fromTrainer_mapsAllFieldsCorrectly() {
+    void toCreatedResponse_includesUsernameAndRawPassword() {
+        Trainer trainer = buildTrainerWithRawPassword();
+
+        TrainerCreatedResponse actual = trainerMapper.toCreatedResponse(trainer);
+
+        assertEquals("Mike.Tyson", actual.getUsername());
+        assertEquals("rawPass123", actual.getPassword());
+    }
+
+    @Test
+    void toProfileResponse_mapsAllFieldsCorrectly() {
         Trainer trainer = buildTrainer();
 
-        TrainerResponse actual = trainerMapper.toResponse(trainer);
+        TrainerProfileResponse actual = trainerMapper.toProfileResponse(trainer);
 
         assertEquals(EXISTING_ID, actual.getId());
         assertEquals("Mike", actual.getFirstName());
@@ -83,7 +100,38 @@ class TrainerMapperTest {
     @Test
     void toResponse_passwordFieldNotPresentInResponse() {
         assertThrows(NoSuchFieldException.class,
-                () -> TrainerResponse.class.getDeclaredField("password"));
+                () -> TrainerProfileResponse.class.getDeclaredField("password"));
+    }
+
+    @Test
+    void toAssignedTraineeInfo_mapsUserFields() {
+        Trainee trainee = buildTrainee();
+
+        AssignedTraineeInfo actual = trainerMapper.toAssignedTraineeInfo(trainee);
+
+        assertEquals("Abdul.Hariton", actual.getUsername());
+        assertEquals("Abdul", actual.getFirstName());
+        assertEquals("Hariton", actual.getLastName());
+    }
+
+    @Test
+    void toAssignedTraineeInfoList_mapsEachElement() {
+        List<AssignedTraineeInfo> actual = trainerMapper.toAssignedTraineeInfoList(List.of(buildTrainee()));
+
+        assertEquals(1, actual.size());
+        assertEquals("Abdul.Hariton", actual.get(0).getUsername());
+    }
+
+    @Test
+    void mapSpecialization_withNullId_returnsNull() {
+        assertNull(trainerMapper.mapSpecialization(null));
+    }
+
+    @Test
+    void mapSpecialization_withId_returnsTrainingTypeWithSameId() {
+        TrainingType actual = trainerMapper.mapSpecialization(EXISTING_ID);
+
+        assertEquals(EXISTING_ID, actual.getId());
     }
 
     private CreateTrainerRequest buildCreateRequest() {
@@ -91,7 +139,6 @@ class TrainerMapperTest {
                 .firstName("Mike")
                 .lastName("Tyson")
                 .specializationId(EXISTING_ID)
-                .isActive(true)
                 .build();
     }
 
@@ -119,6 +166,41 @@ class TrainerMapperTest {
                 .id(EXISTING_ID)
                 .user(user)
                 .specialization(TrainingType.builder().trainingTypeName("BOXING").build())
+                .build();
+    }
+
+    private Trainer buildTrainerWithRawPassword() {
+        User user = User.builder()
+                .id(EXISTING_ID)
+                .firstName("Mike")
+                .lastName("Tyson")
+                .username("Mike.Tyson")
+                .password("hashedPassword")
+                .rawPassword("rawPass123")
+                .isActive(true)
+                .build();
+
+        return Trainer.builder()
+                .id(EXISTING_ID)
+                .user(user)
+                .specialization(TrainingType.builder().trainingTypeName("BOXING").build())
+                .build();
+    }
+
+    private Trainee buildTrainee() {
+        User user = User.builder()
+                .id(2L)
+                .firstName("Abdul")
+                .lastName("Hariton")
+                .username("Abdul.Hariton")
+                .isActive(true)
+                .build();
+
+        return Trainee.builder()
+                .id(2L)
+                .user(user)
+                .dateOfBirth(LocalDate.of(1990, 1, 1))
+                .address("Kyiv")
                 .build();
     }
 }

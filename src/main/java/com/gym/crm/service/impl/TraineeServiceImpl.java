@@ -6,6 +6,7 @@ import com.gym.crm.dto.request.ActivationRequest;
 import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.model.Trainee;
+import com.gym.crm.model.Trainer;
 import com.gym.crm.model.User;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.UserProfileService;
@@ -64,6 +65,8 @@ public class TraineeServiceImpl implements TraineeService {
         User userWithProfile = trainee.getUser().toBuilder()
                 .username(username)
                 .password(hashedPassword)
+                .rawPassword(rawPassword)
+                .isActive(Boolean.TRUE)
                 .build();
 
         Trainee traineeWithProfile = trainee.toBuilder()
@@ -99,17 +102,18 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @PersistenceTx
-    public void updateTrainers(String traineeUsername, List<String> trainerUsernames) {
+    public List<Trainer> updateTrainers(String traineeUsername, List<String> trainerUsernames) {
         validator.requireNonBlank(traineeUsername, USERNAME_BLANK_MSG);
         validator.requireNonNull(trainerUsernames, "Trainer usernames list cannot be null");
 
         log.info("Updating trainers list for trainee: username={}, trainers={}", traineeUsername, trainerUsernames);
 
-        if (traineeDao.findByUsername(traineeUsername).isEmpty()) {
-            throw new EntityNotFoundException("Trainee not found: " + traineeUsername);
-        }
+        Trainee trainee = traineeDao.findByUsername(traineeUsername)
+                .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + traineeUsername));
 
         traineeDao.updateTrainers(traineeUsername, trainerUsernames);
+
+        return trainee.getTrainers();
     }
 
     @Override
