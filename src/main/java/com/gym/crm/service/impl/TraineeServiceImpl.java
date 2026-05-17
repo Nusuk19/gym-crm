@@ -107,7 +107,7 @@ public class TraineeServiceImpl implements TraineeService {
         validator.requireNonBlank(traineeUsername, USERNAME_BLANK_MSG);
         validator.requireNonNull(trainerUsernames, "Trainer usernames list cannot be null");
 
-        log.info("Updating trainers list for trainee: username={}, trainers={}", traineeUsername, trainerUsernames);
+        log.info("Updating trainers list for trainee");
 
         Trainee trainee = traineeDao.findByUsername(traineeUsername)
                 .orElseThrow(() -> new EntityNotFoundException(TRAINEE_NOT_FOUND + traineeUsername));
@@ -129,7 +129,7 @@ public class TraineeServiceImpl implements TraineeService {
     @Override
     @PersistenceTx
     public void deleteByUsername(String username) {
-        log.info("Deleting trainee: username={}", username);
+        log.info("Deleting trainee by username");
         validator.requireNonBlank(username, USERNAME_BLANK_MSG);
 
         traineeDao.deleteByUsername(username);
