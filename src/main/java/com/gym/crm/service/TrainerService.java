@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TrainerService {
-    Trainer create(Trainer trainer);
+    Trainer create(Trainer trainer, String specializationName);
 
     Trainer update(Trainer trainer);
 

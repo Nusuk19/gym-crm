@@ -3,6 +3,7 @@ package com.gym.crm.facade;
 import com.gia.openapi.model.ActivationStatusRequest;
 import com.gia.openapi.model.AssignedTrainerResponse;
 import com.gia.openapi.model.GetTraineeTrainingResponse;
+import com.gia.openapi.model.GetTrainerTrainingResponse;
 import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
 import com.gia.openapi.model.TraineeAssignedTrainersUpdateRequest;
@@ -12,6 +13,11 @@ import com.gia.openapi.model.TraineeCreateResponse;
 import com.gia.openapi.model.TraineeGetResponse;
 import com.gia.openapi.model.TraineeUpdateRequest;
 import com.gia.openapi.model.TraineeUpdateResponse;
+import com.gia.openapi.model.TrainerCreateRequest;
+import com.gia.openapi.model.TrainerCreateResponse;
+import com.gia.openapi.model.TrainerGetResponse;
+import com.gia.openapi.model.TrainerUpdateRequest;
+import com.gia.openapi.model.TrainerUpdateResponse;
 import com.gym.crm.dao.search.filters.TrainerTrainingSearchFilter;
 import com.gym.crm.dto.request.ActivationRequest;
 import com.gym.crm.dto.request.ChangePasswordRequest;
@@ -27,10 +33,12 @@ import com.gym.crm.dto.response.TraineeProfileResponse;
 import com.gym.crm.dto.response.TrainerCreatedResponse;
 import com.gym.crm.dto.response.TrainerProfileResponse;
 import com.gym.crm.dto.response.TrainingResponse;
+import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.mapper.AuthMapper;
 import com.gym.crm.mapper.TraineeMapper;
 import com.gym.crm.mapper.TraineeRestMapper;
 import com.gym.crm.mapper.TrainerMapper;
+import com.gym.crm.mapper.TrainerRestMapper;
 import com.gym.crm.mapper.TrainingMapper;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
@@ -56,6 +64,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -90,6 +99,8 @@ class GymFacadeTest {
     @Mock
     private TraineeRestMapper traineeRestMapper;
     @Mock
+    private TrainerRestMapper trainerRestMapper;
+    @Mock
     private CoreValidator coreValidator;
     @Mock
     private AuthenticationService authenticationService;
@@ -112,6 +123,7 @@ class GymFacadeTest {
         facade.setTrainingMapper(trainingMapper);
         facade.setAuthMapper(authMapper);
         facade.setTraineeRestMapper(traineeRestMapper);
+        facade.setTrainerRestMapper(trainerRestMapper);
         facade.setValidationService(coreValidator);
         facade.setAuthenticationService(authenticationService);
 
@@ -410,46 +422,115 @@ class GymFacadeTest {
 
     @Test
     void createTrainer_whenValidRequest_returnsTrainerCreatedResponse() {
-        CreateTrainerRequest request = CreateTrainerRequest.builder()
+        TrainerCreateRequest restRequest = new TrainerCreateRequest();
+        CreateTrainerRequest internalRequest = CreateTrainerRequest.builder()
                 .firstName("Mike")
                 .lastName("Tyson")
-                .specializationId(EXISTING_ID)
+                .specializationName("BOXING")
                 .build();
+        TrainerCreateResponse expected = new TrainerCreateResponse();
 
-        when(trainerMapper.toEntity(request)).thenReturn(trainer);
-        when(trainerService.create(trainer)).thenReturn(trainer);
+        when(trainerRestMapper.toCreateRequest(restRequest)).thenReturn(internalRequest);
+        when(trainerMapper.toEntity(internalRequest)).thenReturn(trainer);
+        when(trainerService.create(trainer, "BOXING")).thenReturn(trainer);
         when(trainerMapper.toCreatedResponse(trainer)).thenReturn(trainerCreatedResponse);
+        when(trainerRestMapper.toCreateResponse(trainerCreatedResponse)).thenReturn(expected);
 
-        TrainerCreatedResponse actual = facade.createTrainer(request);
+        TrainerCreateResponse actual = facade.createTrainer(restRequest);
 
-        assertEquals(trainerCreatedResponse, actual);
-        verify(coreValidator).validate(request);
-        verify(trainerMapper).toEntity(request);
-        verify(trainerService).create(trainer);
+        assertEquals(expected, actual);
+        verify(trainerRestMapper).toCreateRequest(restRequest);
+        verify(coreValidator).validate(internalRequest);
+        verify(trainerMapper).toEntity(internalRequest);
+        verify(trainerService).create(trainer, "BOXING");
         verify(trainerMapper).toCreatedResponse(trainer);
+        verify(trainerRestMapper).toCreateResponse(trainerCreatedResponse);
+    }
+
+    @Test
+    void getTrainerByUsername_whenExists_returnsRestResponse() {
+        TrainerGetResponse expected = new TrainerGetResponse();
+
+        when(trainerService.findByUsername(TRAINER_USERNAME)).thenReturn(Optional.of(trainer));
+        when(trainerMapper.toProfileResponse(trainer)).thenReturn(trainerProfileResponse);
+        when(trainerRestMapper.toGetResponse(trainerProfileResponse)).thenReturn(expected);
+
+        TrainerGetResponse actual = facade.getTrainerByUsername(TRAINER_USERNAME);
+
+        assertEquals(expected, actual);
+        verify(trainerService).findByUsername(TRAINER_USERNAME);
+        verify(trainerMapper).toProfileResponse(trainer);
+        verify(trainerRestMapper).toGetResponse(trainerProfileResponse);
+    }
+
+    @Test
+    void getTrainerByUsername_whenNotExists_throwsEntityNotFoundException() {
+        when(trainerService.findByUsername(TRAINER_USERNAME)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> facade.getTrainerByUsername(TRAINER_USERNAME))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining(TRAINER_USERNAME);
+
+        verify(trainerService).findByUsername(TRAINER_USERNAME);
     }
 
     @Test
     void updateTrainer_whenValidRequest_returnsUpdatedTrainerResponse() {
-        UpdateTrainerRequest request = UpdateTrainerRequest.builder()
+        TrainerUpdateRequest restRequest = new TrainerUpdateRequest();
+        UpdateTrainerRequest internalRequest = UpdateTrainerRequest.builder()
                 .username(TRAINER_USERNAME)
                 .firstName("Mike")
                 .lastName("Tyson")
-                .username(TRAINER_USERNAME)
-                .specializationId(EXISTING_ID)
+                .isActive(true)
                 .build();
-        UserCredentials credentials = buildTrainerCredentials();
+        TrainerUpdateResponse expected = new TrainerUpdateResponse();
 
-        when(trainerMapper.toEntity(request)).thenReturn(trainer);
+        when(trainerRestMapper.toUpdateRequest(TRAINER_USERNAME, restRequest)).thenReturn(internalRequest);
+        when(trainerMapper.toEntity(internalRequest)).thenReturn(trainer);
         when(trainerService.update(trainer)).thenReturn(trainer);
         when(trainerMapper.toProfileResponse(trainer)).thenReturn(trainerProfileResponse);
+        when(trainerRestMapper.toUpdateResponse(trainerProfileResponse)).thenReturn(expected);
 
-        TrainerProfileResponse actual = facade.updateTrainer(request, credentials);
+        TrainerUpdateResponse actual = facade.updateTrainer(TRAINER_USERNAME, restRequest);
 
-        assertEquals(trainerProfileResponse, actual);
-        verify(coreValidator).validate(request);
-        verify(authenticationService).validateTrainerCredentials(credentials);
+        assertEquals(expected, actual);
+        verify(trainerRestMapper).toUpdateRequest(TRAINER_USERNAME, restRequest);
+        verify(coreValidator).validate(internalRequest);
         verify(trainerService).update(trainer);
+        verify(trainerMapper).toProfileResponse(trainer);
+        verify(trainerRestMapper).toUpdateResponse(trainerProfileResponse);
+    }
+
+    @Test
+    void changeTrainerActivationStatus_whenActive_callsActivate() {
+        ActivationStatusRequest body = new ActivationStatusRequest(true);
+        ActivationRequest activation = ActivationRequest.builder()
+                .username(TRAINER_USERNAME)
+                .isActive(true)
+                .build();
+
+        when(trainerRestMapper.toActivationRequest(TRAINER_USERNAME, body)).thenReturn(activation);
+
+        facade.changeTrainerActivationStatus(TRAINER_USERNAME, body);
+
+        verify(trainerRestMapper).toActivationRequest(TRAINER_USERNAME, body);
+        verify(trainerService).activate(activation);
+    }
+
+    @Test
+    void changeTrainerActivationStatus_whenInactive_callsDeactivate() {
+        ActivationStatusRequest body = new ActivationStatusRequest(false);
+        ActivationRequest activation = ActivationRequest.builder()
+                .username(TRAINER_USERNAME)
+                .isActive(false)
+                .build();
+
+        when(trainerRestMapper.toActivationRequest(TRAINER_USERNAME, body)).thenReturn(activation);
+
+        facade.changeTrainerActivationStatus(TRAINER_USERNAME, body);
+
+        verify(trainerRestMapper).toActivationRequest(TRAINER_USERNAME, body);
+        verify(trainerService).deactivate(activation);
     }
 
     @Test
@@ -662,20 +743,46 @@ class GymFacadeTest {
 
     @Test
     void findTrainingsByTrainerCriteria_returnsFilteredList() {
-        TrainerTrainingSearchFilter filter = TrainerTrainingSearchFilter.builder()
-                .username(TRAINER_USERNAME)
-                .build();
-        UserCredentials credentials = buildTrainerCredentials();
+        LocalDate from = LocalDate.of(2024, 1, 1);
+        LocalDate to = LocalDate.of(2024, 12, 31);
+        String traineeName = "Abdul";
+        GetTrainerTrainingResponse restResponse = new GetTrainerTrainingResponse();
 
-        when(trainingService.findByTrainerCriteria(filter)).thenReturn(List.of(training));
+        when(trainingService.findByTrainerCriteria(any(TrainerTrainingSearchFilter.class))).thenReturn(List.of(training));
         when(trainingMapper.toResponse(training)).thenReturn(trainingResponse);
+        when(trainerRestMapper.toTrainerTrainingResponse(trainingResponse)).thenReturn(restResponse);
 
-        List<TrainingResponse> actual = facade.findTrainingsByTrainerCriteria(filter, credentials);
+        List<GetTrainerTrainingResponse> actual = facade.findTrainingsByTrainerCriteria(TRAINER_USERNAME, from, to, traineeName);
 
         assertEquals(1, actual.size());
-        assertEquals(trainingResponse, actual.get(0));
-        verify(authenticationService).validateTrainerCredentials(credentials);
-        verify(trainingService).findByTrainerCriteria(filter);
+        assertEquals(restResponse, actual.get(0));
+
+        ArgumentCaptor<TrainerTrainingSearchFilter> captor = ArgumentCaptor.forClass(TrainerTrainingSearchFilter.class);
+        verify(trainingService).findByTrainerCriteria(captor.capture());
+        TrainerTrainingSearchFilter captured = captor.getValue();
+        assertThat(captured.getUsername()).isEqualTo(TRAINER_USERNAME);
+        assertThat(captured.getFromDate()).isEqualTo(from);
+        assertThat(captured.getToDate()).isEqualTo(to);
+        assertThat(captured.getTraineeFullName()).isEqualTo(traineeName);
+    }
+
+    @Test
+    void findTrainingsByTrainerCriteria_withNullFilters_buildsFilterWithUsernameOnly() {
+        GetTrainerTrainingResponse restResponse = new GetTrainerTrainingResponse();
+
+        when(trainingService.findByTrainerCriteria(any(TrainerTrainingSearchFilter.class))).thenReturn(List.of(training));
+        when(trainingMapper.toResponse(training)).thenReturn(trainingResponse);
+        when(trainerRestMapper.toTrainerTrainingResponse(trainingResponse)).thenReturn(restResponse);
+
+        List<GetTrainerTrainingResponse> actual =
+                facade.findTrainingsByTrainerCriteria(TRAINER_USERNAME, null, null, null);
+
+        assertEquals(1, actual.size());
+        ArgumentCaptor<TrainerTrainingSearchFilter> captor = ArgumentCaptor.forClass(TrainerTrainingSearchFilter.class);
+        verify(trainingService).findByTrainerCriteria(captor.capture());
+        assertThat(captor.getValue().getFromDate()).isNull();
+        assertThat(captor.getValue().getToDate()).isNull();
+        assertThat(captor.getValue().getTraineeFullName()).isNull();
     }
 
     private UserCredentials buildTraineeCredentials() {

@@ -3,10 +3,12 @@ package com.gym.crm.service.impl;
 import com.gym.crm.annotation.PersistenceTx;
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
+import com.gym.crm.dao.TrainingTypeDao;
 import com.gym.crm.dto.request.ActivationRequest;
 import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.model.Trainer;
+import com.gym.crm.model.TrainingType;
 import com.gym.crm.model.User;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.UserProfileService;
@@ -27,6 +29,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     private TrainerDao trainerDao;
     private TraineeDao traineeDao;
+    private TrainingTypeDao trainingTypeDao;
     private EntityValidator validator;
     private UserProfileService userProfileService;
     private UserService userService;
@@ -39,6 +42,11 @@ public class TrainerServiceImpl implements TrainerService {
     @Autowired
     public void setTraineeDao(TraineeDao traineeDao) {
         this.traineeDao = traineeDao;
+    }
+
+    @Autowired
+    public void setTrainingTypeDao(TrainingTypeDao trainingTypeDao) {
+        this.trainingTypeDao = trainingTypeDao;
     }
 
     @Autowired
@@ -58,10 +66,12 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     @PersistenceTx
-    public Trainer create(Trainer trainer) {
+    public Trainer create(Trainer trainer, String specializationName) {
         log.info("Creating trainer: firstName={}, lastName={}",
                 trainer.getUser().getFirstName(), trainer.getUser().getLastName());
         validator.validateTrainer(trainer);
+
+        TrainingType specialization = resolveSpecialization(specializationName);
 
         String username = userProfileService.generateUsername(
                 trainer.getUser().getFirstName(), trainer.getUser().getLastName());
@@ -71,11 +81,16 @@ public class TrainerServiceImpl implements TrainerService {
         User userWithProfile = trainer.getUser().toBuilder()
                 .username(username)
                 .password(hashedPassword)
+                .rawPassword(rawPassword)
+                .isActive(Boolean.TRUE)
                 .build();
 
         Trainer trainerWithProfile = trainer.toBuilder()
                 .user(userWithProfile)
+                .specialization(specialization)
                 .build();
+
+        validator.validateTrainer(trainerWithProfile);
 
         return trainerDao.save(trainerWithProfile);
     }
@@ -99,6 +114,7 @@ public class TrainerServiceImpl implements TrainerService {
         Trainer merged = trainer.toBuilder()
                 .id(existing.getId())
                 .user(mergedUser)
+                .specialization(existing.getSpecialization())
                 .build();
 
         return trainerDao.update(merged);
@@ -157,6 +173,13 @@ public class TrainerServiceImpl implements TrainerService {
         requireTrainerByUsername(request.getUsername());
 
         userService.deactivate(request);
+    }
+
+    private TrainingType resolveSpecialization(String name) {
+        validator.requireNonBlank(name, "Specialization name cannot be blank");
+
+        return trainingTypeDao.findByTrainingTypeName(name)
+                .orElseThrow(() -> new EntityNotFoundException("Specialization not found: " + name));
     }
 
     private Trainer requireTrainerByUsername(String username) {
