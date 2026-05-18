@@ -6,11 +6,9 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class TrainerResponse {
-    private final Long id;
+public class AssignedTrainerInfo {
+    private final String username;
     private final String firstName;
     private final String lastName;
-    private final String username;
     private final TrainingType specialization;
-    private final Boolean isActive;
 }

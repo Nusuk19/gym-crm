@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
 
+    private static final String BASE_PATH = "/api/v1";
     private static final String USERNAME = "john.doe";
     private static final String PASSWORD = "password123";
     private static final String NEW_PASSWORD = "newPassword123";
@@ -42,6 +43,7 @@ class AuthControllerTest {
 
         mockMvc = MockMvcBuilders.standaloneSetup(new AuthController(facade))
                 .setValidator(validator)
+                .addPlaceholderValue("app.api.base-path", BASE_PATH)
                 .build();
     }
 
