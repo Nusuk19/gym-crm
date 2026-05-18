@@ -191,20 +191,19 @@ class GymFacadeTest {
     }
 
     @Test
-    void getTraineeByUsername_whenExists_returnsResponseWithTrainers() {
+    void getTraineeByUsername_whenExists_returnsResponse() {
         TraineeGetResponse expected = new TraineeGetResponse();
-        List<AssignedTrainerInfo> trainerInfos = List.of(buildAssignedTrainerInfo());
 
         when(traineeService.findByUsername(USERNAME)).thenReturn(Optional.of(trainee));
-        when(traineeMapper.toAssignedTrainerInfoList(trainee.getTrainers())).thenReturn(trainerInfos);
         when(traineeMapper.toProfileResponse(trainee)).thenReturn(traineeProfileResponse);
-        when(traineeRestMapper.toGetResponse(any(TraineeProfileResponse.class))).thenReturn(expected);
+        when(traineeRestMapper.toGetResponse(traineeProfileResponse)).thenReturn(expected);
 
         TraineeGetResponse actual = facade.getTraineeByUsername(USERNAME);
 
         assertEquals(expected, actual);
         verify(traineeService).findByUsername(USERNAME);
-        verify(traineeMapper).toAssignedTrainerInfoList(trainee.getTrainers());
+        verify(traineeMapper).toProfileResponse(trainee);
+        verify(traineeRestMapper).toGetResponse(traineeProfileResponse);
     }
 
     @Test

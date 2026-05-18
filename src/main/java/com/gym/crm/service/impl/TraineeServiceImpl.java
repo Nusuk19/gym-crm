@@ -143,6 +143,7 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
+    @PersistenceTx
     public Optional<Trainee> findByUsername(String username) {
         validator.requireNonBlank(username, USERNAME_BLANK_MSG);
         log.debug("Looking up trainee by username={}", username);

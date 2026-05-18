@@ -19,7 +19,6 @@ import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.dto.request.CreateTraineeRequest;
 import com.gym.crm.dto.request.CreateTrainerRequest;
 import com.gym.crm.dto.request.CreateTrainingRequest;
-import com.gym.crm.dto.request.UpdateTraineeRequest;
 import com.gym.crm.dto.request.UpdateTrainerRequest;
 import com.gym.crm.dto.request.UserCredentials;
 import com.gym.crm.dto.response.AssignedTrainerInfo;
@@ -48,6 +47,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 
 @Component
@@ -144,28 +144,23 @@ public class GymFacade {
     @Authenticated
     public TraineeGetResponse getTraineeByUsername(String username) {
 
-        TraineeProfileResponse response = traineeService.findByUsername(username)
-                .map(trainee -> {
-                    List<AssignedTrainerInfo> assignedTrainers = traineeMapper.toAssignedTrainerInfoList(trainee.getTrainers());
-                    return traineeMapper.toProfileResponse(trainee).toBuilder()
-                            .trainers(assignedTrainers)
-                            .build();
-                })
+        TraineeProfileResponse traineeProfile = traineeService.findByUsername(username)
+                .map(traineeMapper::toProfileResponse)
                 .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + username));
 
-        return traineeRestMapper.toGetResponse(response);
+        return traineeRestMapper.toGetResponse(traineeProfile);
     }
 
     @Authenticated
     public TraineeUpdateResponse updateTrainee(String username, TraineeUpdateRequest request) {
-        UpdateTraineeRequest internalRequest = traineeRestMapper.toUpdateRequest(username, request);
+        var internalRequest = traineeRestMapper.toUpdateRequest(username, request);
         coreValidator.validate(internalRequest);
 
         var updated = traineeService.update(traineeMapper.toEntity(internalRequest));
         List<AssignedTrainerInfo> assignedTrainers =
                 traineeMapper.toAssignedTrainerInfoList(updated.getTrainers());
 
-        TraineeProfileResponse profile = traineeMapper.toProfileResponse(updated).toBuilder()
+        var profile = traineeMapper.toProfileResponse(updated).toBuilder()
                 .trainers(assignedTrainers)
                 .build();
 
@@ -211,8 +206,7 @@ public class GymFacade {
 
     @Authenticated
     public TraineeAssignedTrainersUpdateResponse updateTraineeTrainers(String username, TraineeAssignedTrainersUpdateRequest request) {
-        List<AssignedTrainerInfo> trainers = traineeService.updateTrainers(username, request.getTrainerUsernames())
-                .stream()
+        List<AssignedTrainerInfo> trainers = traineeService.updateTrainers(username, request.getTrainerUsernames()).stream()
                 .map(traineeMapper::toAssignedTrainerInfo)
                 .toList();
 
@@ -250,11 +244,11 @@ public class GymFacade {
     public void changeTraineeActivationStatus(String username, ActivationStatusRequest request) {
         ActivationRequest activationRequest = traineeRestMapper.toActivationRequest(username, request);
 
-        if (Boolean.TRUE.equals(request.getIsActive())) {
-            traineeService.activate(activationRequest);
-        } else {
-            traineeService.deactivate(activationRequest);
-        }
+        Consumer<ActivationRequest> action = request.getIsActive()
+                ? traineeService::activate
+                : traineeService::deactivate;
+
+        action.accept(activationRequest);
     }
 
 

@@ -1,8 +1,8 @@
 package com.gym.crm.dao.impl;
 
 import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.model.Trainee;
 import com.gym.crm.dao.common.TransactionHandler;
+import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -101,7 +101,12 @@ public class TraineeDaoImpl implements TraineeDao {
     public Optional<Trainee> findByUsername(String username) {
         return transactionHandler.executeReturningWithinTx(session ->
                 session.createQuery(
-                                "FROM Trainee t JOIN FETCH t.user LEFT JOIN FETCH t.trainers WHERE t.user.username = :username",
+                                "SELECT DISTINCT t FROM Trainee t " +
+                                        "JOIN FETCH t.user " +
+                                        "LEFT JOIN FETCH t.trainers tr " +
+                                        "LEFT JOIN FETCH tr.user " +
+                                        "LEFT JOIN FETCH tr.specialization " +
+                                        "WHERE t.user.username = :username",
                                 Trainee.class)
                         .setParameter(USERNAME, username)
                         .uniqueResultOptional()
