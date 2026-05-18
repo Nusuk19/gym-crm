@@ -17,7 +17,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -41,7 +40,7 @@ class TrainerMapperTest {
 
         assertEquals("Mike", actual.getUser().getFirstName());
         assertEquals("Tyson", actual.getUser().getLastName());
-        assertEquals(EXISTING_ID, actual.getSpecialization().getId());
+        assertNull(actual.getSpecialization());
     }
 
     @Test
@@ -49,7 +48,6 @@ class TrainerMapperTest {
         CreateTrainerRequest request = CreateTrainerRequest.builder()
                 .firstName("Mike")
                 .lastName("Tyson")
-                .specializationId(EXISTING_ID)
                 .build();
 
         Trainer actual = trainerMapper.toEntity(request);
@@ -69,8 +67,7 @@ class TrainerMapperTest {
         assertEquals("Mike.Tyson", actual.getUser().getUsername());
         assertEquals("Mike", actual.getUser().getFirstName());
         assertEquals("Tyson", actual.getUser().getLastName());
-        assertEquals(EXISTING_ID, actual.getSpecialization().getId());
-        assertFalse(actual.getUser().getIsActive());
+        assertNull(actual.getSpecialization());
     }
 
     @Test
@@ -99,8 +96,7 @@ class TrainerMapperTest {
 
     @Test
     void toResponse_passwordFieldNotPresentInResponse() {
-        assertThrows(NoSuchFieldException.class,
-                () -> TrainerProfileResponse.class.getDeclaredField("password"));
+        assertThrows(NoSuchFieldException.class, () -> TrainerProfileResponse.class.getDeclaredField("password"));
     }
 
     @Test
@@ -122,23 +118,10 @@ class TrainerMapperTest {
         assertEquals("Abdul.Hariton", actual.get(0).getUsername());
     }
 
-    @Test
-    void mapSpecialization_withNullId_returnsNull() {
-        assertNull(trainerMapper.mapSpecialization(null));
-    }
-
-    @Test
-    void mapSpecialization_withId_returnsTrainingTypeWithSameId() {
-        TrainingType actual = trainerMapper.mapSpecialization(EXISTING_ID);
-
-        assertEquals(EXISTING_ID, actual.getId());
-    }
-
     private CreateTrainerRequest buildCreateRequest() {
         return CreateTrainerRequest.builder()
                 .firstName("Mike")
                 .lastName("Tyson")
-                .specializationId(EXISTING_ID)
                 .build();
     }
 
@@ -147,7 +130,6 @@ class TrainerMapperTest {
                 .username("Mike.Tyson")
                 .firstName("Mike")
                 .lastName("Tyson")
-                .specializationId(EXISTING_ID)
                 .isActive(false)
                 .build();
     }

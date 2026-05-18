@@ -2,6 +2,7 @@ package com.gym.crm.service.impl;
 
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
+import com.gym.crm.dao.TrainingTypeDao;
 import com.gym.crm.dto.request.ActivationRequest;
 import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.exception.EntityNotFoundException;
@@ -34,6 +35,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -43,6 +45,7 @@ class TrainerServiceImplTest {
     private static final Long ID = 1L;
     private static final Long NON_EXISTING_ID = 99L;
     private static final String USERNAME = "Mike.Tyson";
+    private static final String SPECIALIZATION = "BOXING";
 
     private final Trainer trainer = buildTrainer();
 
@@ -50,6 +53,8 @@ class TrainerServiceImplTest {
     private TrainerDao trainerDao;
     @Mock
     private TraineeDao traineeDao;
+    @Mock
+    private TrainingTypeDao trainingTypeDao;
     @Mock
     private EntityValidator validator;
     @Mock
@@ -61,17 +66,21 @@ class TrainerServiceImplTest {
 
     @Test
     void create_whenValidTrainer_savesWithGeneratedProfile() {
+        TrainingType specialization = TrainingType.builder().trainingTypeName(SPECIALIZATION).build();
+        when(trainingTypeDao.findByTrainingTypeName(SPECIALIZATION)).thenReturn(Optional.of(specialization));
         when(userProfileService.generateUsername("Mike", "Tyson")).thenReturn("Mike.Tyson");
         when(userProfileService.generatePassword()).thenReturn("rawPass123");
         when(userProfileService.hashPassword("rawPass123")).thenReturn("hashedPass");
         when(trainerDao.save(any(Trainer.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Trainer actual = service.create(trainer);
+        Trainer actual = service.create(trainer, SPECIALIZATION);
 
         assertEquals("Mike.Tyson", actual.getUser().getUsername());
         assertEquals("hashedPass", actual.getUser().getPassword());
         assertNotEquals("rawPass123", actual.getUser().getPassword());
-        verify(validator).validateTrainer(trainer);
+        assertEquals(specialization, actual.getSpecialization());
+        verify(validator, times(2)).validateTrainer(any(Trainer.class));
+        verify(trainingTypeDao).findByTrainingTypeName(SPECIALIZATION);
         verify(userProfileService).generateUsername("Mike", "Tyson");
         verify(userProfileService).generatePassword();
         verify(userProfileService).hashPassword("rawPass123");
@@ -80,10 +89,33 @@ class TrainerServiceImplTest {
 
     @Test
     void create_whenValidationFails_throwsExceptionAndDaoNotCalled() {
-        doThrow(new EntityValidationException("Trainer cannot be null"))
-                .when(validator).validateTrainer(trainer);
+        doThrow(new EntityValidationException("Trainer cannot be null")).when(validator).validateTrainer(trainer);
 
-        assertThrows(EntityValidationException.class, () -> service.create(trainer));
+        assertThrows(EntityValidationException.class, () -> service.create(trainer, SPECIALIZATION));
+
+        verify(trainerDao, never()).save(any());
+    }
+
+    @Test
+    void create_whenSpecializationNotFound_throwsEntityNotFoundException() {
+        when(trainingTypeDao.findByTrainingTypeName("UNKNOWN")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.create(trainer, "UNKNOWN"))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("Specialization not found")
+                .hasMessageContaining("UNKNOWN");
+
+        verify(trainerDao, never()).save(any());
+    }
+
+    @Test
+    void create_whenBlankSpecializationName_throwsAndDaoNotCalled() {
+        doThrow(new EntityValidationException("Specialization name cannot be blank"))
+                .when(validator).requireNonBlank("", "Specialization name cannot be blank");
+
+        assertThatThrownBy(() -> service.create(trainer, ""))
+                .isInstanceOf(EntityValidationException.class)
+                .hasMessageContaining("Specialization name cannot be blank");
 
         verify(trainerDao, never()).save(any());
     }
@@ -312,7 +344,7 @@ class TrainerServiceImplTest {
                 .id(ID)
                 .user(user)
                 .specialization(TrainingType.builder()
-                        .trainingTypeName("BOXING")
+                        .trainingTypeName(SPECIALIZATION)
                         .build())
                 .build();
     }

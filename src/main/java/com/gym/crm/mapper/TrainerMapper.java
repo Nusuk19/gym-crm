@@ -7,10 +7,8 @@ import com.gym.crm.dto.response.TrainerCreatedResponse;
 import com.gym.crm.dto.response.TrainerProfileResponse;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
-import com.gym.crm.model.TrainingType;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 
 import java.util.List;
 
@@ -19,7 +17,7 @@ public interface TrainerMapper {
 
     @Mapping(target = "user.firstName", source = "firstName")
     @Mapping(target = "user.lastName", source = "lastName")
-    @Mapping(target = "specialization", source = "specializationId", qualifiedByName = "mapSpecialization")
+    @Mapping(target = "specialization", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user.isActive", ignore = true)
     @Mapping(target = "trainings", ignore = true)
@@ -30,7 +28,7 @@ public interface TrainerMapper {
     @Mapping(target = "user.firstName", source = "firstName")
     @Mapping(target = "user.lastName", source = "lastName")
     @Mapping(target = "user.isActive", source = "isActive")
-    @Mapping(target = "specialization", source = "specializationId", qualifiedByName = "mapSpecialization")
+    @Mapping(target = "specialization", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "trainings", ignore = true)
     @Mapping(target = "trainees", ignore = true)
@@ -55,10 +53,4 @@ public interface TrainerMapper {
     AssignedTraineeInfo toAssignedTraineeInfo(Trainee trainee);
 
     List<AssignedTraineeInfo> toAssignedTraineeInfoList(List<Trainee> trainees);
-
-    @Named("mapSpecialization")
-    default TrainingType mapSpecialization(Long id) {
-        if (id == null) return null;
-        return TrainingType.builder().id(id).build();
-    }
 }

@@ -1,0 +1,300 @@
+package com.gym.crm.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.gia.openapi.model.ActivationStatusRequest;
+import com.gia.openapi.model.AssignedTraineeResponse;
+import com.gia.openapi.model.GetTrainerTrainingResponse;
+import com.gia.openapi.model.TrainerCreateRequest;
+import com.gia.openapi.model.TrainerCreateResponse;
+import com.gia.openapi.model.TrainerGetResponse;
+import com.gia.openapi.model.TrainerUpdateRequest;
+import com.gia.openapi.model.TrainerUpdateResponse;
+import com.gym.crm.facade.GymFacade;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@ExtendWith(MockitoExtension.class)
+class TrainerControllerTest {
+
+    private static final String USERNAME = "Mike.Tyson";
+    private static final String TRAINEE_USERNAME = "Abdul.Hariton";
+    private static final String BASE_URL = "/api/v1/trainers";
+    private static final String BASE_PATH = "/api/v1";
+    private static final String FIRST_NAME = "Mike";
+    private static final String LAST_NAME = "Tyson";
+    private static final String PASSWORD = "password123";
+    private static final String SPECIALIZATION = "BOXING";
+
+    private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
+
+    @Mock
+    private GymFacade facade;
+
+    @BeforeEach
+    void setUp() {
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(new TrainerController(facade))
+                .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
+                .addPlaceholderValue("app.api.base-path", BASE_PATH)
+                .build();
+    }
+
+    @Test
+    void register_shouldReturnCredentials_whenRequestIsValid() throws Exception {
+        TrainerCreateRequest request = buildCreateRequest();
+        TrainerCreateResponse response = new TrainerCreateResponse();
+        response.setUsername(USERNAME);
+        response.setPassword(PASSWORD);
+
+        when(facade.createTrainer(any(TrainerCreateRequest.class))).thenReturn(response);
+
+        mockMvc.perform(post(BASE_URL + "/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(USERNAME))
+                .andExpect(jsonPath("$.password").value(PASSWORD));
+
+        verify(facade).createTrainer(any(TrainerCreateRequest.class));
+    }
+
+    @Test
+    void register_shouldReturnBadRequest_whenFirstNameIsMissing() throws Exception {
+        TrainerCreateRequest request = new TrainerCreateRequest();
+        request.setLastName(LAST_NAME);
+        request.setSpecialization(SPECIALIZATION);
+
+        mockMvc.perform(post(BASE_URL + "/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(facade);
+    }
+
+    @Test
+    void register_shouldReturnBadRequest_whenLastNameIsMissing() throws Exception {
+        TrainerCreateRequest request = new TrainerCreateRequest();
+        request.setFirstName(FIRST_NAME);
+        request.setSpecialization(SPECIALIZATION);
+
+        mockMvc.perform(post(BASE_URL + "/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(facade);
+    }
+
+    @Test
+    void getTrainerProfile_shouldReturnTrainer_whenExists() throws Exception {
+        TrainerGetResponse response = buildGetResponse();
+
+        when(facade.getTrainerByUsername(USERNAME)).thenReturn(response);
+
+        mockMvc.perform(get(BASE_URL + "/" + USERNAME))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName").value(FIRST_NAME))
+                .andExpect(jsonPath("$.lastName").value(LAST_NAME))
+                .andExpect(jsonPath("$.specialization").value(SPECIALIZATION))
+                .andExpect(jsonPath("$.isActive").value(true))
+                .andExpect(jsonPath("$.trainees").isArray())
+                .andExpect(jsonPath("$.trainees.length()").value(1))
+                .andExpect(jsonPath("$.trainees[0].username").value(TRAINEE_USERNAME));
+
+        verify(facade).getTrainerByUsername(USERNAME);
+    }
+
+    @Test
+    void updateTrainerProfile_shouldReturnUpdatedTrainer_whenRequestIsValid() throws Exception {
+        TrainerUpdateRequest request = buildUpdateRequest();
+        TrainerUpdateResponse response = buildUpdateResponse();
+
+        when(facade.updateTrainer(eq(USERNAME), any(TrainerUpdateRequest.class))).thenReturn(response);
+
+        mockMvc.perform(put(BASE_URL + "/" + USERNAME)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(USERNAME))
+                .andExpect(jsonPath("$.firstName").value(FIRST_NAME))
+                .andExpect(jsonPath("$.lastName").value(LAST_NAME))
+                .andExpect(jsonPath("$.specialization").value(SPECIALIZATION))
+                .andExpect(jsonPath("$.isActive").value(true))
+                .andExpect(jsonPath("$.trainees").isArray());
+
+        verify(facade).updateTrainer(eq(USERNAME), any(TrainerUpdateRequest.class));
+    }
+
+    @Test
+    void updateTrainerProfile_shouldReturnBadRequest_whenFirstNameIsMissing() throws Exception {
+        TrainerUpdateRequest request = new TrainerUpdateRequest();
+        request.setLastName(LAST_NAME);
+        request.isActive(true);
+
+        mockMvc.perform(put(BASE_URL + "/" + USERNAME)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(facade);
+    }
+
+    @Test
+    void getTrainerTrainings_shouldReturnList_whenNoFilters() throws Exception {
+        List<GetTrainerTrainingResponse> response = List.of(buildTrainingResponse());
+
+        when(facade.findTrainingsByTrainerCriteria(USERNAME, null, null, null))
+                .thenReturn(response);
+
+        mockMvc.perform(get(BASE_URL + "/" + USERNAME + "/trainings"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].trainingName").value("Evening Boxing"))
+                .andExpect(jsonPath("$[0].trainingType").value(SPECIALIZATION))
+                .andExpect(jsonPath("$[0].traineeName").value(TRAINEE_USERNAME));
+
+        verify(facade).findTrainingsByTrainerCriteria(USERNAME, null, null, null);
+    }
+
+    @Test
+    void getTrainerTrainings_shouldPassFilters_whenProvided() throws Exception {
+        LocalDate from = LocalDate.of(2024, 1, 1);
+        LocalDate to = LocalDate.of(2024, 12, 31);
+
+        when(facade.findTrainingsByTrainerCriteria(USERNAME, from, to, TRAINEE_USERNAME))
+                .thenReturn(List.of());
+
+        mockMvc.perform(get(BASE_URL + "/" + USERNAME + "/trainings")
+                        .param("fromDate", "2024-01-01")
+                        .param("toDate", "2024-12-31")
+                        .param("traineeName", TRAINEE_USERNAME))
+                .andExpect(status().isOk());
+
+        verify(facade).findTrainingsByTrainerCriteria(USERNAME, from, to, TRAINEE_USERNAME);
+    }
+
+    @Test
+    void changeActivationStatus_shouldReturnOk_whenActivating() throws Exception {
+        ActivationStatusRequest request = new ActivationStatusRequest(true);
+
+        mockMvc.perform(patch(BASE_URL + "/" + USERNAME + "/activation")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        verify(facade).changeTrainerActivationStatus(eq(USERNAME), any(ActivationStatusRequest.class));
+    }
+
+    @Test
+    void changeActivationStatus_shouldReturnOk_whenDeactivating() throws Exception {
+        ActivationStatusRequest request = new ActivationStatusRequest(false);
+
+        mockMvc.perform(patch(BASE_URL + "/" + USERNAME + "/activation")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        verify(facade).changeTrainerActivationStatus(eq(USERNAME), any(ActivationStatusRequest.class));
+    }
+
+    @Test
+    void changeActivationStatus_shouldReturnBadRequest_whenIsActiveIsMissing() throws Exception {
+        mockMvc.perform(patch(BASE_URL + "/" + USERNAME + "/activation")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(facade);
+    }
+
+    private TrainerCreateRequest buildCreateRequest() {
+        TrainerCreateRequest request = new TrainerCreateRequest();
+        request.setFirstName(FIRST_NAME);
+        request.setLastName(LAST_NAME);
+        request.setSpecialization(SPECIALIZATION);
+
+        return request;
+    }
+
+    private TrainerUpdateRequest buildUpdateRequest() {
+        TrainerUpdateRequest request = new TrainerUpdateRequest();
+        request.setFirstName(FIRST_NAME);
+        request.setLastName(LAST_NAME);
+        request.isActive(true);
+
+        return request;
+    }
+
+    private TrainerGetResponse buildGetResponse() {
+        TrainerGetResponse response = new TrainerGetResponse();
+        response.setFirstName(FIRST_NAME);
+        response.setLastName(LAST_NAME);
+        response.setSpecialization(SPECIALIZATION);
+        response.isActive(true);
+        response.setTrainees(List.of(buildAssignedTraineeResponse()));
+
+        return response;
+    }
+
+    private TrainerUpdateResponse buildUpdateResponse() {
+        TrainerUpdateResponse response = new TrainerUpdateResponse();
+        response.setUsername(USERNAME);
+        response.setFirstName(FIRST_NAME);
+        response.setLastName(LAST_NAME);
+        response.setSpecialization(SPECIALIZATION);
+        response.isActive(true);
+        response.setTrainees(List.of(buildAssignedTraineeResponse()));
+
+        return response;
+    }
+
+    private AssignedTraineeResponse buildAssignedTraineeResponse() {
+        AssignedTraineeResponse response = new AssignedTraineeResponse();
+        response.setUsername(TRAINEE_USERNAME);
+        response.setFirstName("Abdul");
+        response.setLastName("Hariton");
+
+        return response;
+    }
+
+    private GetTrainerTrainingResponse buildTrainingResponse() {
+        GetTrainerTrainingResponse response = new GetTrainerTrainingResponse();
+        response.setTrainingName("Evening Boxing");
+        response.setTrainingDate(LocalDate.of(2024, 5, 1));
+        response.setTrainingType(SPECIALIZATION);
+        response.setTrainingDuration(60);
+        response.setTraineeName(TRAINEE_USERNAME);
+
+        return response;
+    }
+}

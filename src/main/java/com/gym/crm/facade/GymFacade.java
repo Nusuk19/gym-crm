@@ -3,6 +3,7 @@ package com.gym.crm.facade;
 import com.gia.openapi.model.ActivationStatusRequest;
 import com.gia.openapi.model.AssignedTrainerResponse;
 import com.gia.openapi.model.GetTraineeTrainingResponse;
+import com.gia.openapi.model.GetTrainerTrainingResponse;
 import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
 import com.gia.openapi.model.TraineeAssignedTrainersUpdateRequest;
@@ -12,6 +13,11 @@ import com.gia.openapi.model.TraineeCreateResponse;
 import com.gia.openapi.model.TraineeGetResponse;
 import com.gia.openapi.model.TraineeUpdateRequest;
 import com.gia.openapi.model.TraineeUpdateResponse;
+import com.gia.openapi.model.TrainerCreateRequest;
+import com.gia.openapi.model.TrainerCreateResponse;
+import com.gia.openapi.model.TrainerGetResponse;
+import com.gia.openapi.model.TrainerUpdateRequest;
+import com.gia.openapi.model.TrainerUpdateResponse;
 import com.gym.crm.dao.search.filters.TraineeTrainingSearchFilter;
 import com.gym.crm.dao.search.filters.TrainerTrainingSearchFilter;
 import com.gym.crm.dto.request.ActivationRequest;
@@ -32,6 +38,7 @@ import com.gym.crm.mapper.AuthMapper;
 import com.gym.crm.mapper.TraineeMapper;
 import com.gym.crm.mapper.TraineeRestMapper;
 import com.gym.crm.mapper.TrainerMapper;
+import com.gym.crm.mapper.TrainerRestMapper;
 import com.gym.crm.mapper.TrainingMapper;
 import com.gym.crm.security.Authenticated;
 import com.gym.crm.security.SecurityContext;
@@ -60,6 +67,7 @@ public class GymFacade {
     private TraineeMapper traineeMapper;
     private TraineeRestMapper traineeRestMapper;
     private TrainerMapper trainerMapper;
+    private TrainerRestMapper trainerRestMapper;
     private TrainingMapper trainingMapper;
     private AuthMapper authMapper;
     private CoreValidator coreValidator;
@@ -93,6 +101,11 @@ public class GymFacade {
     @Autowired
     public void setTrainerMapper(TrainerMapper trainerMapper) {
         this.trainerMapper = trainerMapper;
+    }
+
+    @Autowired
+    public void setTrainerRestMapper(TrainerRestMapper trainerRestMapper) {
+        this.trainerRestMapper = trainerRestMapper;
     }
 
     @Autowired
@@ -252,19 +265,34 @@ public class GymFacade {
     }
 
 
-    public TrainerCreatedResponse createTrainer(CreateTrainerRequest request) {
-        coreValidator.validate(request);
+    public TrainerCreateResponse createTrainer(TrainerCreateRequest request) {
+        CreateTrainerRequest internalRequest = trainerRestMapper.toCreateRequest(request);
+        coreValidator.validate(internalRequest);
 
-        return trainerMapper.toCreatedResponse(trainerService.create(trainerMapper.toEntity(request)));
+        TrainerCreatedResponse response = trainerMapper.toCreatedResponse(
+                trainerService.create(trainerMapper.toEntity(internalRequest), internalRequest.getSpecializationName()));
+
+        return trainerRestMapper.toCreateResponse(response);
     }
 
-    public TrainerProfileResponse updateTrainer(UpdateTrainerRequest request, UserCredentials credentials) {
-        coreValidator.validate(request);
-        coreValidator.validate(credentials);
+    @Authenticated
+    public TrainerUpdateResponse updateTrainer(String username, TrainerUpdateRequest request) {
+        UpdateTrainerRequest internalRequest = trainerRestMapper.toUpdateRequest(username, request);
+        coreValidator.validate(internalRequest);
 
-        authenticationService.validateTrainerCredentials(credentials);
+        TrainerProfileResponse profile = trainerMapper.toProfileResponse(
+                trainerService.update(trainerMapper.toEntity(internalRequest)));
 
-        return trainerMapper.toProfileResponse(trainerService.update(trainerMapper.toEntity(request)));
+        return trainerRestMapper.toUpdateResponse(profile);
+    }
+
+    @Authenticated
+    public TrainerGetResponse getTrainerByUsername(String username) {
+        TrainerProfileResponse profile = trainerService.findByUsername(username)
+                .map(trainerMapper::toProfileResponse)
+                .orElseThrow(() -> new EntityNotFoundException("Trainer not found: " + username));
+
+        return trainerRestMapper.toGetResponse(profile);
     }
 
     public Optional<TrainerProfileResponse> findTrainerById(Long id, UserCredentials credentials) {
@@ -296,6 +324,17 @@ public class GymFacade {
                 .map(traineeMapper::toAssignedTrainerInfo)
                 .map(traineeRestMapper::toAssignedTrainerResponse)
                 .toList();
+    }
+
+    @Authenticated
+    public void changeTrainerActivationStatus(String username, ActivationStatusRequest statusRequest) {
+        ActivationRequest request = trainerRestMapper.toActivationRequest(username, statusRequest);
+
+        Consumer<ActivationRequest> action = request.getIsActive()
+                ? trainerService::activate
+                : trainerService::deactivate;
+
+        action.accept(request);
     }
 
     public void changeTrainerPassword(ChangePasswordRequest request, UserCredentials credentials) {
@@ -367,12 +406,17 @@ public class GymFacade {
                 .toList();
     }
 
-    public List<TrainingResponse> findTrainingsByTrainerCriteria(TrainerTrainingSearchFilter filter, UserCredentials credentials) {
-        coreValidator.validate(credentials);
-        authenticationService.validateTrainerCredentials(credentials);
+    public List<GetTrainerTrainingResponse> findTrainingsByTrainerCriteria(String username, LocalDate fromDate, LocalDate toDate, String traineeName) {
+        TrainerTrainingSearchFilter filter = TrainerTrainingSearchFilter.builder()
+                .username(username)
+                .fromDate(fromDate)
+                .toDate(toDate)
+                .traineeFullName(traineeName)
+                .build();
 
         return trainingService.findByTrainerCriteria(filter).stream()
                 .map(trainingMapper::toResponse)
+                .map(trainerRestMapper::toTrainerTrainingResponse)
                 .toList();
     }
 }
