@@ -18,6 +18,7 @@ import com.gia.openapi.model.TrainerCreateResponse;
 import com.gia.openapi.model.TrainerGetResponse;
 import com.gia.openapi.model.TrainerUpdateRequest;
 import com.gia.openapi.model.TrainerUpdateResponse;
+import com.gia.openapi.model.TrainingCreateRequest;
 import com.gym.crm.dao.search.filters.TrainerTrainingSearchFilter;
 import com.gym.crm.dto.request.ActivationRequest;
 import com.gym.crm.dto.request.ChangePasswordRequest;
@@ -40,6 +41,7 @@ import com.gym.crm.mapper.TraineeRestMapper;
 import com.gym.crm.mapper.TrainerMapper;
 import com.gym.crm.mapper.TrainerRestMapper;
 import com.gym.crm.mapper.TrainingMapper;
+import com.gym.crm.mapper.TrainingRestMapper;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.model.Training;
@@ -48,6 +50,7 @@ import com.gym.crm.model.User;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
+import com.gym.crm.service.TrainingTypeService;
 import com.gym.crm.service.UserService;
 import com.gym.crm.service.common.AuthenticationService;
 import com.gym.crm.service.common.CoreValidator;
@@ -69,6 +72,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -87,6 +91,8 @@ class GymFacadeTest {
     @Mock
     private TrainingService trainingService;
     @Mock
+    private TrainingTypeService trainingTypeService;
+    @Mock
     private UserService userService;
     @Mock
     private TraineeMapper traineeMapper;
@@ -100,6 +106,8 @@ class GymFacadeTest {
     private TraineeRestMapper traineeRestMapper;
     @Mock
     private TrainerRestMapper trainerRestMapper;
+    @Mock
+    private TrainingRestMapper trainingRestMapper;
     @Mock
     private CoreValidator coreValidator;
     @Mock
@@ -117,13 +125,14 @@ class GymFacadeTest {
 
     @BeforeEach
     void setUp() {
-        facade = new GymFacade(traineeService, trainerService, trainingService, userService);
+        facade = new GymFacade(traineeService, trainerService, trainingService, trainingTypeService, userService);
         facade.setTraineeMapper(traineeMapper);
         facade.setTrainerMapper(trainerMapper);
         facade.setTrainingMapper(trainingMapper);
         facade.setAuthMapper(authMapper);
         facade.setTraineeRestMapper(traineeRestMapper);
         facade.setTrainerRestMapper(trainerRestMapper);
+        facade.setTrainingRestMapper(trainingRestMapper);
         facade.setValidationService(coreValidator);
         facade.setAuthenticationService(authenticationService);
 
@@ -661,27 +670,26 @@ class GymFacadeTest {
     }
 
     @Test
-    void createTraining_whenValidRequest_returnsTrainingResponse() {
-        CreateTrainingRequest request = CreateTrainingRequest.builder()
-                .traineeId(EXISTING_ID)
-                .trainerId(EXISTING_ID)
-                .trainingName("Boxing basics")
-                .build();
-        UserCredentials credentials = buildTrainerCredentials();
+    void createTraining_whenValidRequest_callsService() {
+        TrainingCreateRequest restRequest = new TrainingCreateRequest();
+        CreateTrainingRequest internalRequest = mock(CreateTrainingRequest.class);
 
-        when(trainingMapper.toEntity(request)).thenReturn(training);
-        when(trainingService.create(training)).thenReturn(training);
-        when(trainingMapper.toResponse(training)).thenReturn(trainingResponse);
+        when(trainingRestMapper.toCreateRequest(restRequest)).thenReturn(internalRequest);
 
-        TrainingResponse actual = facade.createTraining(request, credentials);
+        facade.createTraining(restRequest);
 
-        assertEquals(trainingResponse, actual);
-        verify(coreValidator).validate(request);
-        verify(coreValidator).validate(credentials);
-        verify(authenticationService).validateTrainerCredentials(credentials);
-        verify(trainingMapper).toEntity(request);
-        verify(trainingService).create(training);
-        verify(trainingMapper).toResponse(training);
+        verify(trainingRestMapper).toCreateRequest(restRequest);
+        verify(coreValidator).validate(internalRequest);
+        verify(trainingService).create(internalRequest);
+    }
+
+    @Test
+    void getTraineeByUsername_whenNotExists_throwsEntityNotFoundException() {
+        when(traineeService.findByUsername(USERNAME)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> facade.getTraineeByUsername(USERNAME))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining(USERNAME);
     }
 
     @Test

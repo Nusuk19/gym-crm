@@ -10,10 +10,7 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TrainingMapper {
 
-    @Mapping(target = "trainee.id", source = "traineeId")
-    @Mapping(target = "trainer.id", source = "trainerId")
     @Mapping(target = "name", source = "trainingName")
-    @Mapping(target = "trainingType", source = "trainingType")
     @Mapping(target = "trainingDate", source = "trainingDate")
     @Mapping(target = "trainingDuration", source = "trainingDuration")
     @Mapping(target = "id", ignore = true)

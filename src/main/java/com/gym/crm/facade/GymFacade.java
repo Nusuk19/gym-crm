@@ -18,6 +18,8 @@ import com.gia.openapi.model.TrainerCreateResponse;
 import com.gia.openapi.model.TrainerGetResponse;
 import com.gia.openapi.model.TrainerUpdateRequest;
 import com.gia.openapi.model.TrainerUpdateResponse;
+import com.gia.openapi.model.TrainingCreateRequest;
+import com.gia.openapi.model.TrainingTypeResponse;
 import com.gym.crm.dao.search.filters.TraineeTrainingSearchFilter;
 import com.gym.crm.dao.search.filters.TrainerTrainingSearchFilter;
 import com.gym.crm.dto.request.ActivationRequest;
@@ -40,11 +42,13 @@ import com.gym.crm.mapper.TraineeRestMapper;
 import com.gym.crm.mapper.TrainerMapper;
 import com.gym.crm.mapper.TrainerRestMapper;
 import com.gym.crm.mapper.TrainingMapper;
+import com.gym.crm.mapper.TrainingRestMapper;
 import com.gym.crm.security.Authenticated;
 import com.gym.crm.security.SecurityContext;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
+import com.gym.crm.service.TrainingTypeService;
 import com.gym.crm.service.UserService;
 import com.gym.crm.service.common.AuthenticationService;
 import com.gym.crm.service.common.CoreValidator;
@@ -62,6 +66,7 @@ public class GymFacade {
     private final TraineeService traineeService;
     private final TrainerService trainerService;
     private final TrainingService trainingService;
+    private final TrainingTypeService trainingTypeService;
     private final UserService userService;
 
     private TraineeMapper traineeMapper;
@@ -69,6 +74,7 @@ public class GymFacade {
     private TrainerMapper trainerMapper;
     private TrainerRestMapper trainerRestMapper;
     private TrainingMapper trainingMapper;
+    private TrainingRestMapper trainingRestMapper;
     private AuthMapper authMapper;
     private CoreValidator coreValidator;
     private AuthenticationService authenticationService;
@@ -76,10 +82,12 @@ public class GymFacade {
     public GymFacade(TraineeService traineeService,
                      TrainerService trainerService,
                      TrainingService trainingService,
+                     TrainingTypeService trainingTypeService,
                      UserService userService) {
         this.traineeService = traineeService;
         this.trainerService = trainerService;
         this.trainingService = trainingService;
+        this.trainingTypeService = trainingTypeService;
         this.userService = userService;
     }
 
@@ -111,6 +119,11 @@ public class GymFacade {
     @Autowired
     public void setTrainingMapper(TrainingMapper trainingMapper) {
         this.trainingMapper = trainingMapper;
+    }
+
+    @Autowired
+    public void setTrainingRestMapper(TrainingRestMapper trainingRestMapper) {
+        this.trainingRestMapper = trainingRestMapper;
     }
 
     @Autowired
@@ -364,13 +377,16 @@ public class GymFacade {
         trainerService.deactivate(request);
     }
 
-    public TrainingResponse createTraining(CreateTrainingRequest request, UserCredentials credentials) {
-        coreValidator.validate(request);
-        coreValidator.validate(credentials);
+    public void createTraining(TrainingCreateRequest request) {
+        CreateTrainingRequest internalRequest = trainingRestMapper.toCreateRequest(request);
+        coreValidator.validate(internalRequest);
 
-        authenticationService.validateTrainerCredentials(credentials);
+        trainingService.create(internalRequest);
+    }
 
-        return trainingMapper.toResponse(trainingService.create(trainingMapper.toEntity(request)));
+    @Authenticated
+    public List<TrainingTypeResponse> findAllTrainingTypes() {
+        return trainingRestMapper.toTrainingTypeResponseList(trainingTypeService.findAll());
     }
 
     public Optional<TrainingResponse> findTrainingById(Long id, UserCredentials credentials) {
