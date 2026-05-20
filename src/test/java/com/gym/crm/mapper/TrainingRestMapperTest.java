@@ -98,16 +98,6 @@ class TrainingRestMapperTest {
         assertEquals(BigDecimal.valueOf(90), mapper.toBigDecimal(90));
     }
 
-    @Test
-    void longToInt_nullInput_returnsNull() {
-        assertNull(mapper.longToInt(null));
-    }
-
-    @Test
-    void longToInt_validInput_truncatesToInt() {
-        assertEquals(42, mapper.longToInt(42L));
-    }
-
     private TrainingCreateRequest buildCreateRequest(Integer duration) {
         return new TrainingCreateRequest()
                 .traineeUsername("Abdul.Hariton")

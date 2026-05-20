@@ -20,7 +20,7 @@ public interface TrainingRestMapper {
     @Mapping(target = "trainingDuration", source = "trainingDuration")
     CreateTrainingRequest toCreateRequest(TrainingCreateRequest request);
 
-    @Mapping(target = "id", source = "id", qualifiedByName = "longToInt")
+    @Mapping(target = "id", source = "id")
     @Mapping(target = "name", source = "trainingTypeName")
     TrainingTypeResponse toTrainingTypeResponse(TrainingType type);
 
@@ -28,10 +28,5 @@ public interface TrainingRestMapper {
 
     default BigDecimal toBigDecimal(Integer minutes) {
         return minutes == null ? null : BigDecimal.valueOf(minutes);
-    }
-
-    @org.mapstruct.Named("longToInt")
-    default Integer longToInt(Long id) {
-        return id == null ? null : id.intValue();
     }
 }

@@ -133,8 +133,8 @@ class TrainingControllerTest {
     @Test
     void getTrainingTypes_shouldReturnList_whenTypesExist() throws Exception {
         List<TrainingTypeResponse> response = List.of(
-                buildTrainingTypeResponse(1, "BOXING"),
-                buildTrainingTypeResponse(2, "CARDIO"));
+                buildTrainingTypeResponse(1L, "BOXING"),
+                buildTrainingTypeResponse(2L, "CARDIO"));
 
         when(facade.findAllTrainingTypes()).thenReturn(response);
 
@@ -171,7 +171,7 @@ class TrainingControllerTest {
         return request;
     }
 
-    private TrainingTypeResponse buildTrainingTypeResponse(int id, String name) {
+    private TrainingTypeResponse buildTrainingTypeResponse(long id, String name) {
         TrainingTypeResponse response = new TrainingTypeResponse();
         response.setId(id);
         response.setName(name);
