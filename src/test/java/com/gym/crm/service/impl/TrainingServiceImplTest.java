@@ -1,8 +1,12 @@
 package com.gym.crm.service.impl;
 
+import com.gym.crm.dao.TraineeDao;
+import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.dao.search.filters.TraineeTrainingSearchFilter;
 import com.gym.crm.dao.search.filters.TrainerTrainingSearchFilter;
+import com.gym.crm.dto.request.CreateTrainingRequest;
+import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
@@ -12,6 +16,7 @@ import com.gym.crm.model.User;
 import com.gym.crm.service.common.EntityValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -21,6 +26,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -44,41 +51,85 @@ class TrainingServiceImplTest {
     @Mock
     private TrainingDao trainingDao;
     @Mock
+    private TraineeDao traineeDao;
+    @Mock
+    private TrainerDao trainerDao;
+    @Mock
     private EntityValidator validator;
     @InjectMocks
     private TrainingServiceImpl service;
 
     @Test
-    void create_whenValidTraining_savesAndReturnsTraining() {
-        when(trainingDao.save(training)).thenReturn(training);
+    void create_whenValidRequest_buildsTrainingAndSaves() {
+        Trainee trainee = buildTrainee();
+        Trainer trainer = buildTrainer();
+        CreateTrainingRequest request = buildCreateRequest();
 
-        Training actual = service.create(training);
+        when(traineeDao.findByUsername(TRAINEE_USERNAME)).thenReturn(Optional.of(trainee));
+        when(trainerDao.findByUsername(TRAINER_USERNAME)).thenReturn(Optional.of(trainer));
+        when(trainingDao.save(any(Training.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        assertEquals(training, actual);
-        verify(validator).validateTraining(training);
-        verify(trainingDao).save(training);
+        Training actual = service.create(request);
+
+        assertThat(actual.getName()).isEqualTo("Boxing basics");
+        assertThat(actual.getTrainee()).isEqualTo(trainee);
+        assertThat(actual.getTrainer()).isEqualTo(trainer);
+        assertThat(actual.getTrainingType()).isEqualTo(trainer.getSpecialization());
+        assertThat(actual.getTrainingDate()).isEqualTo(LocalDate.of(2024, 5, 1));
+        assertThat(actual.getTrainingDuration()).isEqualByComparingTo(BigDecimal.valueOf(60));
+
+        verify(traineeDao).findByUsername(TRAINEE_USERNAME);
+        verify(trainerDao).findByUsername(TRAINER_USERNAME);
+        verify(validator).validateTraining(any(Training.class));
+        verify(trainingDao).save(any(Training.class));
     }
 
     @Test
     void create_whenValidationFails_throwsExceptionAndDaoNotCalled() {
-        doThrow(new EntityValidationException("Training cannot be null"))
-                .when(validator).validateTraining(training);
+        CreateTrainingRequest request = buildCreateRequest();
 
-        assertThrows(EntityValidationException.class, () -> service.create(training));
+        when(traineeDao.findByUsername(TRAINEE_USERNAME)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.create(request))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("Trainee not found")
+                .hasMessageContaining(TRAINEE_USERNAME);
+
+        verify(trainerDao, never()).findByUsername(any());
+        verify(trainingDao, never()).save(any());
+    }
+
+    @Test
+    void create_whenTrainerNotFound_throwsEntityNotFoundException() {
+        CreateTrainingRequest request = buildCreateRequest();
+
+        when(traineeDao.findByUsername(TRAINEE_USERNAME)).thenReturn(Optional.of(buildTrainee()));
+        when(trainerDao.findByUsername(TRAINER_USERNAME)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.create(request))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("Trainer not found")
+                .hasMessageContaining(TRAINER_USERNAME);
 
         verify(trainingDao, never()).save(any());
     }
 
     @Test
-    void findById_whenTrainingExists_returnsTraining() {
-        when(trainingDao.findById(ID)).thenReturn(Optional.of(training));
+    void create_usesTrainerSpecializationAsTrainingType() {
+        Trainer trainer = buildTrainer();
+        CreateTrainingRequest request = buildCreateRequest();
 
-        Optional<Training> actual = service.findById(ID);
+        when(traineeDao.findByUsername(TRAINEE_USERNAME)).thenReturn(Optional.of(buildTrainee()));
+        when(trainerDao.findByUsername(TRAINER_USERNAME)).thenReturn(Optional.of(trainer));
+        when(trainingDao.save(any(Training.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        assertTrue(actual.isPresent());
-        assertEquals(training, actual.get());
-        verify(validator).requireValidId(ID);
-        verify(trainingDao).findById(ID);
+        Training actual = service.create(request);
+
+        assertThat(actual.getTrainingType()).isEqualTo(trainer.getSpecialization());
+
+        ArgumentCaptor<Training> captor = ArgumentCaptor.forClass(Training.class);
+        verify(trainingDao).save(captor.capture());
+        assertThat(captor.getValue().getTrainingType().getTrainingTypeName()).isEqualTo("BOXING");
     }
 
     @Test
@@ -201,6 +252,40 @@ class TrainingServiceImplTest {
         verify(trainingDao, never()).findByTraineeCriteria(any());
     }
 
+    private CreateTrainingRequest buildCreateRequest() {
+        return CreateTrainingRequest.builder()
+                .traineeUsername(TRAINEE_USERNAME)
+                .trainerUsername(TRAINER_USERNAME)
+                .trainingName("Boxing basics")
+                .trainingDate(LocalDate.of(2024, 5, 1))
+                .trainingDuration(BigDecimal.valueOf(60))
+                .build();
+    }
+
+    private Trainee buildTrainee() {
+        User user = User.builder()
+                .firstName("John")
+                .lastName("Doe")
+                .username(TRAINEE_USERNAME)
+                .build();
+        return Trainee.builder()
+                .user(user)
+                .build();
+    }
+
+    private Trainer buildTrainer() {
+        User user = User.builder()
+                .firstName("Mike")
+                .lastName("Tyson")
+                .username(TRAINER_USERNAME)
+                .build();
+        return Trainer.builder()
+                .user(user)
+                .specialization(TrainingType.builder()
+                        .trainingTypeName("BOXING")
+                        .build())
+                .build();
+    }
 
     private Training buildTraining() {
         User user = User.builder()

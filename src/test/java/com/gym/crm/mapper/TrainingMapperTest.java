@@ -29,16 +29,14 @@ class TrainingMapperTest {
     void setUp() {
         trainingMapper = Mappers.getMapper(TrainingMapper.class);
     }
+
     @Test
     void toEntity_fromCreateRequest_mapsAllFieldsCorrectly() {
         CreateTrainingRequest request = buildCreateRequest();
 
         Training actual = trainingMapper.toEntity(request);
 
-        assertEquals(EXISTING_ID, actual.getTrainee().getId());
-        assertEquals(TRAINEE_ID, actual.getTrainer().getId());
         assertEquals("Boxing basics", actual.getName());
-        assertEquals("BOXING", actual.getTrainingType().getTrainingTypeName());
         assertEquals(LocalDate.of(2024, 5, 1), actual.getTrainingDate());
         assertEquals(BigDecimal.valueOf(60), actual.getTrainingDuration());
     }
@@ -80,10 +78,9 @@ class TrainingMapperTest {
 
     private CreateTrainingRequest buildCreateRequest() {
         return CreateTrainingRequest.builder()
-                .traineeId(EXISTING_ID)
-                .trainerId(TRAINEE_ID)
+                .traineeUsername("John.Doe")
+                .trainerUsername("Mike.Tyson")
                 .trainingName("Boxing basics")
-                .trainingType(TrainingType.builder().trainingTypeName("BOXING").build())
                 .trainingDate(LocalDate.of(2024, 5, 1))
                 .trainingDuration(BigDecimal.valueOf(60))
                 .build();
