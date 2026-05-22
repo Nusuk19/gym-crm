@@ -3,6 +3,7 @@ package com.gym.crm.controller;
 import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
 import com.gym.crm.facade.GymFacade;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +23,10 @@ public class AuthController {
     private final GymFacade facade;
 
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest request, HttpSession session) {
         facade.login(request);
+
+        session.setAttribute("username", request.getUsername());
 
         return ResponseEntity.ok().build();
     }

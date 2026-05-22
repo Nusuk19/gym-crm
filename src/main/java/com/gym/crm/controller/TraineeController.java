@@ -10,6 +10,7 @@ import com.gia.openapi.model.TraineeCreateResponse;
 import com.gia.openapi.model.TraineeGetResponse;
 import com.gia.openapi.model.TraineeUpdateRequest;
 import com.gia.openapi.model.TraineeUpdateResponse;
+import com.gym.crm.annotation.ValidUsername;
 import com.gym.crm.facade.GymFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,36 +43,36 @@ public class TraineeController {
     }
 
     @GetMapping("/{username}")
-    public ResponseEntity<TraineeGetResponse> getTraineeProfile(@PathVariable String username) {
+    public ResponseEntity<TraineeGetResponse> getTraineeProfile(@PathVariable @ValidUsername String username) {
         return ResponseEntity.ok(facade.getTraineeByUsername(username));
     }
 
     @PutMapping("/{username}")
-    public ResponseEntity<TraineeUpdateResponse> updateTraineeProfile(@PathVariable String username,
+    public ResponseEntity<TraineeUpdateResponse> updateTraineeProfile(@PathVariable @ValidUsername String username,
                                                                       @Valid @RequestBody TraineeUpdateRequest request) {
         return ResponseEntity.ok(facade.updateTrainee(username, request));
     }
 
     @DeleteMapping("/{username}")
-    public ResponseEntity<Void> deleteTrainee(@PathVariable String username) {
+    public ResponseEntity<Void> deleteTrainee(@PathVariable @ValidUsername String username) {
         facade.deleteTraineeByUsername(username);
 
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{username}/available-trainers")
-    public ResponseEntity<List<AssignedTrainerResponse>> getAvailableTrainers(@PathVariable String username) {
+    public ResponseEntity<List<AssignedTrainerResponse>> getAvailableTrainers(@PathVariable @ValidUsername String username) {
         return ResponseEntity.ok(facade.findAllTrainersNotAssignedToTrainee(username));
     }
 
     @PutMapping("/{username}/trainers")
-    public ResponseEntity<TraineeAssignedTrainersUpdateResponse> updateTraineeTrainers(@PathVariable String username,
+    public ResponseEntity<TraineeAssignedTrainersUpdateResponse> updateTraineeTrainers(@PathVariable @ValidUsername String username,
                                                                                        @Valid @RequestBody TraineeAssignedTrainersUpdateRequest request) {
         return ResponseEntity.ok(facade.updateTraineeTrainers(username, request));
     }
 
     @GetMapping("/{username}/trainings")
-    public ResponseEntity<List<GetTraineeTrainingResponse>> getTraineeTrainings(@PathVariable String username,
+    public ResponseEntity<List<GetTraineeTrainingResponse>> getTraineeTrainings(@PathVariable @ValidUsername String username,
                                                                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
                                                                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
                                                                                 @RequestParam(required = false) String trainerName,
@@ -80,7 +81,7 @@ public class TraineeController {
     }
 
     @PatchMapping("/{username}/activation")
-    public ResponseEntity<Void> changeActivationStatus(@PathVariable String username,
+    public ResponseEntity<Void> changeActivationStatus(@PathVariable @ValidUsername String username,
                                                        @Valid @RequestBody ActivationStatusRequest request) {
         facade.changeTraineeActivationStatus(username, request);
 

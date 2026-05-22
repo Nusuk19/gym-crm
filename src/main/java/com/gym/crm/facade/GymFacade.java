@@ -44,7 +44,6 @@ import com.gym.crm.mapper.TrainerRestMapper;
 import com.gym.crm.mapper.TrainingMapper;
 import com.gym.crm.mapper.TrainingRestMapper;
 import com.gym.crm.security.Authenticated;
-import com.gym.crm.security.SecurityContext;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
@@ -141,7 +140,6 @@ public class GymFacade {
         coreValidator.validate(credentials);
 
         authenticationService.validateCredentials(credentials);
-        SecurityContext.setCurrentUser(credentials.getUsername());
     }
 
     public void changePassword(LoginChangeRequest request) {
@@ -422,6 +420,7 @@ public class GymFacade {
                 .toList();
     }
 
+    @Authenticated
     public List<GetTrainerTrainingResponse> findTrainingsByTrainerCriteria(String username, LocalDate fromDate, LocalDate toDate, String traineeName) {
         TrainerTrainingSearchFilter filter = TrainerTrainingSearchFilter.builder()
                 .username(username)

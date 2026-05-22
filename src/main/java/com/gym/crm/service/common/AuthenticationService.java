@@ -4,8 +4,7 @@ import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.dao.UserDao;
 import com.gym.crm.dto.request.UserCredentials;
-import com.gym.crm.exception.AuthenticationException;
-import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.exception.AuthenticationFailedException;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.model.User;
@@ -49,12 +48,12 @@ public class AuthenticationService {
         log.info("Validating trainee credentials: username={}", credentials.getUsername());
 
         Trainee trainee = traineeDao.findByUsername(credentials.getUsername())
-                .orElseThrow(() -> new AuthenticationException(INVALID_CREDENTIALS));
+                .orElseThrow(() -> new AuthenticationFailedException(INVALID_CREDENTIALS));
 
         if (!passwordEncoder.matches(credentials.getPassword(), trainee.getUser().getPassword())) {
             log.warn("Authentication failed for trainee: username={}", credentials.getUsername());
 
-            throw new AuthenticationException(INVALID_CREDENTIALS);
+            throw new AuthenticationFailedException(INVALID_CREDENTIALS);
         }
 
         log.info("Trainee credentials validated successfully: username={}", credentials.getUsername());
@@ -64,12 +63,12 @@ public class AuthenticationService {
         log.info("Validating trainer credentials: username={}", credentials.getUsername());
 
         Trainer trainer = trainerDao.findByUsername(credentials.getUsername())
-                .orElseThrow(() -> new AuthenticationException(INVALID_CREDENTIALS));
+                .orElseThrow(() -> new AuthenticationFailedException(INVALID_CREDENTIALS));
 
         if (!passwordEncoder.matches(credentials.getPassword(), trainer.getUser().getPassword())) {
             log.warn("Authentication failed for trainer: username={}", credentials.getUsername());
 
-            throw new AuthenticationException(INVALID_CREDENTIALS);
+            throw new AuthenticationFailedException(INVALID_CREDENTIALS);
         }
 
         log.info("Trainer credentials validated successfully: username={}", credentials.getUsername());
@@ -79,13 +78,13 @@ public class AuthenticationService {
         log.info("Validating credentials: username={}", credentials.getUsername());
 
         User user = userDao.findByUsername(credentials.getUsername())
-                .orElseThrow(() -> new AuthenticationException(INVALID_CREDENTIALS));
+                .orElseThrow(() -> new AuthenticationFailedException(INVALID_CREDENTIALS));
 
 
         if (!passwordEncoder.matches(credentials.getPassword(), user.getPassword())) {
             log.warn("Authentication failed: username={}", credentials.getUsername());
 
-            throw new AuthenticationException(INVALID_CREDENTIALS);
+            throw new AuthenticationFailedException(INVALID_CREDENTIALS);
         }
 
         log.info("Credentials validated successfully: username={}", credentials.getUsername());
