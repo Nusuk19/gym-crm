@@ -80,6 +80,46 @@ class AuthenticationAspectTest {
         assertThrows(AuthorizationException.class, () -> aspect.checkAuthentication(mockJoinPoint(USERNAME)));
     }
 
+    @Test
+    @DisplayName("Should pass when first arg is object with getUsername matching logged user")
+    void checkAuthentication_whenArgHasGetUsernameMatchingLoggedUser_shouldPass() {
+        mockSession(USERNAME);
+        Object argWithUsername = new Object() {
+            public String getUsername() {
+                return USERNAME;
+            }
+        };
+
+        JoinPoint joinPoint = mockJoinPoint(argWithUsername);
+
+        assertDoesNotThrow(() -> aspect.checkAuthentication(joinPoint));
+    }
+
+    @Test
+    @DisplayName("Should throw AuthorizationException when arg object getUsername differs from logged user")
+    void checkAuthentication_whenArgHasGetUsernameDifferentFromLoggedUser_shouldThrowAuthorizationException() {
+        mockSession("other.user");
+        Object argWithUsername = new Object() {
+            public String getUsername() {
+                return USERNAME;
+            }
+        };
+
+        JoinPoint joinPoint = mockJoinPoint(argWithUsername);
+
+        assertThrows(AuthorizationException.class, () -> aspect.checkAuthentication(joinPoint));
+    }
+
+    @Test
+    @DisplayName("Should pass when first arg has no getUsername method")
+    void checkAuthentication_whenArgHasNoGetUsernameMethod_shouldPass() {
+        mockSession(USERNAME);
+
+        JoinPoint joinPoint = mockJoinPoint(42);
+
+        assertDoesNotThrow(() -> aspect.checkAuthentication(joinPoint));
+    }
+
     private void mockSession(String username) {
         HttpSession session = mock(HttpSession.class);
         HttpServletRequest request = mock(HttpServletRequest.class);

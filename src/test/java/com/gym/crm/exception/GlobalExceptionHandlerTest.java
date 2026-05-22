@@ -1,12 +1,18 @@
 package com.gym.crm.exception;
 
+import jakarta.persistence.PersistenceException;
 import org.hibernate.HibernateException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.method.ParameterValidationResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import java.util.List;
 import java.util.Map;
@@ -107,5 +113,61 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getStatusCode().value()).isEqualTo(500);
         assertThat(response.getBody()).containsEntry("errorCode", 3200);
         assertThat(response.getBody()).containsEntry("errorMessage", "Internal processing error");
+    }
+
+    @Test
+    @DisplayName("HandlerMethodValidationException → 400, code 2760, details included")
+    void handleHandlerMethodValidation_returns400WithDetails() {
+        HandlerMethodValidationException ex = mock(HandlerMethodValidationException.class);
+        ParameterValidationResult result = mock(ParameterValidationResult.class);
+        MessageSourceResolvable error = mock(MessageSourceResolvable.class);
+
+        when(ex.getAllValidationResults()).thenReturn(List.of(result));
+        when(result.getResolvableErrors()).thenReturn(List.of(error));
+        when(error.getDefaultMessage()).thenReturn("must not be blank");
+
+        ResponseEntity<Map<String, Object>> response = handler.handleHandlerMethodValidation(ex);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+        assertThat(response.getBody()).containsEntry("errorCode", 2760);
+        assertThat(response.getBody().get("errorMessage").toString()).contains("must not be blank");
+    }
+
+    @Test
+    @DisplayName("HttpMessageNotReadableException → 400, code 2760, generic message returned")
+    void handleNotReadable_returns400WithGenericMessage() {
+        HttpMessageNotReadableException ex = mock(HttpMessageNotReadableException.class);
+        when(ex.getMessage()).thenReturn("JSON parse error");
+
+        ResponseEntity<Map<String, Object>> response = handler.handleNotReadable(ex);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+        assertThat(response.getBody()).containsEntry("errorCode", 2760);
+        assertThat(response.getBody().get("errorMessage").toString()).contains("Malformed or missing request body");
+    }
+
+    @Test
+    @DisplayName("MissingServletRequestParameterException → 400, code 2760, parameter name included")
+    void handleMissingParam_returns400WithParamName() {
+        MissingServletRequestParameterException ex = mock(MissingServletRequestParameterException.class);
+        when(ex.getParameterName()).thenReturn("fromDate");
+
+        ResponseEntity<Map<String, Object>> response = handler.handleMissingParam(ex);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+        assertThat(response.getBody()).containsEntry("errorCode", 2760);
+        assertThat(response.getBody().get("errorMessage").toString()).contains("fromDate");
+    }
+
+    @Test
+    @DisplayName("PersistenceException → 500, code 3358, no internal details leaked")
+    void handlePersistence_returns500WithoutDetails() {
+        PersistenceException ex = new PersistenceException("constraint violation");
+
+        ResponseEntity<Map<String, Object>> response = handler.handlePersistence(ex);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(500);
+        assertThat(response.getBody()).containsEntry("errorCode", 3358);
+        assertThat(response.getBody()).containsEntry("errorMessage", "Unexpected database access failure");
     }
 }
