@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
         String details = ex.getBindingResult().getFieldErrors().stream()
-                .map(fe -> fe.getField() + " " + fe.getDefaultMessage())
+                .map(fieldError -> fieldError.getField() + " " + fieldError.getDefaultMessage())
                 .collect(Collectors.joining(", "));
         log.warn("Request body validation failed: {}", details);
 
@@ -39,8 +39,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<Map<String, Object>> handleHandlerMethodValidation(HandlerMethodValidationException ex) {
         String details = ex.getAllValidationResults().stream()
-                .flatMap(r -> r.getResolvableErrors().stream())
-                .map(e -> e.getDefaultMessage())
+                .flatMap(results -> results.getResolvableErrors().stream())
+                .map(error -> error.getDefaultMessage())
                 .collect(Collectors.joining(", "));
         log.warn("Path/param validation failed: {}", details);
 
