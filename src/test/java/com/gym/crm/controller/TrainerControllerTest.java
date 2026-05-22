@@ -12,6 +12,8 @@ import com.gia.openapi.model.TrainerGetResponse;
 import com.gia.openapi.model.TrainerUpdateRequest;
 import com.gia.openapi.model.TrainerUpdateResponse;
 import com.gym.crm.facade.GymFacade;
+import org.hibernate.validator.HibernateValidator;
+import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -61,8 +64,14 @@ class TrainerControllerTest {
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
+        LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
+        validator.setProviderClass(HibernateValidator.class);
+        validator.setMessageInterpolator(new ParameterMessageInterpolator());
+        validator.afterPropertiesSet();
+
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new TrainerController(facade))
+                .setValidator(validator)
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
                 .addPlaceholderValue("app.api.base-path", BASE_PATH)
                 .build();
@@ -132,6 +141,14 @@ class TrainerControllerTest {
                 .andExpect(jsonPath("$.trainees[0].username").value(TRAINEE_USERNAME));
 
         verify(facade).getTrainerByUsername(USERNAME);
+    }
+
+    @Test
+    void getTrainerProfile_shouldReturnBadRequest_whenUsernameFormatIsInvalid() throws Exception {
+        mockMvc.perform(get(BASE_URL + "/invalid_format"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(facade);
     }
 
     @Test

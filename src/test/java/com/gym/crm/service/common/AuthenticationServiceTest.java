@@ -4,7 +4,7 @@ import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.dao.UserDao;
 import com.gym.crm.dto.request.UserCredentials;
-import com.gym.crm.exception.AuthenticationException;
+import com.gym.crm.exception.AuthenticationFailedException;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.model.TrainingType;
@@ -62,7 +62,7 @@ class AuthenticationServiceTest {
         when(passwordEncoder.matches("wrongPassword", "encodedPassword")).thenReturn(false);
 
         assertThatThrownBy(() -> service.validateTraineeCredentials(credentials))
-                .isInstanceOf(AuthenticationException.class)
+                .isInstanceOf(AuthenticationFailedException.class)
                 .hasMessageContaining("Invalid credentials");
     }
 
@@ -73,7 +73,7 @@ class AuthenticationServiceTest {
         when(traineeDao.findByUsername("ghost.user")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.validateTraineeCredentials(credentials))
-                .isInstanceOf(AuthenticationException.class)
+                .isInstanceOf(AuthenticationFailedException.class)
                 .hasMessageContaining("Invalid credentials");
     }
 
@@ -98,7 +98,7 @@ class AuthenticationServiceTest {
         when(passwordEncoder.matches("wrongPassword", "encodedPassword")).thenReturn(false);
 
         assertThatThrownBy(() -> service.validateTrainerCredentials(credentials))
-                .isInstanceOf(AuthenticationException.class)
+                .isInstanceOf(AuthenticationFailedException.class)
                 .hasMessageContaining("Invalid credentials");
     }
 
@@ -109,7 +109,7 @@ class AuthenticationServiceTest {
         when(trainerDao.findByUsername("ghost.user")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.validateTrainerCredentials(credentials))
-                .isInstanceOf(AuthenticationException.class)
+                .isInstanceOf(AuthenticationFailedException.class)
                 .hasMessageContaining("Invalid credentials");
     }
 
@@ -134,7 +134,7 @@ class AuthenticationServiceTest {
         when(passwordEncoder.matches("wrongPassword", "encodedPassword")).thenReturn(false);
 
         assertThatThrownBy(() -> service.validateCredentials(credentials))
-                .isInstanceOf(AuthenticationException.class)
+                .isInstanceOf(AuthenticationFailedException.class)
                 .hasMessageContaining("Invalid credentials");
     }
 
@@ -145,7 +145,7 @@ class AuthenticationServiceTest {
         when(userDao.findByUsername("ghost.user")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.validateCredentials(credentials))
-                .isInstanceOf(AuthenticationException.class)
+                .isInstanceOf(AuthenticationFailedException.class)
                 .hasMessageContaining("Invalid credentials");
     }
 

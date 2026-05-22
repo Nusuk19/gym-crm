@@ -7,6 +7,7 @@ import com.gia.openapi.model.TrainerCreateResponse;
 import com.gia.openapi.model.TrainerGetResponse;
 import com.gia.openapi.model.TrainerUpdateRequest;
 import com.gia.openapi.model.TrainerUpdateResponse;
+import com.gym.crm.annotation.ValidUsername;
 import com.gym.crm.facade.GymFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -38,18 +39,18 @@ public class TrainerController {
     }
 
     @GetMapping("/{username}")
-    public ResponseEntity<TrainerGetResponse> getTrainerProfile(@PathVariable String username) {
+    public ResponseEntity<TrainerGetResponse> getTrainerProfile(@PathVariable @ValidUsername String username) {
         return ResponseEntity.ok(facade.getTrainerByUsername(username));
     }
 
     @PutMapping("/{username}")
-    public ResponseEntity<TrainerUpdateResponse> updateTrainerProfile(@PathVariable String username,
+    public ResponseEntity<TrainerUpdateResponse> updateTrainerProfile(@PathVariable @ValidUsername String username,
                                                                       @Valid @RequestBody TrainerUpdateRequest request) {
         return ResponseEntity.ok(facade.updateTrainer(username, request));
     }
 
     @GetMapping("/{username}/trainings")
-    public ResponseEntity<List<GetTrainerTrainingResponse>> getTrainerTrainings(@PathVariable String username,
+    public ResponseEntity<List<GetTrainerTrainingResponse>> getTrainerTrainings(@PathVariable @ValidUsername String username,
                                                                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
                                                                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
                                                                                 @RequestParam(required = false) String traineeName) {
@@ -57,7 +58,7 @@ public class TrainerController {
     }
 
     @PatchMapping("/{username}/activation")
-    public ResponseEntity<Void> changeActivationStatus(@PathVariable String username,
+    public ResponseEntity<Void> changeActivationStatus(@PathVariable @ValidUsername String username,
                                                        @Valid @RequestBody ActivationStatusRequest request) {
         facade.changeTrainerActivationStatus(username, request);
 

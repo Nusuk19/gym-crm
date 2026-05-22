@@ -14,6 +14,8 @@ import com.gia.openapi.model.TraineeGetResponse;
 import com.gia.openapi.model.TraineeUpdateRequest;
 import com.gia.openapi.model.TraineeUpdateResponse;
 import com.gym.crm.facade.GymFacade;
+import org.hibernate.validator.HibernateValidator;
+import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -66,8 +69,14 @@ class TraineeControllerTest {
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
+        LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
+        validator.setProviderClass(HibernateValidator.class);
+        validator.setMessageInterpolator(new ParameterMessageInterpolator());
+        validator.afterPropertiesSet();
+
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new TraineeController(facade))
+                .setValidator(validator)
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
                 .addPlaceholderValue("app.api.base-path", BASE_PATH)
                 .build();
@@ -152,6 +161,14 @@ class TraineeControllerTest {
     }
 
     @Test
+    void getTraineeProfile_shouldReturnBadRequest_whenUsernameFormatIsInvalid() throws Exception {
+        mockMvc.perform(get(BASE_URL + "/invalid-username-format"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(facade);
+    }
+
+    @Test
     void updateTraineeProfile_shouldReturnUpdatedTrainee_whenRequestIsValid() throws Exception {
         TraineeUpdateRequest request = buildUpdateRequest();
         TraineeUpdateResponse response = buildUpdateResponse();
@@ -191,6 +208,14 @@ class TraineeControllerTest {
                 .andExpect(status().isOk());
 
         verify(facade).deleteTraineeByUsername(USERNAME);
+    }
+
+    @Test
+    void deleteTrainee_shouldReturnBadRequest_whenUsernameFormatIsInvalid() throws Exception {
+        mockMvc.perform(delete(BASE_URL + "/bad_username"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(facade);
     }
 
     @Test
