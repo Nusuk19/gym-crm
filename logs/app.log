@@ -1,0 +1,17 @@
+2026-05-23 11:45:32.399 [http-nio-8080-exec-1] WARN  [transactionId=06172398-3f61-4541-b372-2092a2e7e40f] c.g.c.e.GlobalExceptionHandler - Entity validation error: Validation failed: password: Password must be between 10 and 100 characters
+2026-05-23 11:45:32.542 [http-nio-8080-exec-1] WARN  [transactionId=06172398-3f61-4541-b372-2092a2e7e40f] c.g.crm.logging.RequestLoggingFilter - REST call completed. transactionId=06172398-3f61-4541-b372-2092a2e7e40f, method=POST, endpoint=/gym-crm/api/v1/auth/login, query=null, requestBody={
+  "username": "john.doe",
+  "password": "***"
+}, responseStatus=400, duration=1256ms
+2026-05-23 11:45:42.789 [http-nio-8080-exec-4] INFO  [transactionId=88ffcd0d-04f1-4bfe-a9de-f8144bccd10e] c.g.c.s.common.AuthenticationService - Validating credentials: username=john.doe
+2026-05-23 11:45:45.554 [http-nio-8080-exec-4] WARN  [transactionId=88ffcd0d-04f1-4bfe-a9de-f8144bccd10e] c.g.c.e.GlobalExceptionHandler - Authentication failed: Invalid credentials
+2026-05-23 11:45:45.557 [http-nio-8080-exec-4] WARN  [transactionId=88ffcd0d-04f1-4bfe-a9de-f8144bccd10e] c.g.crm.logging.RequestLoggingFilter - REST call completed. transactionId=88ffcd0d-04f1-4bfe-a9de-f8144bccd10e, method=POST, endpoint=/gym-crm/api/v1/auth/login, query=null, requestBody={
+  "username": "john.doe",
+  "password": "***"
+}, responseStatus=401, duration=2773ms
+2026-05-23 11:47:46.840 [http-nio-8080-exec-7] INFO  [transactionId=6f4c320c-a2ed-461a-9834-fd33bb1194b8] c.g.c.s.impl.TraineeServiceImpl - Creating trainee: firstName=Bah, lastName=Ribots
+2026-05-23 11:47:47.888 [http-nio-8080-exec-7] INFO  [transactionId=6f4c320c-a2ed-461a-9834-fd33bb1194b8] com.gym.crm.dao.impl.TraineeDaoImpl - Trainee saved: username=Bah.Ribots
+2026-05-23 11:47:47.961 [http-nio-8080-exec-7] INFO  [transactionId=6f4c320c-a2ed-461a-9834-fd33bb1194b8] c.g.crm.logging.RequestLoggingFilter - REST call completed. transactionId=6f4c320c-a2ed-461a-9834-fd33bb1194b8, method=POST, endpoint=/gym-crm/api/v1/trainees/register, query=null, requestBody={
+  "firstName": "Bah",
+  "lastName": "Ribots"
+}, responseStatus=200, duration=1378ms
