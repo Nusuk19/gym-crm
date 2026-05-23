@@ -36,7 +36,7 @@ public class TransactionIdFilter extends OncePerRequestFilter {
     private String resolveTransactionId(HttpServletRequest request) {
         String incoming = request.getHeader(TRANSACTION_ID_HEADER);
 
-        return (incoming != null && !incoming.isBlank())
+        return incoming != null && !incoming.isBlank()
                 ? incoming
                 : UUID.randomUUID().toString();
     }
