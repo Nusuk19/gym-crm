@@ -35,6 +35,7 @@ import com.gym.crm.dto.response.TrainerCreatedResponse;
 import com.gym.crm.dto.response.TrainerProfileResponse;
 import com.gym.crm.dto.response.TrainingResponse;
 import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.mapper.AuthMapper;
 import com.gym.crm.mapper.TraineeMapper;
 import com.gym.crm.mapper.TraineeRestMapper;
@@ -51,6 +52,7 @@ import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
 import com.gym.crm.service.TrainingTypeService;
+import com.gym.crm.service.UserProfileService;
 import com.gym.crm.service.UserService;
 import com.gym.crm.service.common.AuthenticationService;
 import com.gym.crm.service.common.CoreValidator;
@@ -73,6 +75,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -94,6 +97,8 @@ class GymFacadeTest {
     private TrainingTypeService trainingTypeService;
     @Mock
     private UserService userService;
+    @Mock
+    private UserProfileService userProfileService;
     @Mock
     private TraineeMapper traineeMapper;
     @Mock
@@ -125,7 +130,7 @@ class GymFacadeTest {
 
     @BeforeEach
     void setUp() {
-        facade = new GymFacade(traineeService, trainerService, trainingService, trainingTypeService, userService);
+        facade = new GymFacade(traineeService, trainerService, trainingService, trainingTypeService, userService, userProfileService);
         facade.setTraineeMapper(traineeMapper);
         facade.setTrainerMapper(trainerMapper);
         facade.setTrainingMapper(trainingMapper);
@@ -209,6 +214,29 @@ class GymFacadeTest {
         verify(traineeService).create(trainee);
         verify(traineeMapper).toCreatedResponse(trainee);
         verify(traineeRestMapper).toCreateResponse(traineeCreatedResponse);
+    }
+
+    @Test
+    void createTrainee_whenUserAlreadyTrainer_shouldThrowEntityValidationException() {
+        TraineeCreateRequest request = new TraineeCreateRequest();
+        request.setFirstName("Yordan");
+        request.setLastName("Green");
+
+        CreateTraineeRequest internalRequest = CreateTraineeRequest.builder()
+                .firstName("Yordan")
+                .lastName("Green")
+                .build();
+
+        when(traineeRestMapper.toCreateRequest(request)).thenReturn(internalRequest);
+        when(userProfileService.generateUsername("Yordan", "Green")).thenReturn("Yordan.Green");
+        when(trainerService.findByUsername("Yordan.Green")).thenReturn(Optional.of(buildTrainer("Yordan.Green")));
+
+        assertThatThrownBy(() -> facade.createTrainee(request))
+                .isInstanceOf(EntityValidationException.class)
+                .hasMessageContaining("Yordan.Green")
+                .hasMessageContaining("already registered as a trainer");
+
+        verify(traineeService, never()).create(any());
     }
 
     @Test
@@ -454,6 +482,31 @@ class GymFacadeTest {
         verify(trainerService).create(trainer, "BOXING");
         verify(trainerMapper).toCreatedResponse(trainer);
         verify(trainerRestMapper).toCreateResponse(trainerCreatedResponse);
+    }
+
+    @Test
+    void createTrainer_whenUserAlreadyTrainee_shouldThrowEntityValidationException() {
+        TrainerCreateRequest request = new TrainerCreateRequest();
+        request.setFirstName("Yordan");
+        request.setLastName("Green");
+        request.setSpecialization("BOXING");
+
+        CreateTrainerRequest internalRequest = CreateTrainerRequest.builder()
+                .firstName("Yordan")
+                .lastName("Green")
+                .specializationName("BOXING")
+                .build();
+
+        when(trainerRestMapper.toCreateRequest(request)).thenReturn(internalRequest);
+        when(userProfileService.generateUsername("Yordan", "Green")).thenReturn("Yordan.Green");
+        when(traineeService.findByUsername("Yordan.Green")).thenReturn(Optional.of(buildTrainee("Yordan.Green")));
+
+        assertThatThrownBy(() -> facade.createTrainer(request))
+                .isInstanceOf(EntityValidationException.class)
+                .hasMessageContaining("Yordan.Green")
+                .hasMessageContaining("already registered as a trainee");
+
+        verify(trainerService, never()).create(any(), any());
     }
 
     @Test
@@ -835,6 +888,18 @@ class GymFacadeTest {
                 .id(EXISTING_ID)
                 .user(user)
                 .specialization(TrainingType.builder().trainingTypeName("BOXING").build())
+                .build();
+    }
+
+    private Trainee buildTrainee(String username) {
+        return Trainee.builder()
+                .user(User.builder().username(username).build())
+                .build();
+    }
+
+    private Trainer buildTrainer(String username) {
+        return Trainer.builder()
+                .user(User.builder().username(username).build())
                 .build();
     }
 

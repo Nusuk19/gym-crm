@@ -36,6 +36,7 @@ import com.gym.crm.dto.response.TrainerCreatedResponse;
 import com.gym.crm.dto.response.TrainerProfileResponse;
 import com.gym.crm.dto.response.TrainingResponse;
 import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.mapper.AuthMapper;
 import com.gym.crm.mapper.TraineeMapper;
 import com.gym.crm.mapper.TraineeRestMapper;
@@ -48,6 +49,7 @@ import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
 import com.gym.crm.service.TrainingTypeService;
+import com.gym.crm.service.UserProfileService;
 import com.gym.crm.service.UserService;
 import com.gym.crm.service.common.AuthenticationService;
 import com.gym.crm.service.common.CoreValidator;
@@ -67,6 +69,7 @@ public class GymFacade {
     private final TrainingService trainingService;
     private final TrainingTypeService trainingTypeService;
     private final UserService userService;
+    private final UserProfileService userProfileService;
 
     private TraineeMapper traineeMapper;
     private TraineeRestMapper traineeRestMapper;
@@ -82,12 +85,14 @@ public class GymFacade {
                      TrainerService trainerService,
                      TrainingService trainingService,
                      TrainingTypeService trainingTypeService,
-                     UserService userService) {
+                     UserService userService,
+                     UserProfileService userProfileService) {
         this.traineeService = traineeService;
         this.trainerService = trainerService;
         this.trainingService = trainingService;
         this.trainingTypeService = trainingTypeService;
         this.userService = userService;
+        this.userProfileService = userProfileService;
     }
 
     @Autowired
@@ -158,6 +163,11 @@ public class GymFacade {
     public TraineeCreateResponse createTrainee(TraineeCreateRequest request) {
         CreateTraineeRequest internalRequest = traineeRestMapper.toCreateRequest(request);
         coreValidator.validate(internalRequest);
+
+        String candidateUsername = userProfileService.generateUsername(
+                internalRequest.getFirstName(), internalRequest.getLastName());
+        trainerService.findByUsername(candidateUsername).ifPresent(existing -> {
+            throw new EntityValidationException("User '" + candidateUsername + "' is already registered as a trainer");});
 
         TraineeCreatedResponse response = traineeMapper.toCreatedResponse(
                 traineeService.create(traineeMapper.toEntity(internalRequest)));
@@ -279,6 +289,11 @@ public class GymFacade {
     public TrainerCreateResponse createTrainer(TrainerCreateRequest request) {
         CreateTrainerRequest internalRequest = trainerRestMapper.toCreateRequest(request);
         coreValidator.validate(internalRequest);
+
+        String candidateUsername = userProfileService.generateUsername(
+                internalRequest.getFirstName(), internalRequest.getLastName());
+        traineeService.findByUsername(candidateUsername).ifPresent(existing -> {
+            throw new EntityValidationException("User '" + candidateUsername + "' is already registered as a trainee");});
 
         TrainerCreatedResponse response = trainerMapper.toCreatedResponse(
                 trainerService.create(trainerMapper.toEntity(internalRequest), internalRequest.getSpecializationName()));
