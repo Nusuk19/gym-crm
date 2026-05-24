@@ -392,6 +392,7 @@ public class GymFacade {
         trainerService.deactivate(request);
     }
 
+    @Authenticated
     public void createTraining(TrainingCreateRequest request) {
         CreateTrainingRequest internalRequest = trainingRestMapper.toCreateRequest(request);
         coreValidator.validate(internalRequest);
