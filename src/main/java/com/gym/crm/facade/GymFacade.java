@@ -167,7 +167,8 @@ public class GymFacade {
         String candidateUsername = userProfileService.generateUsername(
                 internalRequest.getFirstName(), internalRequest.getLastName());
         trainerService.findByUsername(candidateUsername).ifPresent(existing -> {
-            throw new EntityValidationException("User '" + candidateUsername + "' is already registered as a trainer");});
+            throw new EntityValidationException(
+                    "User '%s' is already registered as a trainer".formatted(candidateUsername));});
 
         TraineeCreatedResponse response = traineeMapper.toCreatedResponse(
                 traineeService.create(traineeMapper.toEntity(internalRequest)));
@@ -293,7 +294,8 @@ public class GymFacade {
         String candidateUsername = userProfileService.generateUsername(
                 internalRequest.getFirstName(), internalRequest.getLastName());
         traineeService.findByUsername(candidateUsername).ifPresent(existing -> {
-            throw new EntityValidationException("User '" + candidateUsername + "' is already registered as a trainee");});
+            throw new EntityValidationException(
+                    "User '%s' is already registered as a trainee".formatted(candidateUsername));});
 
         TrainerCreatedResponse response = trainerMapper.toCreatedResponse(
                 trainerService.create(trainerMapper.toEntity(internalRequest), internalRequest.getSpecializationName()));
