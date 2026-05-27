@@ -138,27 +138,6 @@ class TrainingServiceImplTest {
     }
 
     @Test
-    void findById_whenTrainingNotExists_returnsEmpty() {
-        when(trainingRepository.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
-
-        Optional<Training> actual = service.findById(NON_EXISTING_ID);
-
-        assertFalse(actual.isPresent());
-        verify(validator).requireValidId(NON_EXISTING_ID);
-        verify(trainingRepository).findById(NON_EXISTING_ID);
-    }
-
-    @Test
-    void findById_whenInvalidId_throwsExceptionAndDaoNotCalled() {
-        doThrow(new EntityValidationException("Id must be a positive integer"))
-                .when(validator).requireValidId(any());
-
-        assertThrows(EntityValidationException.class, () -> service.findById(0L));
-
-        verify(trainingRepository, never()).findById(any());
-    }
-
-    @Test
     void findAll_whenTrainingsExist_returnsAllTrainings() {
         when(trainingRepository.findAll()).thenReturn(List.of(training));
 

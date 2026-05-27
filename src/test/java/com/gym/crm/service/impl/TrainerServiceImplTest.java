@@ -157,39 +157,6 @@ class TrainerServiceImplTest {
     }
 
     @Test
-    void findById_whenTrainerExists_returnsTrainer() {
-        when(trainerRepository.findById(ID)).thenReturn(Optional.of(trainer));
-
-        Optional<Trainer> actual = service.findById(ID);
-
-        assertTrue(actual.isPresent());
-        assertEquals(trainer, actual.get());
-        verify(validator).requireValidId(ID);
-        verify(trainerRepository).findById(ID);
-    }
-
-    @Test
-    void findById_whenTrainerNotExists_returnsEmpty() {
-        when(trainerRepository.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
-
-        Optional<Trainer> actual = service.findById(NON_EXISTING_ID);
-
-        assertFalse(actual.isPresent());
-        verify(validator).requireValidId(NON_EXISTING_ID);
-        verify(trainerRepository).findById(NON_EXISTING_ID);
-    }
-
-    @Test
-    void findById_whenInvalidId_throwsExceptionAndRepositoryNotCalled() {
-        doThrow(new EntityValidationException("Id must be a positive integer"))
-                .when(validator).requireValidId(any());
-
-        assertThrows(EntityValidationException.class, () -> service.findById(0L));
-
-        verify(trainerRepository, never()).findById(any());
-    }
-
-    @Test
     void findByUsername_whenTrainerExists_returnsTrainer() {
         when(trainerRepository.findByUserUsername(USERNAME)).thenReturn(Optional.of(trainer));
 

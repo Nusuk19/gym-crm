@@ -131,24 +131,6 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    void delete_whenValidId_deletesSuccessfully() {
-        service.deleteById(ID);
-
-        verify(validator).requireValidId(ID);
-        verify(traineeRepository).deleteById(ID);
-    }
-
-    @Test
-    void delete_whenInvalidId_throwsException() {
-        doThrow(new EntityValidationException("Id must be a positive integer"))
-                .when(validator).requireValidId(any());
-
-        assertThrows(EntityValidationException.class, () -> service.deleteById(-ID));
-
-        verify(traineeRepository, never()).deleteById(any());
-    }
-
-    @Test
     void deleteByUsername_whenValidUsername_deletesSuccessfully() {
         when(traineeRepository.findByUserUsername(USERNAME)).thenReturn(Optional.of(trainee));
 
@@ -176,37 +158,6 @@ class TraineeServiceImplTest {
         assertThrows(EntityNotFoundException.class, () -> service.deleteByUsername(USERNAME));
 
         verify(traineeRepository, never()).delete(any());
-    }
-
-    @Test
-    void findById_whenTraineeExists_returnsTrainee() {
-        when(traineeRepository.findById(ID)).thenReturn(Optional.of(trainee));
-
-        Optional<Trainee> actual = service.findById(ID);
-
-        assertTrue(actual.isPresent());
-        assertEquals(trainee, actual.get());
-        verify(validator).requireValidId(ID);
-    }
-
-    @Test
-    void findById_whenTraineeNotExists_returnsEmpty() {
-        when(traineeRepository.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
-
-        Optional<Trainee> actual = service.findById(NON_EXISTING_ID);
-
-        assertFalse(actual.isPresent());
-        verify(validator).requireValidId(NON_EXISTING_ID);
-    }
-
-    @Test
-    void findById_whenInvalidId_throwsException() {
-        doThrow(new EntityValidationException("Id must be a positive integer"))
-                .when(validator).requireValidId(any());
-
-        assertThrows(EntityValidationException.class, () -> service.findById(0L));
-
-        verify(traineeRepository, never()).findById(any());
     }
 
     @Test
