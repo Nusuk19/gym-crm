@@ -7,7 +7,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -15,6 +14,7 @@ class GymCrmApplicationTest {
 
     @Autowired
     private ApplicationContext context;
+
     @Test
     void context_shouldLoadSuccessfully() {
         assertThat(context).isNotNull();

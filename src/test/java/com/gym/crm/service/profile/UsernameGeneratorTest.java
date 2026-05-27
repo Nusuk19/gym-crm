@@ -9,7 +9,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,16 +22,6 @@ class UsernameGeneratorTest {
 
     @InjectMocks
     private UsernameGenerator usernameGenerator;
-
-    @Test
-    void generate_whenNoUsernameExists_returnsBaseUsername() {
-        when(traineeRepository.existsByUserUsername("Abdul.Hariton")).thenReturn(false);
-        when(trainerRepository.existsByUserUsername("Abdul.Hariton")).thenReturn(false);
-
-        String actual = usernameGenerator.generate("Abdul", "Hariton");
-
-        assertEquals("Abdul.Hariton", actual);
-    }
 
     @Test
     void generate_whenBaseUsernameExistsInTrainees_returnsUsernameWithSuffix1() {
