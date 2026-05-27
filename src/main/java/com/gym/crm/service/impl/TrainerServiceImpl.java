@@ -1,71 +1,42 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.annotation.PersistenceTx;
-import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.dao.TrainerDao;
-import com.gym.crm.dao.TrainingTypeDao;
 import com.gym.crm.dto.request.ActivationRequest;
 import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.model.TrainingType;
 import com.gym.crm.model.User;
+import com.gym.crm.repository.TraineeRepository;
+import com.gym.crm.repository.TrainerRepository;
+import com.gym.crm.repository.TrainingTypeRepository;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.UserProfileService;
 import com.gym.crm.service.UserService;
 import com.gym.crm.service.common.EntityValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
+@RequiredArgsConstructor
 @Service
 public class TrainerServiceImpl implements TrainerService {
-    private static final Logger log = LoggerFactory.getLogger(TrainerServiceImpl.class);
+
     private static final String USERNAME_BLANK_MSG = "Username cannot be blank";
 
-    private TrainerDao trainerDao;
-    private TraineeDao traineeDao;
-    private TrainingTypeDao trainingTypeDao;
-    private EntityValidator validator;
-    private UserProfileService userProfileService;
-    private UserService userService;
-
-    @Autowired
-    public void setTrainerDao(TrainerDao trainerDao) {
-        this.trainerDao = trainerDao;
-    }
-
-    @Autowired
-    public void setTraineeDao(TraineeDao traineeDao) {
-        this.traineeDao = traineeDao;
-    }
-
-    @Autowired
-    public void setTrainingTypeDao(TrainingTypeDao trainingTypeDao) {
-        this.trainingTypeDao = trainingTypeDao;
-    }
-
-    @Autowired
-    public void setValidator(EntityValidator validator) {
-        this.validator = validator;
-    }
-
-    @Autowired
-    public void setUserProfileService(UserProfileService userProfileService) {
-        this.userProfileService = userProfileService;
-    }
-
-    @Autowired
-    public void setUserService(UserService userService) {
-        this.userService = userService;
-    }
+    private final TrainerRepository trainerRepository;
+    private final TraineeRepository traineeRepository;
+    private final TrainingTypeRepository trainingTypeRepository;
+    private final EntityValidator validator;
+    private final UserProfileService userProfileService;
+    private final UserService userService;
 
     @Override
-    @PersistenceTx
+    @Transactional
     public Trainer create(Trainer trainer, String specializationName) {
         log.info("Creating trainer: firstName={}, lastName={}",
                 trainer.getUser().getFirstName(), trainer.getUser().getLastName());
@@ -92,17 +63,17 @@ public class TrainerServiceImpl implements TrainerService {
 
         validator.validateTrainer(trainerWithProfile);
 
-        return trainerDao.save(trainerWithProfile);
+        return trainerRepository.save(trainerWithProfile);
     }
 
     @Override
-    @PersistenceTx
+    @Transactional
     public Trainer update(Trainer trainer) {
         String username = trainer.getUser().getUsername();
         log.info("Updating trainer: username={}", username);
         validator.validateTrainer(trainer);
 
-        Trainer existing = trainerDao.findByUsername(username)
+        Trainer existing = trainerRepository.findByUserUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("Trainer not found: " + username));
 
         User mergedUser = trainer.getUser().toBuilder()
@@ -117,42 +88,45 @@ public class TrainerServiceImpl implements TrainerService {
                 .specialization(existing.getSpecialization())
                 .build();
 
-        return trainerDao.update(merged);
+        return trainerRepository.save(merged);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Trainer> findById(Long id) {
         validator.requireValidId(id);
 
-        return trainerDao.findById(id);
+        return trainerRepository.findById(id);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Trainer> findByUsername(String username) {
         validator.requireNonBlank(username, USERNAME_BLANK_MSG);
         log.debug("Looking up trainer by username={}", username);
 
-        return trainerDao.findByUsername(username);
+        return trainerRepository.findByUserUsername(username);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Trainer> findAll() {
-        return trainerDao.findAll();
+        return trainerRepository.findAll();
     }
 
     @Override
-    @PersistenceTx
+    @Transactional(readOnly = true)
     public List<Trainer> findAllNotAssignedToTrainee(String traineeUsername) {
         validator.requireNonBlank(traineeUsername, USERNAME_BLANK_MSG);
 
-        traineeDao.findByUsername(traineeUsername)
+        traineeRepository.findByUserUsername(traineeUsername)
                 .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + traineeUsername));
 
-        return trainerDao.findAllNotAssignedToTrainee(traineeUsername);
+        return trainerRepository.findAllActiveNotAssignedToTrainee(traineeUsername);
     }
 
     @Override
-    @PersistenceTx
+    @Transactional
     public void changePassword(ChangePasswordRequest request) {
         requireTrainerByUsername(request.getUsername());
 
@@ -160,7 +134,7 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
-    @PersistenceTx
+    @Transactional
     public void activate(ActivationRequest request) {
         requireTrainerByUsername(request.getUsername());
 
@@ -168,7 +142,7 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
-    @PersistenceTx
+    @Transactional
     public void deactivate(ActivationRequest request) {
         requireTrainerByUsername(request.getUsername());
 
@@ -178,14 +152,14 @@ public class TrainerServiceImpl implements TrainerService {
     private TrainingType resolveSpecialization(String name) {
         validator.requireNonBlank(name, "Specialization name cannot be blank");
 
-        return trainingTypeDao.findByTrainingTypeName(name)
+        return trainingTypeRepository.findByTrainingTypeName(name)
                 .orElseThrow(() -> new EntityNotFoundException("Specialization not found: " + name));
     }
 
     private Trainer requireTrainerByUsername(String username) {
         validator.requireNonBlank(username, USERNAME_BLANK_MSG);
 
-        return trainerDao.findByUsername(username)
+        return trainerRepository.findByUserUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("Trainer not found: " + username));
     }
 }

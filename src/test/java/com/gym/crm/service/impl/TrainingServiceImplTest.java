@@ -1,8 +1,5 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.dao.TrainerDao;
-import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.dao.search.filters.TraineeTrainingSearchFilter;
 import com.gym.crm.dao.search.filters.TrainerTrainingSearchFilter;
 import com.gym.crm.dto.request.CreateTrainingRequest;
@@ -13,13 +10,19 @@ import com.gym.crm.model.Trainer;
 import com.gym.crm.model.Training;
 import com.gym.crm.model.TrainingType;
 import com.gym.crm.model.User;
+import com.gym.crm.repository.TraineeRepository;
+import com.gym.crm.repository.TrainerRepository;
+import com.gym.crm.repository.TrainingRepository;
+import com.gym.crm.repository.specification.TrainingSpecifications;
 import com.gym.crm.service.common.EntityValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -34,6 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -49,11 +54,11 @@ class TrainingServiceImplTest {
     private final Training training = buildTraining();
 
     @Mock
-    private TrainingDao trainingDao;
+    private TrainingRepository trainingRepository;
     @Mock
-    private TraineeDao traineeDao;
+    private TraineeRepository traineeRepository;
     @Mock
-    private TrainerDao trainerDao;
+    private TrainerRepository trainerRepository;
     @Mock
     private EntityValidator validator;
     @InjectMocks
@@ -65,9 +70,9 @@ class TrainingServiceImplTest {
         Trainer trainer = buildTrainer();
         CreateTrainingRequest request = buildCreateRequest();
 
-        when(traineeDao.findByUsername(TRAINEE_USERNAME)).thenReturn(Optional.of(trainee));
-        when(trainerDao.findByUsername(TRAINER_USERNAME)).thenReturn(Optional.of(trainer));
-        when(trainingDao.save(any(Training.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(traineeRepository.findByUserUsername(TRAINEE_USERNAME)).thenReturn(Optional.of(trainee));
+        when(trainerRepository.findByUserUsername(TRAINER_USERNAME)).thenReturn(Optional.of(trainer));
+        when(trainingRepository.save(any(Training.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Training actual = service.create(request);
 
@@ -78,40 +83,40 @@ class TrainingServiceImplTest {
         assertThat(actual.getTrainingDate()).isEqualTo(LocalDate.of(2024, 5, 1));
         assertThat(actual.getTrainingDuration()).isEqualByComparingTo(BigDecimal.valueOf(60));
 
-        verify(traineeDao).findByUsername(TRAINEE_USERNAME);
-        verify(trainerDao).findByUsername(TRAINER_USERNAME);
+        verify(traineeRepository).findByUserUsername(TRAINEE_USERNAME);
+        verify(trainerRepository).findByUserUsername(TRAINER_USERNAME);
         verify(validator).validateTraining(any(Training.class));
-        verify(trainingDao).save(any(Training.class));
+        verify(trainingRepository).save(any(Training.class));
     }
 
     @Test
     void create_whenValidationFails_throwsExceptionAndDaoNotCalled() {
         CreateTrainingRequest request = buildCreateRequest();
 
-        when(traineeDao.findByUsername(TRAINEE_USERNAME)).thenReturn(Optional.empty());
+        when(traineeRepository.findByUserUsername(TRAINEE_USERNAME)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.create(request))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("Trainee not found")
                 .hasMessageContaining(TRAINEE_USERNAME);
 
-        verify(trainerDao, never()).findByUsername(any());
-        verify(trainingDao, never()).save(any());
+        verify(trainerRepository, never()).findByUserUsername(any());
+        verify(trainingRepository, never()).save(any());
     }
 
     @Test
     void create_whenTrainerNotFound_throwsEntityNotFoundException() {
         CreateTrainingRequest request = buildCreateRequest();
 
-        when(traineeDao.findByUsername(TRAINEE_USERNAME)).thenReturn(Optional.of(buildTrainee()));
-        when(trainerDao.findByUsername(TRAINER_USERNAME)).thenReturn(Optional.empty());
+        when(traineeRepository.findByUserUsername(TRAINEE_USERNAME)).thenReturn(Optional.of(buildTrainee()));
+        when(trainerRepository.findByUserUsername(TRAINER_USERNAME)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.create(request))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("Trainer not found")
                 .hasMessageContaining(TRAINER_USERNAME);
 
-        verify(trainingDao, never()).save(any());
+        verify(trainingRepository, never()).save(any());
     }
 
     @Test
@@ -119,28 +124,28 @@ class TrainingServiceImplTest {
         Trainer trainer = buildTrainer();
         CreateTrainingRequest request = buildCreateRequest();
 
-        when(traineeDao.findByUsername(TRAINEE_USERNAME)).thenReturn(Optional.of(buildTrainee()));
-        when(trainerDao.findByUsername(TRAINER_USERNAME)).thenReturn(Optional.of(trainer));
-        when(trainingDao.save(any(Training.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(traineeRepository.findByUserUsername(TRAINEE_USERNAME)).thenReturn(Optional.of(buildTrainee()));
+        when(trainerRepository.findByUserUsername(TRAINER_USERNAME)).thenReturn(Optional.of(trainer));
+        when(trainingRepository.save(any(Training.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Training actual = service.create(request);
 
         assertThat(actual.getTrainingType()).isEqualTo(trainer.getSpecialization());
 
         ArgumentCaptor<Training> captor = ArgumentCaptor.forClass(Training.class);
-        verify(trainingDao).save(captor.capture());
+        verify(trainingRepository).save(captor.capture());
         assertThat(captor.getValue().getTrainingType().getTrainingTypeName()).isEqualTo("BOXING");
     }
 
     @Test
     void findById_whenTrainingNotExists_returnsEmpty() {
-        when(trainingDao.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
+        when(trainingRepository.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
 
         Optional<Training> actual = service.findById(NON_EXISTING_ID);
 
         assertFalse(actual.isPresent());
         verify(validator).requireValidId(NON_EXISTING_ID);
-        verify(trainingDao).findById(NON_EXISTING_ID);
+        verify(trainingRepository).findById(NON_EXISTING_ID);
     }
 
     @Test
@@ -150,85 +155,109 @@ class TrainingServiceImplTest {
 
         assertThrows(EntityValidationException.class, () -> service.findById(0L));
 
-        verify(trainingDao, never()).findById(any());
+        verify(trainingRepository, never()).findById(any());
     }
 
     @Test
     void findAll_whenTrainingsExist_returnsAllTrainings() {
-        when(trainingDao.findAll()).thenReturn(List.of(training));
+        when(trainingRepository.findAll()).thenReturn(List.of(training));
 
         List<Training> actual = service.findAll();
 
         assertEquals(List.of(training), actual);
-        verify(trainingDao).findAll();
+        verify(trainingRepository).findAll();
     }
 
     @Test
     void findAll_whenNoTrainingsExist_returnsEmptyList() {
-        when(trainingDao.findAll()).thenReturn(List.of());
+        when(trainingRepository.findAll()).thenReturn(List.of());
 
         List<Training> actual = service.findAll();
 
         assertTrue(actual.isEmpty());
-        verify(trainingDao).findAll();
+        verify(trainingRepository).findAll();
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     void findByTraineeCriteria_whenFilterValid_returnsMatchingTrainings() {
         TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
                 .username(TRAINEE_USERNAME)
                 .build();
-        when(trainingDao.findByTraineeCriteria(filter)).thenReturn(List.of(training));
+        Specification<Training> spec = mock(Specification.class);
 
-        List<Training> actual = service.findByTraineeCriteria(filter);
+        try (MockedStatic<TrainingSpecifications> staticMock = mockStatic(TrainingSpecifications.class)) {
+            staticMock.when(() -> TrainingSpecifications.forTraineeCriteria(filter)).thenReturn(spec);
+            when(trainingRepository.findAll(spec)).thenReturn(List.of(training));
 
-        assertEquals(1, actual.size());
-        assertEquals(training, actual.get(0));
-        verify(validator).requireNonNull(filter, "Search filter cannot be null");
-        verify(trainingDao).findByTraineeCriteria(filter);
+            List<Training> actual = service.findByTraineeCriteria(filter);
+
+            assertEquals(1, actual.size());
+            assertEquals(training, actual.get(0));
+            verify(validator).requireNonNull(filter, "Search filter cannot be null");
+            verify(trainingRepository).findAll(spec);
+        }
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     void findByTraineeCriteria_whenNoResults_returnsEmptyList() {
         TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
                 .username(TRAINEE_USERNAME)
                 .fromDate(LocalDate.of(2030, 1, 1))
                 .build();
-        when(trainingDao.findByTraineeCriteria(filter)).thenReturn(List.of());
+        Specification<Training> spec = mock(Specification.class);
 
-        List<Training> actual = service.findByTraineeCriteria(filter);
+        try (MockedStatic<TrainingSpecifications> staticMock = mockStatic(TrainingSpecifications.class)) {
+            staticMock.when(() -> TrainingSpecifications.forTraineeCriteria(filter)).thenReturn(spec);
+            when(trainingRepository.findAll(spec)).thenReturn(List.of());
 
-        assertTrue(actual.isEmpty());
-        verify(trainingDao).findByTraineeCriteria(filter);
+            List<Training> actual = service.findByTraineeCriteria(filter);
+
+            assertTrue(actual.isEmpty());
+            verify(trainingRepository).findAll(spec);
+        }
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     void findByTrainerCriteria_whenFilterValid_returnsMatchingTrainings() {
         TrainerTrainingSearchFilter filter = TrainerTrainingSearchFilter.builder()
                 .username(TRAINER_USERNAME)
                 .build();
-        when(trainingDao.findByTrainerCriteria(filter)).thenReturn(List.of(training));
+        Specification<Training> spec = mock(Specification.class);
 
-        List<Training> actual = service.findByTrainerCriteria(filter);
+        try (MockedStatic<TrainingSpecifications> staticMock = mockStatic(TrainingSpecifications.class)) {
+            staticMock.when(() -> TrainingSpecifications.forTrainerCriteria(filter)).thenReturn(spec);
+            when(trainingRepository.findAll(spec)).thenReturn(List.of(training));
 
-        assertEquals(1, actual.size());
-        assertEquals(training, actual.get(0));
-        verify(validator).requireNonNull(filter, "Search filter cannot be null");
-        verify(trainingDao).findByTrainerCriteria(filter);
+            List<Training> actual = service.findByTrainerCriteria(filter);
+
+            assertEquals(1, actual.size());
+            assertEquals(training, actual.get(0));
+            verify(validator).requireNonNull(filter, "Search filter cannot be null");
+            verify(trainingRepository).findAll(spec);
+        }
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     void findByTrainerCriteria_whenNoResults_returnsEmptyList() {
         TrainerTrainingSearchFilter filter = TrainerTrainingSearchFilter.builder()
                 .username(TRAINER_USERNAME)
                 .fromDate(LocalDate.of(2030, 1, 1))
                 .build();
-        when(trainingDao.findByTrainerCriteria(filter)).thenReturn(List.of());
+        Specification<Training> spec = mock(Specification.class);
 
-        List<Training> actual = service.findByTrainerCriteria(filter);
+        try (MockedStatic<TrainingSpecifications> staticMock = mockStatic(TrainingSpecifications.class)) {
+            staticMock.when(() -> TrainingSpecifications.forTrainerCriteria(filter)).thenReturn(spec);
+            when(trainingRepository.findAll(spec)).thenReturn(List.of());
 
-        assertTrue(actual.isEmpty());
-        verify(trainingDao).findByTrainerCriteria(filter);
+            List<Training> actual = service.findByTrainerCriteria(filter);
+
+            assertTrue(actual.isEmpty());
+            verify(trainingRepository).findAll(spec);
+        }
     }
 
     @Test
@@ -238,9 +267,8 @@ class TrainingServiceImplTest {
 
         assertThrows(EntityValidationException.class, () -> service.findByTrainerCriteria(null));
 
-        verify(trainingDao, never()).findByTrainerCriteria(any());
+        verify(trainingRepository, never()).findAll(any(Specification.class));
     }
-
 
     @Test
     void findByTraineeCriteria_whenFilterNull_throwsEntityValidationException() {
@@ -249,7 +277,7 @@ class TrainingServiceImplTest {
 
         assertThrows(EntityValidationException.class, () -> service.findByTraineeCriteria(null));
 
-        verify(trainingDao, never()).findByTraineeCriteria(any());
+        verify(trainingRepository, never()).findAll(any(Specification.class));
     }
 
     private CreateTrainingRequest buildCreateRequest() {

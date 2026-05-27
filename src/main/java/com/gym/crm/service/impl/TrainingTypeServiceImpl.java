@@ -1,29 +1,27 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.TrainingTypeDao;
 import com.gym.crm.model.TrainingType;
+import com.gym.crm.repository.TrainingTypeRepository;
 import com.gym.crm.service.TrainingTypeService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class TrainingTypeServiceImpl implements TrainingTypeService {
 
-    private TrainingTypeDao trainingTypeDao;
-
-    @Autowired
-    public void setTrainingTypeDao(TrainingTypeDao trainingTypeDao) {
-        this.trainingTypeDao = trainingTypeDao;
-    }
+    private final TrainingTypeRepository trainingTypeRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<TrainingType> findAll() {
         log.info("Loading all training types");
 
-        return trainingTypeDao.findAll();
+        return trainingTypeRepository.findAll();
     }
 }

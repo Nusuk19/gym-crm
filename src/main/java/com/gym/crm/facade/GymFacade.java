@@ -55,6 +55,7 @@ import com.gym.crm.service.common.AuthenticationService;
 import com.gym.crm.service.common.CoreValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -160,6 +161,7 @@ public class GymFacade {
         userService.changePassword(changeRequest);
     }
 
+    @Transactional
     public TraineeCreateResponse createTrainee(TraineeCreateRequest request) {
         CreateTraineeRequest internalRequest = traineeRestMapper.toCreateRequest(request);
         coreValidator.validate(internalRequest);

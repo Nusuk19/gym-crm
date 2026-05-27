@@ -1,11 +1,11 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.UserDao;
 import com.gym.crm.dto.request.ActivationRequest;
 import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.User;
+import com.gym.crm.repository.UserRepository;
 import com.gym.crm.service.common.CoreValidator;
 import com.gym.crm.service.profile.PasswordEncoder;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 class UserServiceImplTest {
 
     @Mock
-    private UserDao userDao;
+    private UserRepository userRepository;
     @Mock
     private PasswordEncoder passwordEncoder;
     @Mock
@@ -38,7 +38,7 @@ class UserServiceImplTest {
 
     @Test
     void findByUsername_existingUser_returnsUser() {
-        when(userDao.findByUsername("Abdul.Hariton")).thenReturn(Optional.of(buildActiveUser()));
+        when(userRepository.findByUsername("Abdul.Hariton")).thenReturn(Optional.of(buildActiveUser()));
 
         Optional<User> result = service.findByUsername("Abdul.Hariton");
 
@@ -47,41 +47,40 @@ class UserServiceImplTest {
         assertThat(result.get().getFirstName()).isEqualTo("Abdul");
         assertThat(result.get().getLastName()).isEqualTo("Hariton");
         assertThat(result.get().getIsActive()).isTrue();
-        verify(userDao).findByUsername("Abdul.Hariton");
+        verify(userRepository).findByUsername("Abdul.Hariton");
     }
 
     @Test
     void findByUsername_nonExistingUser_returnsEmpty() {
-        when(userDao.findByUsername("ghost.user")).thenReturn(Optional.empty());
+        when(userRepository.findByUsername("ghost.user")).thenReturn(Optional.empty());
 
         Optional<User> result = service.findByUsername("ghost.user");
 
         assertThat(result).isEmpty();
-        verify(userDao).findByUsername("ghost.user");
+        verify(userRepository).findByUsername("ghost.user");
     }
 
     @Test
     void changePassword_validRequest_updatesPassword() {
         ChangePasswordRequest request = buildChangePasswordRequest("Abdul.Hariton", "rawOldPassword", "newPassword123");
 
-        when(userDao.findByUsername("Abdul.Hariton")).thenReturn(Optional.of(buildActiveUser()));
+        when(userRepository.findByUsername("Abdul.Hariton")).thenReturn(Optional.of(buildActiveUser()));
         when(passwordEncoder.matches("rawOldPassword", "encodedPassword")).thenReturn(true);
         when(passwordEncoder.encode("newPassword123")).thenReturn("newEncodedPassword");
-        when(userDao.update(any(User.class))).thenReturn(buildActiveUser());
 
         service.changePassword(request);
 
-        verify(userDao).findByUsername("Abdul.Hariton");
+        verify(userRepository).findByUsername("Abdul.Hariton");
         verify(passwordEncoder).matches("rawOldPassword", "encodedPassword");
         verify(passwordEncoder).encode("newPassword123");
-        verify(userDao).update(any(User.class));
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
     void changePassword_wrongOldPassword_throwsEntityValidationException() {
         ChangePasswordRequest request = buildChangePasswordRequest("Abdul.Hariton", "wrongOldPassword", "newPassword123");
 
-        when(userDao.findByUsername("Abdul.Hariton")).thenReturn(Optional.of(buildActiveUser()));
+        when(userRepository.findByUsername("Abdul.Hariton")).thenReturn(Optional.of(buildActiveUser()));
         when(passwordEncoder.matches("wrongOldPassword", "encodedPassword")).thenReturn(false);
 
         assertThatThrownBy(() -> service.changePassword(request))
@@ -90,14 +89,14 @@ class UserServiceImplTest {
                 .hasMessageContaining("Abdul.Hariton");
 
         verify(passwordEncoder, never()).encode(anyString());
-        verify(userDao, never()).update(any());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
     void changePassword_userNotFound_throwsEntityNotFoundException() {
         ChangePasswordRequest request = buildChangePasswordRequest("ghost.user", "oldPassword", "newPassword123");
 
-        when(userDao.findByUsername("ghost.user")).thenReturn(Optional.empty());
+        when(userRepository.findByUsername("ghost.user")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.changePassword(request))
                 .isInstanceOf(EntityNotFoundException.class)
@@ -105,89 +104,87 @@ class UserServiceImplTest {
                 .hasMessageContaining("ghost.user");
 
         verify(passwordEncoder, never()).matches(anyString(), anyString());
-        verify(userDao, never()).update(any());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
     void activate_inactiveUser_activatesSuccessfully() {
         ActivationRequest request = buildActivationRequest("Mike.Tyson");
 
-        when(userDao.findByUsername("Mike.Tyson")).thenReturn(Optional.of(buildInactiveUser()));
-        when(userDao.update(any(User.class))).thenReturn(buildInactiveUser());
+        when(userRepository.findByUsername("Mike.Tyson")).thenReturn(Optional.of(buildInactiveUser()));
 
         service.activate(request);
 
-        verify(userDao).findByUsername("Mike.Tyson");
-        verify(userDao).update(any(User.class));
+        verify(userRepository).findByUsername("Mike.Tyson");
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
     void activate_alreadyActiveUser_throwsEntityValidationException() {
         ActivationRequest request = buildActivationRequest("Abdul.Hariton");
 
-        when(userDao.findByUsername("Abdul.Hariton")).thenReturn(Optional.of(buildActiveUser()));
+        when(userRepository.findByUsername("Abdul.Hariton")).thenReturn(Optional.of(buildActiveUser()));
 
         assertThatThrownBy(() -> service.activate(request))
                 .isInstanceOf(EntityValidationException.class)
                 .hasMessageContaining("User is already active")
                 .hasMessageContaining("Abdul.Hariton");
 
-        verify(userDao, never()).update(any());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
     void activate_userNotFound_throwsEntityNotFoundException() {
         ActivationRequest request = buildActivationRequest("ghost.user");
 
-        when(userDao.findByUsername("ghost.user")).thenReturn(Optional.empty());
+        when(userRepository.findByUsername("ghost.user")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.activate(request))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("User not found")
                 .hasMessageContaining("ghost.user");
 
-        verify(userDao, never()).update(any());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
     void deactivate_activeUser_deactivatesSuccessfully() {
         ActivationRequest request = buildActivationRequest("Abdul.Hariton");
 
-        when(userDao.findByUsername("Abdul.Hariton")).thenReturn(Optional.of(buildActiveUser()));
-        when(userDao.update(any(User.class))).thenReturn(buildActiveUser());
+        when(userRepository.findByUsername("Abdul.Hariton")).thenReturn(Optional.of(buildActiveUser()));
 
         service.deactivate(request);
 
-        verify(userDao).findByUsername("Abdul.Hariton");
-        verify(userDao).update(any(User.class));
+        verify(userRepository).findByUsername("Abdul.Hariton");
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
     void deactivate_alreadyInactiveUser_throwsEntityValidationException() {
         ActivationRequest request = buildActivationRequest("Mike.Tyson");
 
-        when(userDao.findByUsername("Mike.Tyson")).thenReturn(Optional.of(buildInactiveUser()));
+        when(userRepository.findByUsername("Mike.Tyson")).thenReturn(Optional.of(buildInactiveUser()));
 
         assertThatThrownBy(() -> service.deactivate(request))
                 .isInstanceOf(EntityValidationException.class)
                 .hasMessageContaining("User is already inactive")
                 .hasMessageContaining("Mike.Tyson");
 
-        verify(userDao, never()).update(any());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
     void deactivate_userNotFound_throwsEntityNotFoundException() {
         ActivationRequest request = buildActivationRequest("ghost.user");
 
-        when(userDao.findByUsername("ghost.user")).thenReturn(Optional.empty());
+        when(userRepository.findByUsername("ghost.user")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.deactivate(request))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("User not found")
                 .hasMessageContaining("ghost.user");
 
-        verify(userDao, never()).update(any());
+        verify(userRepository, never()).save(any());
     }
 
     private User buildActiveUser() {

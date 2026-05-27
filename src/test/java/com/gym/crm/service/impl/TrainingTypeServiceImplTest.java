@@ -1,7 +1,7 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.TrainingTypeDao;
 import com.gym.crm.model.TrainingType;
+import com.gym.crm.repository.TrainingTypeRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,7 +19,7 @@ import static org.mockito.Mockito.when;
 class TrainingTypeServiceImplTest {
 
     @Mock
-    private TrainingTypeDao trainingTypeDao;
+    private TrainingTypeRepository trainingTypeRepository;
 
     @InjectMocks
     private TrainingTypeServiceImpl service;
@@ -30,21 +30,21 @@ class TrainingTypeServiceImplTest {
                 TrainingType.builder().id(1L).trainingTypeName("BOXING").build(),
                 TrainingType.builder().id(2L).trainingTypeName("CARDIO").build());
 
-        when(trainingTypeDao.findAll()).thenReturn(types);
+        when(trainingTypeRepository.findAll()).thenReturn(types);
 
         List<TrainingType> actual = service.findAll();
 
         assertEquals(types, actual);
-        verify(trainingTypeDao).findAll();
+        verify(trainingTypeRepository).findAll();
     }
 
     @Test
     void findAll_whenNoTypesExist_returnsEmptyList() {
-        when(trainingTypeDao.findAll()).thenReturn(List.of());
+        when(trainingTypeRepository.findAll()).thenReturn(List.of());
 
         List<TrainingType> actual = service.findAll();
 
         assertTrue(actual.isEmpty());
-        verify(trainingTypeDao).findAll();
+        verify(trainingTypeRepository).findAll();
     }
 }

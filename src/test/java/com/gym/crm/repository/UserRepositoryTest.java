@@ -1,0 +1,100 @@
+package com.gym.crm.repository;
+
+import com.gym.crm.model.User;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.jdbc.Sql;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
+
+@Sql(scripts = "/datasets/user-insert.sql", executionPhase = BEFORE_TEST_METHOD)
+class UserRepositoryTest extends AbstractRepositoryTest {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Test
+    void findByUsername_existingUser_returnsUserWithAllFields() {
+        Optional<User> result = userRepository.findByUsername("Abdul.Hariton");
+
+        assertThat(result).isPresent();
+        User user = result.get();
+        assertThat(user.getId()).isNotNull();
+        assertThat(user.getFirstName()).isEqualTo("Abdul");
+        assertThat(user.getLastName()).isEqualTo("Hariton");
+        assertThat(user.getUsername()).isEqualTo("Abdul.Hariton");
+        assertThat(user.getPassword()).isEqualTo("hashedPassword");
+        assertThat(user.getIsActive()).isTrue();
+    }
+
+    @Test
+    void findByUsername_inactiveUser_returnsUserWithCorrectActiveFlag() {
+        Optional<User> result = userRepository.findByUsername("Mike.Tyson");
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getIsActive()).isFalse();
+        assertThat(result.get().getFirstName()).isEqualTo("Mike");
+    }
+
+    @Test
+    void findByUsername_nonExistingUser_returnsEmpty() {
+        assertThat(userRepository.findByUsername("ghost.user")).isEmpty();
+    }
+
+    @Test
+    void save_update_firstName_updatesInDB() {
+        User user = userRepository.findByUsername("Abdul.Hariton").orElseThrow();
+        User updated = user.toBuilder().firstName("UpdatedName").build();
+
+        userRepository.save(updated);
+        em.flush();
+        em.clear();
+
+        User result = userRepository.findByUsername("Abdul.Hariton").orElseThrow();
+        assertThat(result.getFirstName()).isEqualTo("UpdatedName");
+        assertThat(result.getLastName()).isEqualTo("Hariton");
+        assertThat(result.getUsername()).isEqualTo("Abdul.Hariton");
+        assertThat(result.getIsActive()).isTrue();
+    }
+
+    @Test
+    void save_update_allFields_updatesAllInDB() {
+        User user = userRepository.findByUsername("Abdul.Hariton").orElseThrow();
+        User updated = user.toBuilder()
+                .firstName("NewFirst")
+                .lastName("NewLast")
+                .password("newPassword")
+                .isActive(false)
+                .build();
+
+        User result = userRepository.save(updated);
+        em.flush();
+        em.clear();
+
+        assertThat(result.getFirstName()).isEqualTo("NewFirst");
+        assertThat(result.getLastName()).isEqualTo("NewLast");
+        assertThat(result.getPassword()).isEqualTo("newPassword");
+        assertThat(result.getIsActive()).isFalse();
+        assertThat(result.getUsername()).isEqualTo("Abdul.Hariton");
+
+        User fromDb = userRepository.findByUsername("Abdul.Hariton").orElseThrow();
+        assertThat(fromDb.getFirstName()).isEqualTo("NewFirst");
+        assertThat(fromDb.getPassword()).isEqualTo("newPassword");
+        assertThat(fromDb.getIsActive()).isFalse();
+    }
+
+    @Test
+    void save_update_isActive_toFalse_updatesInDB() {
+        User user = userRepository.findByUsername("Abdul.Hariton").orElseThrow();
+        assertThat(user.getIsActive()).isTrue();
+
+        userRepository.save(user.toBuilder().isActive(false).build());
+        em.flush();
+        em.clear();
+
+        assertThat(userRepository.findByUsername("Abdul.Hariton").orElseThrow().getIsActive()).isFalse();
+    }
+}
