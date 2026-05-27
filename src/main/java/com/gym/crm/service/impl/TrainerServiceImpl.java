@@ -93,14 +93,6 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Trainer> findById(Long id) {
-        validator.requireValidId(id);
-
-        return trainerRepository.findById(id);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Optional<Trainer> findByUsername(String username) {
         validator.requireNonBlank(username, USERNAME_BLANK_MSG);
         log.debug("Looking up trainer by username={}", username);

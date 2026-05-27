@@ -106,15 +106,6 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional
-    public void deleteById(Long id) {
-        log.info("Deleting trainee: id={}", id);
-        validator.requireValidId(id);
-
-        traineeRepository.deleteById(id);
-    }
-
-    @Override
-    @Transactional
     public void deleteByUsername(String username) {
         log.info("Deleting trainee by username");
         validator.requireNonBlank(username, USERNAME_BLANK_MSG);
@@ -123,14 +114,6 @@ public class TraineeServiceImpl implements TraineeService {
                 .orElseThrow(() -> new EntityNotFoundException(TRAINEE_NOT_FOUND + username));
 
         traineeRepository.delete(trainee);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<Trainee> findById(Long id) {
-        validator.requireValidId(id);
-
-        return traineeRepository.findById(id);
     }
 
     @Override

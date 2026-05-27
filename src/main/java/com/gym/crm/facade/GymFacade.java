@@ -204,25 +204,9 @@ public class GymFacade {
         return traineeRestMapper.toUpdateResponse(profile);
     }
 
-    public void deleteTrainee(Long id, UserCredentials credentials) {
-        coreValidator.validate(id);
-        coreValidator.validate(credentials);
-
-        authenticationService.validateTraineeCredentials(credentials);
-
-        traineeService.deleteById(id);
-    }
-
     @Authenticated
     public void deleteTraineeByUsername(String username) {
         traineeService.deleteByUsername(username);
-    }
-
-    public Optional<TraineeProfileResponse> findTraineeById(Long id, UserCredentials credentials) {
-        coreValidator.validate(credentials);
-        authenticationService.validateTraineeCredentials(credentials);
-
-        return traineeService.findById(id).map(traineeMapper::toProfileResponse);
     }
 
     public Optional<TraineeProfileResponse> findTraineeByUsername(String username, UserCredentials credentials) {
@@ -325,13 +309,6 @@ public class GymFacade {
         return trainerRestMapper.toGetResponse(profile);
     }
 
-    public Optional<TrainerProfileResponse> findTrainerById(Long id, UserCredentials credentials) {
-        coreValidator.validate(credentials);
-        authenticationService.validateTrainerCredentials(credentials);
-
-        return trainerService.findById(id).map(trainerMapper::toProfileResponse);
-    }
-
     public Optional<TrainerProfileResponse> findTrainerByUsername(String username, UserCredentials credentials) {
         coreValidator.validate(credentials);
         authenticationService.validateTrainerCredentials(credentials);
@@ -405,13 +382,6 @@ public class GymFacade {
     @Authenticated
     public List<TrainingTypeResponse> findAllTrainingTypes() {
         return trainingRestMapper.toTrainingTypeResponseList(trainingTypeService.findAll());
-    }
-
-    public Optional<TrainingResponse> findTrainingById(Long id, UserCredentials credentials) {
-        coreValidator.validate(credentials);
-        authenticationService.validateCredentials(credentials);
-
-        return trainingService.findById(id).map(trainingMapper::toResponse);
     }
 
     public List<TrainingResponse> findAllTrainings(UserCredentials credentials) {

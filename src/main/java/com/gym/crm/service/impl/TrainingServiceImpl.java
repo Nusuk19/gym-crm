@@ -59,14 +59,6 @@ public class TrainingServiceImpl implements TrainingService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Training> findById(Long id) {
-        validator.requireValidId(id);
-
-        return trainingRepository.findById(id);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public List<Training> findAll() {
         return trainingRepository.findAll();
     }
