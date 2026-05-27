@@ -105,11 +105,6 @@ class TraineeRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void deleteByUserUsername_nonExistingUser_doesNotThrow() {
-        assertThatCode(() -> traineeRepository.deleteByUserUsername("nobody.here")).doesNotThrowAnyException();
-    }
-
-    @Test
     void findByUserUsername_traineeHasAssignedTrainer() {
         Trainee trainee = traineeRepository.findByUserUsername("Abdul.Hariton").orElseThrow();
 

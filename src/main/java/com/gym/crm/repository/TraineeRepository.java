@@ -26,12 +26,5 @@ public interface TraineeRepository extends JpaRepository<Trainee, Long> {
     @Query("SELECT DISTINCT t FROM Trainee t JOIN FETCH t.user")
     List<Trainee> findAllWithUser();
 
-    @Modifying
-    @Query(value = """
-            DELETE FROM trainees WHERE user_id IN 
-            (SELECT id FROM users WHERE username = :username)
-            """, nativeQuery = true)
-    void deleteByUserUsername(@Param("username") String username);
-
     boolean existsByUserUsername(String username);
 }
