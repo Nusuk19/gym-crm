@@ -3,13 +3,15 @@ package com.gym.crm.service.impl;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dto.request.ActivationRequest;
 import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.model.Trainee;
+import com.gym.crm.model.Trainer;
 import com.gym.crm.model.User;
+import com.gym.crm.repository.TraineeRepository;
+import com.gym.crm.repository.TrainerRepository;
 import com.gym.crm.service.UserProfileService;
 import com.gym.crm.service.UserService;
 import com.gym.crm.service.common.EntityValidator;
@@ -22,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,13 +43,14 @@ import static org.mockito.Mockito.when;
 class TraineeServiceImplTest {
 
     private static final Long ID = 1L;
-    private static final Long NON_EXISTING_ID = 99L;
     private static final String USERNAME = "Abdul.Hariton";
 
     private final Trainee trainee = buildTrainee();
 
     @Mock
-    private TraineeDao traineeDao;
+    private TraineeRepository traineeRepository;
+    @Mock
+    private TrainerRepository trainerRepository;
     @Mock
     private EntityValidator validator;
     @Mock
@@ -71,7 +75,7 @@ class TraineeServiceImplTest {
         when(userProfileService.generateUsername("Abdul", "Hariton")).thenReturn("Abdul.Hariton");
         when(userProfileService.generatePassword()).thenReturn("rawPass123");
         when(userProfileService.hashPassword("rawPass123")).thenReturn("hashedPass");
-        when(traineeDao.save(any(Trainee.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(traineeRepository.save(any(Trainee.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Trainee actual = service.create(trainee);
 
@@ -82,7 +86,7 @@ class TraineeServiceImplTest {
         verify(userProfileService).generateUsername("Abdul", "Hariton");
         verify(userProfileService).generatePassword();
         verify(userProfileService).hashPassword("rawPass123");
-        verify(traineeDao).save(any(Trainee.class));
+        verify(traineeRepository).save(any(Trainee.class));
     }
 
     @Test
@@ -92,7 +96,7 @@ class TraineeServiceImplTest {
 
         assertThrows(EntityValidationException.class, () -> service.create(null));
 
-        verify(traineeDao, never()).save(any());
+        verify(traineeRepository, never()).save(any());
     }
 
     @Test
@@ -100,55 +104,40 @@ class TraineeServiceImplTest {
         Trainee existing = trainee.toBuilder()
                 .user(trainee.getUser().toBuilder()
                         .id(ID)
-                        .username("Abdul.Hariton")
+                        .username(USERNAME)
                         .password("existingHash")
                         .build())
                 .build();
 
-        when(traineeDao.findByUsername("Abdul.Hariton")).thenReturn(Optional.of(existing));
-        when(traineeDao.update(any(Trainee.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(traineeRepository.findByUserUsername(USERNAME)).thenReturn(Optional.of(existing));
+        when(traineeRepository.save(any(Trainee.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Trainee actual = service.update(trainee);
 
         assertEquals(trainee, actual);
         verify(validator).validateTrainee(trainee);
-        verify(traineeDao).findByUsername("Abdul.Hariton");
-        verify(traineeDao).update(any(Trainee.class));
+        verify(traineeRepository).findByUserUsername(USERNAME);
+        verify(traineeRepository).save(any(Trainee.class));
     }
 
     @Test
     void update_whenTraineeNotFound_throwsEntityNotFoundException() {
-        when(traineeDao.findByUsername("Abdul.Hariton")).thenReturn(Optional.empty());
+        when(traineeRepository.findByUserUsername(USERNAME)).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> service.update(trainee));
 
-        verify(traineeDao, never()).update(any());
-    }
-
-    @Test
-    void delete_whenValidId_deletesSuccessfully() {
-        service.deleteById(ID);
-
-        verify(validator).requireValidId(ID);
-        verify(traineeDao).deleteById(ID);
-    }
-
-    @Test
-    void delete_whenInvalidId_throwsException() {
-        doThrow(new EntityValidationException("Id must be a positive integer"))
-                .when(validator).requireValidId(any());
-
-        assertThrows(EntityValidationException.class, () -> service.deleteById(-ID));
-
-        verify(traineeDao, never()).deleteById(any());
+        verify(traineeRepository, never()).save(any());
     }
 
     @Test
     void deleteByUsername_whenValidUsername_deletesSuccessfully() {
+        when(traineeRepository.findByUserUsername(USERNAME)).thenReturn(Optional.of(trainee));
+
         service.deleteByUsername(USERNAME);
 
         verify(validator).requireNonBlank(USERNAME, "Username cannot be blank");
-        verify(traineeDao).deleteByUsername(USERNAME);
+        verify(traineeRepository).findByUserUsername(USERNAME);
+        verify(traineeRepository).delete(trainee);
     }
 
     @Test
@@ -158,43 +147,21 @@ class TraineeServiceImplTest {
 
         assertThrows(EntityValidationException.class, () -> service.deleteByUsername(" "));
 
-        verify(traineeDao, never()).deleteByUsername(any());
+        verify(traineeRepository, never()).delete(any());
     }
 
     @Test
-    void findById_whenTraineeExists_returnsTrainee() {
-        when(traineeDao.findById(ID)).thenReturn(Optional.of(trainee));
+    void deleteByUsername_whenTraineeNotFound_throwsEntityNotFoundException() {
+        when(traineeRepository.findByUserUsername(USERNAME)).thenReturn(Optional.empty());
 
-        Optional<Trainee> actual = service.findById(ID);
+        assertThrows(EntityNotFoundException.class, () -> service.deleteByUsername(USERNAME));
 
-        assertTrue(actual.isPresent());
-        assertEquals(trainee, actual.get());
-        verify(validator).requireValidId(ID);
-    }
-
-    @Test
-    void findById_whenTraineeNotExists_returnsEmpty() {
-        when(traineeDao.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
-
-        Optional<Trainee> actual = service.findById(NON_EXISTING_ID);
-
-        assertFalse(actual.isPresent());
-        verify(validator).requireValidId(NON_EXISTING_ID);
-    }
-
-    @Test
-    void findById_whenInvalidId_throwsException() {
-        doThrow(new EntityValidationException("Id must be a positive integer"))
-                .when(validator).requireValidId(any());
-
-        assertThrows(EntityValidationException.class, () -> service.findById(0L));
-
-        verify(traineeDao, never()).findById(any());
+        verify(traineeRepository, never()).delete(any());
     }
 
     @Test
     void findByUsername_whenExists_returnsTrainee() {
-        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.of(trainee));
+        when(traineeRepository.findByUserUsername(USERNAME)).thenReturn(Optional.of(trainee));
 
         Optional<Trainee> actual = service.findByUsername(USERNAME);
 
@@ -205,7 +172,7 @@ class TraineeServiceImplTest {
 
     @Test
     void findByUsername_whenNotExists_returnsEmpty() {
-        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.empty());
+        when(traineeRepository.findByUserUsername(USERNAME)).thenReturn(Optional.empty());
 
         Optional<Trainee> actual = service.findByUsername(USERNAME);
 
@@ -219,13 +186,14 @@ class TraineeServiceImplTest {
 
         assertThrows(EntityValidationException.class, () -> service.findByUsername(" "));
 
-        verify(traineeDao, never()).findByUsername(any());
+        verify(traineeRepository, never()).findByUserUsername(any());
     }
+
 
     @Test
     void findAll_returnsAllTrainees() {
         List<Trainee> trainees = List.of(trainee);
-        when(traineeDao.findAll()).thenReturn(trainees);
+        when(traineeRepository.findAll()).thenReturn(trainees);
 
         List<Trainee> actual = service.findAll();
 
@@ -235,7 +203,7 @@ class TraineeServiceImplTest {
 
     @Test
     void findAll_whenEmpty_returnsEmptyList() {
-        when(traineeDao.findAll()).thenReturn(List.of());
+        when(traineeRepository.findAll()).thenReturn(List.of());
 
         List<Trainee> actual = service.findAll();
 
@@ -243,29 +211,45 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    void updateTrainers_whenValidRequest_delegatesToDao() {
+    void updateTrainers_whenValidRequest_updatesAndReturnsTrainerList() {
         List<String> trainerUsernames = List.of("Mike.Tyson", "John.Doe");
-        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.of(trainee));
+        Trainer trainer1 = Trainer.builder().build();
+        Trainer trainer2 = Trainer.builder().build();
+        List<Trainer> foundTrainers = new ArrayList<>(List.of(trainer1, trainer2));
 
-        service.updateTrainers(USERNAME, trainerUsernames);
+        Trainee mutableTrainee = trainee.toBuilder().trainers(new ArrayList<>()).build();
+        when(traineeRepository.findByUserUsername(USERNAME)).thenReturn(Optional.of(mutableTrainee));
+        when(trainerRepository.findAllByUserUsernameIn(trainerUsernames)).thenReturn(foundTrainers);
 
-        verify(traineeDao).updateTrainers(USERNAME, trainerUsernames);
+        List<Trainer> result = service.updateTrainers(USERNAME, trainerUsernames);
+
+        assertEquals(2, result.size());
+        assertTrue(result.containsAll(foundTrainers));
+        verify(validator).requireNonBlank(USERNAME, "Username cannot be blank");
+        verify(validator).requireNonNull(trainerUsernames, "Trainer usernames list cannot be null");
+        verify(traineeRepository).findByUserUsername(USERNAME);
+        verify(trainerRepository).findAllByUserUsernameIn(trainerUsernames);
     }
 
     @Test
     void updateTrainers_whenTraineeNotFound_throwsEntityNotFoundException() {
-        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.empty());
+        List<String> trainerUsernames = List.of("Mike.Tyson");
+        when(traineeRepository.findByUserUsername(USERNAME)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> service.updateTrainers(USERNAME, List.of()));
+        assertThrows(EntityNotFoundException.class, () -> service.updateTrainers(USERNAME, trainerUsernames));
 
-        verify(traineeDao, never()).updateTrainers(any(), any());
+        verify(trainerRepository, never()).findAllByUserUsernameIn(any());
     }
 
     @Test
     void updateTrainers_whenNullList_throwsEntityValidationException() {
-        assertThrows(EntityNotFoundException.class, () -> service.updateTrainers(USERNAME, null));
+        doThrow(new EntityValidationException("Trainer usernames list cannot be null"))
+                .when(validator).requireNonNull(any(), any());
 
-        verify(traineeDao, never()).updateTrainers(any(), any());
+        assertThrows(EntityValidationException.class, () -> service.updateTrainers(USERNAME, null));
+
+        verify(traineeRepository, never()).findByUserUsername(any());
+        verify(trainerRepository, never()).findAllByUserUsernameIn(any());
     }
 
     @Test
@@ -275,7 +259,7 @@ class TraineeServiceImplTest {
                 .oldPassword("oldPass123")
                 .newPassword("newPass456")
                 .build();
-        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.of(trainee));
+        when(traineeRepository.findByUserUsername(USERNAME)).thenReturn(Optional.of(trainee));
 
         service.changePassword(request);
 
@@ -289,7 +273,7 @@ class TraineeServiceImplTest {
                 .oldPassword("oldPass123")
                 .newPassword("newPass456")
                 .build();
-        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.empty());
+        when(traineeRepository.findByUserUsername(USERNAME)).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> service.changePassword(request));
 
@@ -301,7 +285,7 @@ class TraineeServiceImplTest {
         ActivationRequest request = ActivationRequest.builder()
                 .username(USERNAME)
                 .build();
-        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.of(trainee));
+        when(traineeRepository.findByUserUsername(USERNAME)).thenReturn(Optional.of(trainee));
 
         service.activate(request);
 
@@ -313,7 +297,7 @@ class TraineeServiceImplTest {
         ActivationRequest request = ActivationRequest.builder()
                 .username(USERNAME)
                 .build();
-        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.empty());
+        when(traineeRepository.findByUserUsername(USERNAME)).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> service.activate(request));
 
@@ -325,7 +309,7 @@ class TraineeServiceImplTest {
         ActivationRequest request = ActivationRequest.builder()
                 .username(USERNAME)
                 .build();
-        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.of(trainee));
+        when(traineeRepository.findByUserUsername(USERNAME)).thenReturn(Optional.of(trainee));
 
         service.deactivate(request);
 
@@ -337,7 +321,7 @@ class TraineeServiceImplTest {
         ActivationRequest request = ActivationRequest.builder()
                 .username(USERNAME)
                 .build();
-        when(traineeDao.findByUsername(USERNAME)).thenReturn(Optional.empty());
+        when(traineeRepository.findByUserUsername(USERNAME)).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> service.deactivate(request));
 

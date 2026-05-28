@@ -15,11 +15,7 @@ public interface TraineeService {
 
     List<Trainer> updateTrainers(String traineeUsername, List<String> trainerUsernames);
 
-    void deleteById(Long id);
-
     void deleteByUsername(String username);
-
-    Optional<Trainee> findById(Long id);
 
     Optional<Trainee> findByUsername(String username);
 

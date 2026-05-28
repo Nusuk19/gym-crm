@@ -12,8 +12,6 @@ public interface TrainerService {
 
     Trainer update(Trainer trainer);
 
-    Optional<Trainer> findById(Long id);
-
     Optional<Trainer> findByUsername(String username);
 
     List<Trainer> findAll();

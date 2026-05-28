@@ -34,7 +34,6 @@ import com.gym.crm.dto.response.TraineeCreatedResponse;
 import com.gym.crm.dto.response.TraineeProfileResponse;
 import com.gym.crm.dto.response.TrainerCreatedResponse;
 import com.gym.crm.dto.response.TrainerProfileResponse;
-import com.gym.crm.dto.response.TrainingResponse;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.EntityValidationException;
 import com.gym.crm.mapper.AuthMapper;
@@ -55,6 +54,7 @@ import com.gym.crm.service.common.AuthenticationService;
 import com.gym.crm.service.common.CoreValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -160,6 +160,7 @@ public class GymFacade {
         userService.changePassword(changeRequest);
     }
 
+    @Transactional
     public TraineeCreateResponse createTrainee(TraineeCreateRequest request) {
         CreateTraineeRequest internalRequest = traineeRestMapper.toCreateRequest(request);
         coreValidator.validate(internalRequest);
@@ -168,7 +169,8 @@ public class GymFacade {
                 internalRequest.getFirstName(), internalRequest.getLastName());
         trainerService.findByUsername(candidateUsername).ifPresent(existing -> {
             throw new EntityValidationException(
-                    "User '%s' is already registered as a trainer".formatted(candidateUsername));});
+                    "User '%s' is already registered as a trainer".formatted(candidateUsername));
+        });
 
         TraineeCreatedResponse response = traineeMapper.toCreatedResponse(
                 traineeService.create(traineeMapper.toEntity(internalRequest)));
@@ -202,25 +204,9 @@ public class GymFacade {
         return traineeRestMapper.toUpdateResponse(profile);
     }
 
-    public void deleteTrainee(Long id, UserCredentials credentials) {
-        coreValidator.validate(id);
-        coreValidator.validate(credentials);
-
-        authenticationService.validateTraineeCredentials(credentials);
-
-        traineeService.deleteById(id);
-    }
-
     @Authenticated
     public void deleteTraineeByUsername(String username) {
         traineeService.deleteByUsername(username);
-    }
-
-    public Optional<TraineeProfileResponse> findTraineeById(Long id, UserCredentials credentials) {
-        coreValidator.validate(credentials);
-        authenticationService.validateTraineeCredentials(credentials);
-
-        return traineeService.findById(id).map(traineeMapper::toProfileResponse);
     }
 
     public Optional<TraineeProfileResponse> findTraineeByUsername(String username, UserCredentials credentials) {
@@ -230,15 +216,6 @@ public class GymFacade {
         return traineeService.findByUsername(username).map(traineeMapper::toProfileResponse);
     }
 
-    public List<TraineeProfileResponse> findAllTrainees(UserCredentials credentials) {
-        coreValidator.validate(credentials);
-        authenticationService.validateTraineeCredentials(credentials);
-
-        return traineeService.findAll().stream()
-                .map(traineeMapper::toProfileResponse)
-                .toList();
-    }
-
     @Authenticated
     public TraineeAssignedTrainersUpdateResponse updateTraineeTrainers(String username, TraineeAssignedTrainersUpdateRequest request) {
         List<AssignedTrainerInfo> trainers = traineeService.updateTrainers(username, request.getTrainerUsernames()).stream()
@@ -246,33 +223,6 @@ public class GymFacade {
                 .toList();
 
         return traineeRestMapper.toAssignedTrainersUpdateResponse(trainers);
-    }
-
-    public void changeTraineePassword(ChangePasswordRequest request, UserCredentials credentials) {
-        coreValidator.validate(request);
-        coreValidator.validate(credentials);
-
-        authenticationService.validateTraineeCredentials(credentials);
-
-        traineeService.changePassword(request);
-    }
-
-    public void activateTrainee(ActivationRequest request, UserCredentials credentials) {
-        coreValidator.validate(request);
-        coreValidator.validate(credentials);
-
-        authenticationService.validateTraineeCredentials(credentials);
-
-        traineeService.activate(request);
-    }
-
-    public void deactivateTrainee(ActivationRequest request, UserCredentials credentials) {
-        coreValidator.validate(request);
-        coreValidator.validate(credentials);
-
-        authenticationService.validateTraineeCredentials(credentials);
-
-        traineeService.deactivate(request);
     }
 
     @Authenticated
@@ -286,7 +236,6 @@ public class GymFacade {
         action.accept(activationRequest);
     }
 
-
     public TrainerCreateResponse createTrainer(TrainerCreateRequest request) {
         CreateTrainerRequest internalRequest = trainerRestMapper.toCreateRequest(request);
         coreValidator.validate(internalRequest);
@@ -295,7 +244,8 @@ public class GymFacade {
                 internalRequest.getFirstName(), internalRequest.getLastName());
         traineeService.findByUsername(candidateUsername).ifPresent(existing -> {
             throw new EntityValidationException(
-                    "User '%s' is already registered as a trainee".formatted(candidateUsername));});
+                    "User '%s' is already registered as a trainee".formatted(candidateUsername));
+        });
 
         TrainerCreatedResponse response = trainerMapper.toCreatedResponse(
                 trainerService.create(trainerMapper.toEntity(internalRequest), internalRequest.getSpecializationName()));
@@ -323,29 +273,6 @@ public class GymFacade {
         return trainerRestMapper.toGetResponse(profile);
     }
 
-    public Optional<TrainerProfileResponse> findTrainerById(Long id, UserCredentials credentials) {
-        coreValidator.validate(credentials);
-        authenticationService.validateTrainerCredentials(credentials);
-
-        return trainerService.findById(id).map(trainerMapper::toProfileResponse);
-    }
-
-    public Optional<TrainerProfileResponse> findTrainerByUsername(String username, UserCredentials credentials) {
-        coreValidator.validate(credentials);
-        authenticationService.validateTrainerCredentials(credentials);
-
-        return trainerService.findByUsername(username).map(trainerMapper::toProfileResponse);
-    }
-
-    public List<TrainerProfileResponse> findAllTrainers(UserCredentials credentials) {
-        coreValidator.validate(credentials);
-        authenticationService.validateTrainerCredentials(credentials);
-
-        return trainerService.findAll().stream()
-                .map(trainerMapper::toProfileResponse)
-                .toList();
-    }
-
     @Authenticated
     public List<AssignedTrainerResponse> findAllTrainersNotAssignedToTrainee(String username) {
         return trainerService.findAllNotAssignedToTrainee(username).stream()
@@ -365,33 +292,6 @@ public class GymFacade {
         action.accept(request);
     }
 
-    public void changeTrainerPassword(ChangePasswordRequest request, UserCredentials credentials) {
-        coreValidator.validate(request);
-        coreValidator.validate(credentials);
-
-        authenticationService.validateTrainerCredentials(credentials);
-
-        trainerService.changePassword(request);
-    }
-
-    public void activateTrainer(ActivationRequest request, UserCredentials credentials) {
-        coreValidator.validate(request);
-        coreValidator.validate(credentials);
-
-        authenticationService.validateTrainerCredentials(credentials);
-
-        trainerService.activate(request);
-    }
-
-    public void deactivateTrainer(ActivationRequest request, UserCredentials credentials) {
-        coreValidator.validate(request);
-        coreValidator.validate(credentials);
-
-        authenticationService.validateTrainerCredentials(credentials);
-
-        trainerService.deactivate(request);
-    }
-
     @Authenticated
     public void createTraining(TrainingCreateRequest request) {
         CreateTrainingRequest internalRequest = trainingRestMapper.toCreateRequest(request);
@@ -403,22 +303,6 @@ public class GymFacade {
     @Authenticated
     public List<TrainingTypeResponse> findAllTrainingTypes() {
         return trainingRestMapper.toTrainingTypeResponseList(trainingTypeService.findAll());
-    }
-
-    public Optional<TrainingResponse> findTrainingById(Long id, UserCredentials credentials) {
-        coreValidator.validate(credentials);
-        authenticationService.validateCredentials(credentials);
-
-        return trainingService.findById(id).map(trainingMapper::toResponse);
-    }
-
-    public List<TrainingResponse> findAllTrainings(UserCredentials credentials) {
-        coreValidator.validate(credentials);
-        authenticationService.validateCredentials(credentials);
-
-        return trainingService.findAll().stream()
-                .map(trainingMapper::toResponse)
-                .toList();
     }
 
     @Authenticated

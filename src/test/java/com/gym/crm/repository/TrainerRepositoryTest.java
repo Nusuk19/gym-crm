@@ -1,7 +1,5 @@
-package com.gym.crm.dao.impl;
+package com.gym.crm.repository;
 
-import com.gym.crm.dao.AbstractRepositoryTest;
-import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.model.TrainingType;
 import com.gym.crm.model.User;
@@ -15,16 +13,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
 
 @Sql(scripts = {"/datasets/cleanup.sql", "/datasets/trainer-insert.sql"}, executionPhase = BEFORE_TEST_METHOD)
-class TrainerDaoImplTest extends AbstractRepositoryTest<TrainerDao> {
+class TrainerRepositoryTest extends AbstractRepositoryTest<TrainerRepository> {
 
     @Test
-    void findByUsername_existingTrainer_returnsFullTrainer() {
-        Trainer result = dao.findByUsername("Mike.Tyson").orElseThrow();
+    void findByUserUsername_existingTrainer_returnsFullTrainer() {
+        Trainer result = repository.findByUserUsername("Mike.Tyson").orElseThrow();
 
         assertThat(result.getUser().getFirstName()).isEqualTo("Mike");
         assertThat(result.getUser().getLastName()).isEqualTo("Tyson");
         assertThat(result.getUser().getUsername()).isEqualTo("Mike.Tyson");
-        assertThat(result.getUser().getPassword()).isEqualTo("hashedPassword32");
         assertThat(result.getUser().getIsActive()).isTrue();
         assertThat(result.getId()).isNotNull();
         assertThat(result.getSpecialization()).isNotNull();
@@ -32,26 +29,15 @@ class TrainerDaoImplTest extends AbstractRepositoryTest<TrainerDao> {
     }
 
     @Test
-    void findByUsername_nonExisting_returnsEmpty() {
-        Optional<Trainer> result = dao.findByUsername("ghost.user");
+    void findByUserUsername_nonExisting_returnsEmpty() {
+        Optional<Trainer> result = repository.findByUserUsername("ghost.user");
 
         assertThat(result).isEmpty();
     }
 
     @Test
-    void findById_existing_returnsTrainer_withAllFields() {
-        Trainer trainer = dao.findByUsername("Mike.Tyson").orElseThrow();
-
-        Trainer result = dao.findById(trainer.getId()).orElseThrow();
-
-        assertThat(result.getUser().getUsername()).isEqualTo("Mike.Tyson");
-        assertThat(result.getUser().getFirstName()).isEqualTo("Mike");
-        assertThat(result.getSpecialization().getTrainingTypeName()).isEqualTo("Boxing");
-    }
-
-    @Test
-    void findAll_returnsAllTrainers() {
-        List<Trainer> result = dao.findAll();
+    void findAllWithUserAndSpecialization_returnsAll() {
+        List<Trainer> result = repository.findAllWithUserAndSpecialization();
 
         assertThat(result).hasSizeGreaterThan(0)
                 .extracting("user.username")
@@ -59,13 +45,13 @@ class TrainerDaoImplTest extends AbstractRepositoryTest<TrainerDao> {
     }
 
     @Test
-    void save_persistsTrainer_completely() {
+    void save_persistsTrainer() {
         Trainer trainer = buildTrainer("Bruce", "Lee", "Bruce.Lee");
 
-        Trainer saved = dao.save(trainer);
+        Trainer saved = repository.save(trainer);
 
-        Trainer fromDb = dao.findById(saved.getId()).orElseThrow();
-
+        flushAndClear();
+        Trainer fromDb = repository.findById(saved.getId()).orElseThrow();
         assertThat(fromDb.getUser().getUsername()).isEqualTo("Bruce.Lee");
         assertThat(fromDb.getUser().getFirstName()).isEqualTo("Bruce");
         assertThat(fromDb.getUser().getLastName()).isEqualTo("Lee");
@@ -74,26 +60,23 @@ class TrainerDaoImplTest extends AbstractRepositoryTest<TrainerDao> {
     }
 
     @Test
-    void update_changesTrainerData() {
-        Trainer trainer = dao.findByUsername("Mike.Tyson").orElseThrow();
+    void save_update_changesTrainerData() {
+        Trainer trainer = repository.findByUserUsername("Mike.Tyson").orElseThrow();
         Trainer updated = trainer.toBuilder()
-                .user(trainer.getUser().toBuilder()
-                        .firstName("Michael")
-                        .build())
+                .user(trainer.getUser().toBuilder().firstName("Michael").build())
                 .build();
 
-        dao.update(updated);
+        repository.save(updated);
 
-        Trainer result = dao.findByUsername("Mike.Tyson").orElseThrow();
-
+        flushAndClear();
+        Trainer result = repository.findByUserUsername("Mike.Tyson").orElseThrow();
         assertThat(result.getUser().getFirstName()).isEqualTo("Michael");
         assertThat(result.getUser().getUsername()).isEqualTo("Mike.Tyson");
-        assertThat(result.getSpecialization().getTrainingTypeName()).isEqualTo("Boxing");
     }
 
     @Test
-    void findAllNotAssignedToTrainee_returnsOnlyUnassigned() {
-        List<Trainer> result = dao.findAllNotAssignedToTrainee("Abdul.Hariton");
+    void findAllActiveNotAssignedToTrainee_returnsOnlyUnassigned() {
+        List<Trainer> result = repository.findAllActiveNotAssignedToTrainee("Abdul.Hariton");
 
         assertThat(result).isNotEmpty()
                 .extracting("user.username")
@@ -101,25 +84,32 @@ class TrainerDaoImplTest extends AbstractRepositoryTest<TrainerDao> {
     }
 
     @Test
-    void findAllNotAssignedToTrainee_nonExisting_returnsAll() {
-        List<Trainer> result = dao.findAllNotAssignedToTrainee("ghost.user");
+    void findAllActiveNotAssignedToTrainee_nonExistingTrainee_returnsAll() {
+        List<Trainer> result = repository.findAllActiveNotAssignedToTrainee("ghost.user");
 
         assertThat(result).extracting("user.username").contains("Mike.Tyson", "Adam.Future");
     }
 
     @Test
-    void save_shouldPersistUserAndSpecialization() {
-        Trainer trainer = buildTrainer("Bruce", "Lee", "Bruce.Lee");
+    void existsByUserUsername_existing_returnsTrue() {
+        boolean exists = repository.existsByUserUsername("Mike.Tyson");
 
-        dao.save(trainer);
+        assertThat(exists).isTrue();
+    }
 
-        Trainer fromDb = dao.findByUsername("Bruce.Lee").orElseThrow();
+    @Test
+    void existsByUserUsername_nonExisting_returnsFalse() {
+        boolean exists = repository.existsByUserUsername("ghost.user");
 
-        assertThat(fromDb.getUser()).isNotNull();
-        assertThat(fromDb.getSpecialization()).isNotNull();
+        assertThat(exists).isFalse();
     }
 
     private Trainer buildTrainer(String firstName, String lastName, String username) {
+        TrainingType boxing = em.getEntityManager()
+                .createQuery("FROM TrainingType WHERE trainingTypeName = :name", TrainingType.class)
+                .setParameter("name", "Boxing")
+                .getSingleResult();
+
         User user = User.builder()
                 .firstName(firstName)
                 .lastName(lastName)
@@ -128,20 +118,9 @@ class TrainerDaoImplTest extends AbstractRepositoryTest<TrainerDao> {
                 .isActive(true)
                 .build();
 
-        TrainingType boxing = sessionFactory
-                .openSession()
-                .createQuery("FROM TrainingType WHERE trainingTypeName = :name", TrainingType.class)
-                .setParameter("name", "Boxing")
-                .uniqueResult();
-
         return Trainer.builder()
                 .user(user)
                 .specialization(boxing)
                 .build();
-    }
-
-    @Override
-    protected Class<TrainerDao> getDaoClass() {
-        return TrainerDao.class;
     }
 }

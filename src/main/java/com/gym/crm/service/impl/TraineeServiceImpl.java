@@ -1,58 +1,41 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.annotation.PersistenceTx;
-import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dto.request.ActivationRequest;
 import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.model.Trainee;
 import com.gym.crm.model.Trainer;
 import com.gym.crm.model.User;
+import com.gym.crm.repository.TraineeRepository;
+import com.gym.crm.repository.TrainerRepository;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.UserProfileService;
 import com.gym.crm.service.UserService;
 import com.gym.crm.service.common.EntityValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
+@RequiredArgsConstructor
 @Service
 public class TraineeServiceImpl implements TraineeService {
-    private static final Logger log = LoggerFactory.getLogger(TraineeServiceImpl.class);
+
     private static final String USERNAME_BLANK_MSG = "Username cannot be blank";
     private static final String TRAINEE_NOT_FOUND = "Trainee not found: ";
 
-    private TraineeDao traineeDao;
-    private EntityValidator validator;
-    private UserProfileService userProfileService;
-    private UserService userService;
-
-    @Autowired
-    public void setTraineeDao(TraineeDao traineeDao) {
-        this.traineeDao = traineeDao;
-    }
-
-    @Autowired
-    public void setValidator(EntityValidator validator) {
-        this.validator = validator;
-    }
-
-    @Autowired
-    public void setUserProfileService(UserProfileService userProfileService) {
-        this.userProfileService = userProfileService;
-    }
-
-    @Autowired
-    public void setUserService(UserService userService) {
-        this.userService = userService;
-    }
+    private final TraineeRepository traineeRepository;
+    private final TrainerRepository trainerRepository;
+    private final EntityValidator validator;
+    private final UserProfileService userProfileService;
+    private final UserService userService;
 
     @Override
-    @PersistenceTx
+    @Transactional
     public Trainee create(Trainee trainee) {
         validator.validateTrainee(trainee);
 
@@ -74,17 +57,17 @@ public class TraineeServiceImpl implements TraineeService {
                 .user(userWithProfile)
                 .build();
 
-        return traineeDao.save(traineeWithProfile);
+        return traineeRepository.save(traineeWithProfile);
     }
 
     @Override
-    @PersistenceTx
+    @Transactional
     public Trainee update(Trainee trainee) {
         String username = trainee.getUser().getUsername();
         log.info("Updating trainee: username={}", username);
         validator.validateTrainee(trainee);
 
-        Trainee existing = traineeDao.findByUsername(username)
+        Trainee existing = traineeRepository.findByUserUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException(TRAINEE_NOT_FOUND + username));
 
         User mergedUser = trainee.getUser().toBuilder()
@@ -98,66 +81,58 @@ public class TraineeServiceImpl implements TraineeService {
                 .user(mergedUser)
                 .build();
 
-        return traineeDao.update(merged);
+        return traineeRepository.save(merged);
     }
 
     @Override
-    @PersistenceTx
+    @Transactional
     public List<Trainer> updateTrainers(String traineeUsername, List<String> trainerUsernames) {
         validator.requireNonBlank(traineeUsername, USERNAME_BLANK_MSG);
         validator.requireNonNull(trainerUsernames, "Trainer usernames list cannot be null");
 
         log.info("Updating trainers list for trainee");
 
-        Trainee trainee = traineeDao.findByUsername(traineeUsername)
+        Trainee trainee = traineeRepository.findByUserUsername(traineeUsername)
                 .orElseThrow(() -> new EntityNotFoundException(TRAINEE_NOT_FOUND + traineeUsername));
+        List<Trainer> newTrainers = trainerRepository.findAllByUserUsernameIn(trainerUsernames);
 
-        traineeDao.updateTrainers(traineeUsername, trainerUsernames);
+        trainee.getTrainers().clear();
+        trainee.getTrainers().addAll(newTrainers);
+
+        log.info("Updated trainers list for trainee: username={}, trainers={}", traineeUsername, trainerUsernames);
 
         return trainee.getTrainers();
     }
 
     @Override
-    @PersistenceTx
-    public void deleteById(Long id) {
-        log.info("Deleting trainee: id={}", id);
-        validator.requireValidId(id);
-
-        traineeDao.deleteById(id);
-    }
-
-    @Override
-    @PersistenceTx
+    @Transactional
     public void deleteByUsername(String username) {
         log.info("Deleting trainee by username");
         validator.requireNonBlank(username, USERNAME_BLANK_MSG);
 
-        traineeDao.deleteByUsername(username);
+        Trainee trainee = traineeRepository.findByUserUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException(TRAINEE_NOT_FOUND + username));
+
+        traineeRepository.delete(trainee);
     }
 
     @Override
-    public Optional<Trainee> findById(Long id) {
-        validator.requireValidId(id);
-
-        return traineeDao.findById(id);
-    }
-
-    @Override
-    @PersistenceTx
+    @Transactional(readOnly = true)
     public Optional<Trainee> findByUsername(String username) {
         validator.requireNonBlank(username, USERNAME_BLANK_MSG);
         log.debug("Looking up trainee by username={}", username);
 
-        return traineeDao.findByUsername(username);
+        return traineeRepository.findByUserUsername(username);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Trainee> findAll() {
-        return traineeDao.findAll();
+        return traineeRepository.findAll();
     }
 
     @Override
-    @PersistenceTx
+    @Transactional
     public void changePassword(ChangePasswordRequest request) {
         requireTraineeByUsername(request.getUsername());
 
@@ -165,7 +140,7 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
-    @PersistenceTx
+    @Transactional
     public void activate(ActivationRequest request) {
         requireTraineeByUsername(request.getUsername());
 
@@ -173,7 +148,7 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
-    @PersistenceTx
+    @Transactional
     public void deactivate(ActivationRequest request) {
         requireTraineeByUsername(request.getUsername());
 
@@ -183,7 +158,7 @@ public class TraineeServiceImpl implements TraineeService {
     private Trainee requireTraineeByUsername(String username) {
         validator.requireNonBlank(username, USERNAME_BLANK_MSG);
 
-        return traineeDao.findByUsername(username)
+        return traineeRepository.findByUserUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException(TRAINEE_NOT_FOUND + username));
     }
 }
