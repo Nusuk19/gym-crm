@@ -4,6 +4,8 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
+import java.util.Locale;
+
 @Component
 public class MemoryHealthIndicator implements HealthIndicator {
 
@@ -38,7 +40,7 @@ public class MemoryHealthIndicator implements HealthIndicator {
                 .withDetail("allocated_memory_bytes", allocatedMemory)
                 .withDetail("max_memory_bytes", maxMemory)
                 .withDetail("used_memory_bytes", usedMemory)
-                .withDetail("usage_percentage", String.format("%.2f%%", memoryUsagePercentage * 100))
+                .withDetail("usage_percentage", String.format(Locale.US, "%.2f%%", memoryUsagePercentage * 100))
                 .build();
     }
 

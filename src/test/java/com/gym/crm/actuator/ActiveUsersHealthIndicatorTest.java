@@ -37,8 +37,9 @@ class ActiveUsersHealthIndicatorTest {
 
         Health health = indicator.health();
 
-        assertThat(health.getStatus()).isEqualTo(Status.DOWN);
-        assertThat(health.getDetails()).containsEntry("reason", "No users found in the system");
+        assertThat(health.getStatus()).isEqualTo(Status.UP);
+        assertThat(health.getDetails()).containsEntry("warning", "No users found in the system");
+        assertThat(health.getDetails()).containsEntry("totalUsers", 0);
     }
 
     @Test
@@ -48,6 +49,6 @@ class ActiveUsersHealthIndicatorTest {
         Health health = indicator.health();
 
         assertThat(health.getStatus()).isEqualTo(Status.DOWN);
-        assertThat(health.getDetails()).containsEntry("reason", "Cannot reach users table");
+        assertThat(health.getDetails()).containsEntry("reason", "Users table unreachable");
     }
 }

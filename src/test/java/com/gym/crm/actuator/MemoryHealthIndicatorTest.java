@@ -42,7 +42,7 @@ class MemoryHealthIndicatorTest {
         Health actual = indicator.health();
 
         assertThat(actual.getStatus()).isEqualTo(Status.DOWN);
-        assertThat(actual.getDetails()).containsEntry("message", "Memory threshold exceeded");
+        assertThat(actual.getDetails()).containsEntry("message", "Memory usage exceeded threshold");
     }
 
     @Test
@@ -54,6 +54,6 @@ class MemoryHealthIndicatorTest {
         Health actual = indicator.health();
 
         assertThat(actual.getStatus()).isEqualTo(Status.DOWN);
-        assertThat(actual.getDetails()).containsEntry("message", "Memory threshold exceeded");
+        assertThat(actual.getDetails()).containsEntry("message", "Memory usage exceeded threshold");
     }
 }
