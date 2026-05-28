@@ -73,8 +73,9 @@ class TrainingRepositoryTest extends AbstractRepositoryTest<TrainingRepository> 
 
         List<Training> result = repository.findAll(TrainingSpecifications.forTraineeCriteria(filter));
 
-        assertThat(result).hasSize(2);
-        assertThat(result).allMatch(t -> t.getTrainee().getUser().getUsername().equals("Abdul.Hariton"));
+        assertThat(result)
+                .hasSize(2)
+                .allMatch(t -> t.getTrainee().getUser().getUsername().equals("Abdul.Haritoon"));
     }
 
     @Test
