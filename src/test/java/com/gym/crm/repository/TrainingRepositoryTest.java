@@ -27,7 +27,11 @@ class TrainingRepositoryTest extends AbstractRepositoryTest<TrainingRepository> 
 
     @Test
     void findAllWithAssociations_returnsAllTrainings() {
-        assertThat(repository.findAllWithAssociations()).hasSize(3);
+        List<Training> result = repository.findAllWithAssociations();
+
+        assertThat(result).hasSize(3);
+        assertThat(result).extracting("name")
+                .contains("Boxing Basics", "Advanced Boxing", "Morning Yoga");
     }
 
     @Test
@@ -48,17 +52,21 @@ class TrainingRepositoryTest extends AbstractRepositoryTest<TrainingRepository> 
 
     @Test
     void findById_nonExistingId_returnsEmpty() {
-        assertThat(repository.findById(999L)).isEmpty();
+        Optional<Training> result = repository.findById(999L);
+
+        assertThat(result).isEmpty();
     }
 
     @Test
     void save_newTraining_persistsAllFields() {
-        Training saved = repository.save(buildTraining(
+        Training newTraining = buildTraining(
                 "Power Boxing", LocalDate.of(2024, 9, 1), new BigDecimal("75"),
-                "Abdul.Hariton", "Mike.Tyson", "Boxing"));
+                "Abdul.Hariton", "Mike.Tyson", "Boxing");
+        Training saved = repository.save(newTraining);
 
         flushAndClear();
-        Optional<Training> fromDb = repository.findById(saved.getId());
+        Long savedId = saved.getId();
+        Optional<Training> fromDb = repository.findById(savedId);
         assertThat(fromDb).isPresent();
         assertThat(fromDb.get().getName()).isEqualTo("Power Boxing");
         assertThat(fromDb.get().getTrainingDuration()).isEqualByComparingTo(new BigDecimal("75"));
@@ -70,8 +78,9 @@ class TrainingRepositoryTest extends AbstractRepositoryTest<TrainingRepository> 
     @Test
     void findByTraineeCriteria_onlyUsername_returnsAllTraineeTrainings() {
         var filter = TraineeTrainingSearchFilter.builder().username("Abdul.Hariton").build();
+        var spec = TrainingSpecifications.forTraineeCriteria(filter);
 
-        List<Training> result = repository.findAll(TrainingSpecifications.forTraineeCriteria(filter));
+        List<Training> result = repository.findAll(spec);
 
         assertThat(result)
                 .hasSize(2)
@@ -84,11 +93,12 @@ class TrainingRepositoryTest extends AbstractRepositoryTest<TrainingRepository> 
                 .username("Abdul.Hariton")
                 .fromDate(LocalDate.of(2024, 8, 1))
                 .build();
+        var spec = TrainingSpecifications.forTraineeCriteria(filter);
 
-        List<Training> result = repository.findAll(TrainingSpecifications.forTraineeCriteria(filter));
+        List<Training> result = repository.findAll(spec);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getName()).isEqualTo("Advanced Boxing");
+        assertThat(result.iterator().next().getName()).isEqualTo("Advanced Boxing");
     }
 
     @Test
@@ -97,8 +107,9 @@ class TrainingRepositoryTest extends AbstractRepositoryTest<TrainingRepository> 
                 .username("Abdul.Hariton")
                 .trainingTypeName("Boxing")
                 .build();
+        var spec = TrainingSpecifications.forTraineeCriteria(filter);
 
-        List<Training> result = repository.findAll(TrainingSpecifications.forTraineeCriteria(filter));
+        List<Training> result = repository.findAll(spec);
 
         assertThat(result).hasSize(2)
                 .allMatch(t -> t.getTrainingType().getTrainingTypeName().equals("Boxing"));
@@ -110,14 +121,22 @@ class TrainingRepositoryTest extends AbstractRepositoryTest<TrainingRepository> 
                 .username("Abdul.Hariton")
                 .trainingTypeName("Yoga")
                 .build();
+        var spec = TrainingSpecifications.forTraineeCriteria(filter);
 
-        assertThat(repository.findAll(TrainingSpecifications.forTraineeCriteria(filter))).isEmpty();
+        List<Training> result = repository.findAll(spec);
+
+        assertThat(result).isEmpty();
     }
 
     @ParameterizedTest
     @MethodSource("traineeFilterProvider")
     void findByTraineeCriteria_parametrized_returnsExpectedCount(TraineeTrainingSearchFilter filter, int expectedCount) {
-        assertThat(repository.findAll(TrainingSpecifications.forTraineeCriteria(filter))).hasSize(expectedCount);
+        var spec = TrainingSpecifications.forTraineeCriteria(filter);
+
+        List<Training> result = repository.findAll(spec);
+
+        assertThat(result).hasSize(expectedCount);
+        assertThat(result).allMatch(t -> t.getTrainee().getUser().getUsername().equals(filter.getUsername()));
     }
 
     static Stream<Arguments> traineeFilterProvider() {
@@ -132,8 +151,9 @@ class TrainingRepositoryTest extends AbstractRepositoryTest<TrainingRepository> 
     @Test
     void findByTrainerCriteria_onlyUsername_returnsAllTrainerTrainings() {
         var filter = TrainerTrainingSearchFilter.builder().username("Mike.Tyson").build();
+        var spec = TrainingSpecifications.forTrainerCriteria(filter);
 
-        List<Training> result = repository.findAll(TrainingSpecifications.forTrainerCriteria(filter));
+        List<Training> result = repository.findAll(spec);
 
         assertThat(result).hasSize(2)
                 .allMatch(t -> t.getTrainer().getUser().getUsername().equals("Mike.Tyson"));
@@ -145,8 +165,9 @@ class TrainingRepositoryTest extends AbstractRepositoryTest<TrainingRepository> 
                 .username("Mike.Tyson")
                 .traineeFullName("Abdul Hariton")
                 .build();
+        var spec = TrainingSpecifications.forTrainerCriteria(filter);
 
-        List<Training> result = repository.findAll(TrainingSpecifications.forTrainerCriteria(filter));
+        List<Training> result = repository.findAll(spec);
 
         assertThat(result).hasSize(2)
                 .allMatch(t -> t.getTrainee().getUser().getUsername().equals("Abdul.Hariton"));
@@ -155,7 +176,12 @@ class TrainingRepositoryTest extends AbstractRepositoryTest<TrainingRepository> 
     @ParameterizedTest
     @MethodSource("trainerFilterProvider")
     void findByTrainerCriteria_parametrized_returnsExpectedCount(TrainerTrainingSearchFilter filter, int expectedCount) {
-        assertThat(repository.findAll(TrainingSpecifications.forTrainerCriteria(filter))).hasSize(expectedCount);
+        var spec = TrainingSpecifications.forTrainerCriteria(filter);
+
+        List<Training> result = repository.findAll(spec);
+
+        assertThat(result).hasSize(expectedCount);
+        assertThat(result).allMatch(t -> t.getTrainer().getUser().getUsername().equals(filter.getUsername()));
     }
 
     static Stream<Arguments> trainerFilterProvider() {

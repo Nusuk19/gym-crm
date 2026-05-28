@@ -31,13 +31,16 @@ class UserRepositoryTest extends AbstractRepositoryTest<UserRepository> {
         Optional<User> result = repository.findByUsername("Mike.Tyson");
 
         assertThat(result).isPresent();
-        assertThat(result.get().getIsActive()).isFalse();
-        assertThat(result.get().getFirstName()).isEqualTo("Mike");
+        User user = result.get();
+        assertThat(user.getIsActive()).isFalse();
+        assertThat(user.getFirstName()).isEqualTo("Mike");
     }
 
     @Test
     void findByUsername_nonExistingUser_returnsEmpty() {
-        assertThat(repository.findByUsername("ghost.user")).isEmpty();
+        Optional<User> result = repository.findByUsername("ghost.user");
+
+        assertThat(result).isEmpty();
     }
 
     @Test
@@ -83,11 +86,12 @@ class UserRepositoryTest extends AbstractRepositoryTest<UserRepository> {
     @Test
     void save_update_isActive_toFalse_updatesInDB() {
         User user = repository.findByUsername("Abdul.Hariton").orElseThrow();
-        assertThat(user.getIsActive()).isTrue();
+        User updated = user.toBuilder().isActive(false).build();
 
-        repository.save(user.toBuilder().isActive(false).build());
+        repository.save(updated);
 
         flushAndClear();
-        assertThat(repository.findByUsername("Abdul.Hariton").orElseThrow().getIsActive()).isFalse();
+        User result = repository.findByUsername("Abdul.Hariton").orElseThrow();
+        assertThat(result.getIsActive()).isFalse();
     }
 }

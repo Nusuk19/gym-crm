@@ -70,7 +70,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -204,7 +203,7 @@ class GymFacadeTest {
 
         TraineeCreateResponse actual = facade.createTrainee(request);
 
-        assertEquals(expected, actual);
+        assertThat(actual).isEqualTo(expected);
         verify(traineeRestMapper).toCreateRequest(request);
         verify(coreValidator).validate(internalRequest);
         verify(traineeMapper).toEntity(internalRequest);
@@ -218,7 +217,6 @@ class GymFacadeTest {
         TraineeCreateRequest request = new TraineeCreateRequest();
         request.setFirstName("Yordan");
         request.setLastName("Green");
-
         CreateTraineeRequest internalRequest = CreateTraineeRequest.builder()
                 .firstName("Yordan")
                 .lastName("Green")
@@ -232,7 +230,6 @@ class GymFacadeTest {
                 .isInstanceOf(EntityValidationException.class)
                 .hasMessageContaining("Yordan.Green")
                 .hasMessageContaining("already registered as a trainer");
-
         verify(traineeService, never()).create(any());
     }
 
@@ -246,7 +243,7 @@ class GymFacadeTest {
 
         TraineeGetResponse actual = facade.getTraineeByUsername(USERNAME);
 
-        assertEquals(expected, actual);
+        assertThat(actual).isEqualTo(expected);
         verify(traineeService).findByUsername(USERNAME);
         verify(traineeMapper).toProfileResponse(trainee);
         verify(traineeRestMapper).toGetResponse(traineeProfileResponse);
@@ -273,7 +270,7 @@ class GymFacadeTest {
 
         TraineeUpdateResponse actual = facade.updateTrainee(USERNAME, request);
 
-        assertEquals(expected, actual);
+        assertThat(actual).isEqualTo(expected);
         verify(traineeRestMapper).toUpdateRequest(USERNAME, request);
         verify(coreValidator).validate(internalRequest);
         verify(traineeService).update(trainee);
@@ -299,7 +296,7 @@ class GymFacadeTest {
 
         TraineeAssignedTrainersUpdateResponse actual = facade.updateTraineeTrainers(USERNAME, request);
 
-        assertEquals(expected, actual);
+        assertThat(actual).isEqualTo(expected);
         verify(traineeService).updateTrainers(USERNAME, request.getTrainerUsernames());
     }
 
@@ -351,7 +348,7 @@ class GymFacadeTest {
 
         TrainerCreateResponse actual = facade.createTrainer(restRequest);
 
-        assertEquals(expected, actual);
+        assertThat(actual).isEqualTo(expected);
         verify(trainerRestMapper).toCreateRequest(restRequest);
         verify(coreValidator).validate(internalRequest);
         verify(trainerMapper).toEntity(internalRequest);
@@ -366,7 +363,6 @@ class GymFacadeTest {
         request.setFirstName("Yordan");
         request.setLastName("Green");
         request.setSpecialization("BOXING");
-
         CreateTrainerRequest internalRequest = CreateTrainerRequest.builder()
                 .firstName("Yordan")
                 .lastName("Green")
@@ -381,7 +377,6 @@ class GymFacadeTest {
                 .isInstanceOf(EntityValidationException.class)
                 .hasMessageContaining("Yordan.Green")
                 .hasMessageContaining("already registered as a trainee");
-
         verify(trainerService, never()).create(any(), any());
     }
 
@@ -395,7 +390,7 @@ class GymFacadeTest {
 
         TrainerGetResponse actual = facade.getTrainerByUsername(TRAINER_USERNAME);
 
-        assertEquals(expected, actual);
+        assertThat(actual).isEqualTo(expected);
         verify(trainerService).findByUsername(TRAINER_USERNAME);
         verify(trainerMapper).toProfileResponse(trainer);
         verify(trainerRestMapper).toGetResponse(trainerProfileResponse);
@@ -408,7 +403,6 @@ class GymFacadeTest {
         assertThatThrownBy(() -> facade.getTrainerByUsername(TRAINER_USERNAME))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining(TRAINER_USERNAME);
-
         verify(trainerService).findByUsername(TRAINER_USERNAME);
     }
 
@@ -431,7 +425,7 @@ class GymFacadeTest {
 
         TrainerUpdateResponse actual = facade.updateTrainer(TRAINER_USERNAME, restRequest);
 
-        assertEquals(expected, actual);
+        assertThat(actual).isEqualTo(expected);
         verify(trainerRestMapper).toUpdateRequest(TRAINER_USERNAME, restRequest);
         verify(coreValidator).validate(internalRequest);
         verify(trainerService).update(trainer);
@@ -482,7 +476,8 @@ class GymFacadeTest {
 
         List<AssignedTrainerResponse> actual = facade.findAllTrainersNotAssignedToTrainee(USERNAME);
 
-        assertEquals(1, actual.size());
+        assertThat(actual).hasSize(1);
+        assertThat(actual.iterator().next()).isEqualTo(assigned);
         verify(trainerService).findAllNotAssignedToTrainee(USERNAME);
     }
 
@@ -520,7 +515,8 @@ class GymFacadeTest {
         List<GetTraineeTrainingResponse> actual = facade.findTrainingsByTraineeCriteria(
                 USERNAME, null, null, null, null);
 
-        assertEquals(1, actual.size());
+        assertThat(actual).hasSize(1);
+        assertThat(actual.iterator().next()).isEqualTo(response);
         verify(trainingService).findByTraineeCriteria(any());
     }
 
@@ -537,9 +533,8 @@ class GymFacadeTest {
 
         List<GetTrainerTrainingResponse> actual = facade.findTrainingsByTrainerCriteria(TRAINER_USERNAME, from, to, traineeName);
 
-        assertEquals(1, actual.size());
-        assertEquals(restResponse, actual.get(0));
-
+        assertThat(actual).hasSize(1);
+        assertThat(actual.iterator().next()).isEqualTo(restResponse);
         ArgumentCaptor<TrainerTrainingSearchFilter> captor = ArgumentCaptor.forClass(TrainerTrainingSearchFilter.class);
         verify(trainingService).findByTrainerCriteria(captor.capture());
         TrainerTrainingSearchFilter captured = captor.getValue();
@@ -560,7 +555,8 @@ class GymFacadeTest {
         List<GetTrainerTrainingResponse> actual =
                 facade.findTrainingsByTrainerCriteria(TRAINER_USERNAME, null, null, null);
 
-        assertEquals(1, actual.size());
+        assertThat(actual).hasSize(1);
+        assertThat(actual.iterator().next()).isEqualTo(restResponse);
         ArgumentCaptor<TrainerTrainingSearchFilter> captor = ArgumentCaptor.forClass(TrainerTrainingSearchFilter.class);
         verify(trainingService).findByTrainerCriteria(captor.capture());
         assertThat(captor.getValue().getFromDate()).isNull();

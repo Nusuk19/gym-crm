@@ -92,12 +92,16 @@ class TrainerRepositoryTest extends AbstractRepositoryTest<TrainerRepository> {
 
     @Test
     void existsByUserUsername_existing_returnsTrue() {
-        assertThat(repository.existsByUserUsername("Mike.Tyson")).isTrue();
+        boolean exists = repository.existsByUserUsername("Mike.Tyson");
+
+        assertThat(exists).isTrue();
     }
 
     @Test
     void existsByUserUsername_nonExisting_returnsFalse() {
-        assertThat(repository.existsByUserUsername("ghost.user")).isFalse();
+        boolean exists = repository.existsByUserUsername("ghost.user");
+
+        assertThat(exists).isFalse();
     }
 
     private Trainer buildTrainer(String firstName, String lastName, String username) {

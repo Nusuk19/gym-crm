@@ -38,17 +38,17 @@ class TraineeRepositoryTest extends AbstractRepositoryTest<TraineeRepository> {
         List<Trainee> result = repository.findAllWithUser();
 
         assertThat(result).hasSize(1);
-        assertThat(result.getFirst().getUser().getUsername()).isEqualTo("Abdul.Hariton");
+        assertThat(result.iterator().next().getUser().getUsername()).isEqualTo("Abdul.Hariton");
     }
 
     @Test
     void save_newTrainee_persistsAndReturnsWithId() {
         Trainee newTrainee = buildTrainee("Anna", "Koval", "Anna.Koval");
-
         Trainee saved = repository.save(newTrainee);
 
         flushAndClear();
-        Optional<Trainee> fromDb = repository.findById(saved.getId());
+        Long savedId = saved.getId();
+        Optional<Trainee> fromDb = repository.findById(savedId);
         assertThat(fromDb).isPresent();
         assertThat(fromDb.get().getUser().getUsername()).isEqualTo("Anna.Koval");
         assertThat(fromDb.get().getAddress()).isEqualTo("Lviv, Ukraine");
@@ -73,8 +73,10 @@ class TraineeRepositoryTest extends AbstractRepositoryTest<TraineeRepository> {
         repository.deleteById(id);
 
         flushAndClear();
-        assertThat(repository.findById(id)).isEmpty();
-        assertThat(repository.findAll()).isEmpty();
+        Optional<Trainee> deleted = repository.findById(id);
+        List<Trainee> all = repository.findAll();
+        assertThat(deleted).isEmpty();
+        assertThat(all).isEmpty();
     }
 
     @Test
@@ -82,17 +84,21 @@ class TraineeRepositoryTest extends AbstractRepositoryTest<TraineeRepository> {
         Trainee trainee = repository.findByUserUsername("Abdul.Hariton").orElseThrow();
 
         assertThat(trainee.getTrainers()).hasSize(1);
-        assertThat(trainee.getTrainers().getFirst().getUser().getUsername()).isEqualTo("Mike.Tyson");
+        assertThat(trainee.getTrainers().iterator().next().getUser().getUsername()).isEqualTo("Mike.Tyson");
     }
 
     @Test
     void existsByUserUsername_existingUser_returnsTrue() {
-        assertThat(repository.existsByUserUsername("Abdul.Hariton")).isTrue();
+        boolean exists = repository.existsByUserUsername("Abdul.Hariton");
+
+        assertThat(exists).isTrue();
     }
 
     @Test
     void existsByUserUsername_nonExistingUser_returnsFalse() {
-        assertThat(repository.existsByUserUsername("ghost.user")).isFalse();
+        boolean exists = repository.existsByUserUsername("ghost.user");
+
+        assertThat(exists).isFalse();
     }
 
     private Trainee buildTrainee(String firstName, String lastName, String username) {

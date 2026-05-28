@@ -23,13 +23,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -74,10 +70,10 @@ class TrainerServiceImplTest {
 
         Trainer actual = service.create(trainer, SPECIALIZATION);
 
-        assertEquals("Mike.Tyson", actual.getUser().getUsername());
-        assertEquals("hashedPass", actual.getUser().getPassword());
-        assertNotEquals("rawPass123", actual.getUser().getPassword());
-        assertEquals(specialization, actual.getSpecialization());
+        assertThat(actual.getUser().getUsername()).isEqualTo("Mike.Tyson");
+        assertThat(actual.getUser().getPassword()).isEqualTo("hashedPass");
+        assertThat(actual.getUser().getPassword()).isNotEqualTo("rawPass123");
+        assertThat(actual.getSpecialization()).isEqualTo(specialization);
         verify(validator, times(2)).validateTrainer(any(Trainer.class));
         verify(trainingTypeRepository).findByTrainingTypeName(SPECIALIZATION);
         verify(userProfileService).generateUsername("Mike", "Tyson");
@@ -161,8 +157,8 @@ class TrainerServiceImplTest {
 
         Optional<Trainer> actual = service.findByUsername(USERNAME);
 
-        assertTrue(actual.isPresent());
-        assertEquals(trainer, actual.get());
+        assertThat(actual).isPresent();
+        assertThat(actual.get()).isEqualTo(trainer);
         verify(validator).requireNonBlank(USERNAME, "Username cannot be blank");
         verify(trainerRepository).findByUserUsername(USERNAME);
     }
@@ -173,7 +169,7 @@ class TrainerServiceImplTest {
 
         Optional<Trainer> actual = service.findByUsername(USERNAME);
 
-        assertFalse(actual.isPresent());
+        assertThat(actual).isEmpty();
         verify(trainerRepository).findByUserUsername(USERNAME);
     }
 
@@ -193,7 +189,7 @@ class TrainerServiceImplTest {
 
         List<Trainer> actual = service.findAll();
 
-        assertEquals(List.of(trainer), actual);
+        assertThat(actual).containsExactly(trainer);
         verify(trainerRepository).findAll();
     }
 
@@ -203,7 +199,7 @@ class TrainerServiceImplTest {
 
         List<Trainer> actual = service.findAll();
 
-        assertTrue(actual.isEmpty());
+        assertThat(actual).isEmpty();
         verify(trainerRepository).findAll();
     }
 
@@ -215,7 +211,7 @@ class TrainerServiceImplTest {
 
         List<Trainer> actual = service.findAllNotAssignedToTrainee("Abdul.Hariton");
 
-        assertThat(actual.get(0)).isEqualTo(trainer);
+        assertThat(actual.iterator().next()).isEqualTo(trainer);
         verify(validator).requireNonBlank("Abdul.Hariton", "Username cannot be blank");
         verify(traineeRepository).findByUserUsername("Abdul.Hariton");
         verify(trainerRepository).findAllActiveNotAssignedToTrainee("Abdul.Hariton");

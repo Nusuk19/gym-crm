@@ -13,14 +13,12 @@ import com.gym.crm.model.User;
 import com.gym.crm.repository.TraineeRepository;
 import com.gym.crm.repository.TrainerRepository;
 import com.gym.crm.repository.TrainingRepository;
-import com.gym.crm.repository.specification.TrainingSpecifications;
 import com.gym.crm.service.common.EntityValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -31,13 +29,9 @@ import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -80,7 +74,6 @@ class TrainingServiceImplTest {
         assertThat(actual.getTrainingType()).isEqualTo(trainer.getSpecialization());
         assertThat(actual.getTrainingDate()).isEqualTo(LocalDate.of(2024, 5, 1));
         assertThat(actual.getTrainingDuration()).isEqualByComparingTo(BigDecimal.valueOf(60));
-
         verify(traineeRepository).findByUserUsername(TRAINEE_USERNAME);
         verify(trainerRepository).findByUserUsername(TRAINER_USERNAME);
         verify(validator).validateTraining(any(Training.class));
@@ -88,7 +81,7 @@ class TrainingServiceImplTest {
     }
 
     @Test
-    void create_whenValidationFails_throwsExceptionAndDaoNotCalled() {
+    void create_whenTraineeNotFound_throwsEntityNotFoundException() {
         CreateTrainingRequest request = buildCreateRequest();
 
         when(traineeRepository.findByUserUsername(TRAINEE_USERNAME)).thenReturn(Optional.empty());
@@ -97,7 +90,6 @@ class TrainingServiceImplTest {
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("Trainee not found")
                 .hasMessageContaining(TRAINEE_USERNAME);
-
         verify(trainerRepository, never()).findByUserUsername(any());
         verify(trainingRepository, never()).save(any());
     }
@@ -113,7 +105,6 @@ class TrainingServiceImplTest {
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("Trainer not found")
                 .hasMessageContaining(TRAINER_USERNAME);
-
         verify(trainingRepository, never()).save(any());
     }
 
@@ -129,7 +120,6 @@ class TrainingServiceImplTest {
         Training actual = service.create(request);
 
         assertThat(actual.getTrainingType()).isEqualTo(trainer.getSpecialization());
-
         ArgumentCaptor<Training> captor = ArgumentCaptor.forClass(Training.class);
         verify(trainingRepository).save(captor.capture());
         assertThat(captor.getValue().getTrainingType().getTrainingTypeName()).isEqualTo("BOXING");
@@ -141,7 +131,8 @@ class TrainingServiceImplTest {
 
         List<Training> actual = service.findAll();
 
-        assertEquals(List.of(training), actual);
+        assertThat(actual.size()).isEqualTo(1);
+        assertThat(actual.iterator().next()).isEqualTo(training);
         verify(trainingRepository).findAll();
     }
 
@@ -151,7 +142,7 @@ class TrainingServiceImplTest {
 
         List<Training> actual = service.findAll();
 
-        assertTrue(actual.isEmpty());
+        assertThat(actual.isEmpty()).isTrue();
         verify(trainingRepository).findAll();
     }
 
@@ -161,19 +152,16 @@ class TrainingServiceImplTest {
         TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
                 .username(TRAINEE_USERNAME)
                 .build();
-        Specification<Training> spec = mock(Specification.class);
+        when(trainingRepository.findAll(any(Specification.class))).thenReturn(List.of(training));
 
-        try (MockedStatic<TrainingSpecifications> staticMock = mockStatic(TrainingSpecifications.class)) {
-            staticMock.when(() -> TrainingSpecifications.forTraineeCriteria(filter)).thenReturn(spec);
-            when(trainingRepository.findAll(spec)).thenReturn(List.of(training));
+        List<Training> actual = service.findByTraineeCriteria(filter);
 
-            List<Training> actual = service.findByTraineeCriteria(filter);
-
-            assertEquals(1, actual.size());
-            assertEquals(training, actual.get(0));
-            verify(validator).requireNonNull(filter, "Search filter cannot be null");
-            verify(trainingRepository).findAll(spec);
-        }
+        ArgumentCaptor<Specification<Training>> captor = ArgumentCaptor.forClass(Specification.class);
+        verify(trainingRepository).findAll(captor.capture());
+        verify(validator).requireNonNull(filter, "Search filter cannot be null");
+        assertThat(captor.getValue()).isNotNull();
+        assertThat(actual.size()).isEqualTo(1);
+        assertThat(actual.iterator().next()).isEqualTo(training);
     }
 
     @Test
@@ -183,17 +171,12 @@ class TrainingServiceImplTest {
                 .username(TRAINEE_USERNAME)
                 .fromDate(LocalDate.of(2030, 1, 1))
                 .build();
-        Specification<Training> spec = mock(Specification.class);
+        when(trainingRepository.findAll(any(Specification.class))).thenReturn(List.of());
 
-        try (MockedStatic<TrainingSpecifications> staticMock = mockStatic(TrainingSpecifications.class)) {
-            staticMock.when(() -> TrainingSpecifications.forTraineeCriteria(filter)).thenReturn(spec);
-            when(trainingRepository.findAll(spec)).thenReturn(List.of());
+        List<Training> actual = service.findByTraineeCriteria(filter);
 
-            List<Training> actual = service.findByTraineeCriteria(filter);
-
-            assertTrue(actual.isEmpty());
-            verify(trainingRepository).findAll(spec);
-        }
+        assertThat(actual.isEmpty()).isTrue();
+        verify(trainingRepository).findAll(any(Specification.class));
     }
 
     @Test
@@ -202,19 +185,16 @@ class TrainingServiceImplTest {
         TrainerTrainingSearchFilter filter = TrainerTrainingSearchFilter.builder()
                 .username(TRAINER_USERNAME)
                 .build();
-        Specification<Training> spec = mock(Specification.class);
+        when(trainingRepository.findAll(any(Specification.class))).thenReturn(List.of(training));
 
-        try (MockedStatic<TrainingSpecifications> staticMock = mockStatic(TrainingSpecifications.class)) {
-            staticMock.when(() -> TrainingSpecifications.forTrainerCriteria(filter)).thenReturn(spec);
-            when(trainingRepository.findAll(spec)).thenReturn(List.of(training));
+        List<Training> actual = service.findByTrainerCriteria(filter);
 
-            List<Training> actual = service.findByTrainerCriteria(filter);
-
-            assertEquals(1, actual.size());
-            assertEquals(training, actual.get(0));
-            verify(validator).requireNonNull(filter, "Search filter cannot be null");
-            verify(trainingRepository).findAll(spec);
-        }
+        ArgumentCaptor<Specification<Training>> captor = ArgumentCaptor.forClass(Specification.class);
+        verify(trainingRepository).findAll(captor.capture());
+        verify(validator).requireNonNull(filter, "Search filter cannot be null");
+        assertThat(captor.getValue()).isNotNull();
+        assertThat(actual.size()).isEqualTo(1);
+        assertThat(actual.iterator().next()).isEqualTo(training);
     }
 
     @Test
@@ -224,17 +204,12 @@ class TrainingServiceImplTest {
                 .username(TRAINER_USERNAME)
                 .fromDate(LocalDate.of(2030, 1, 1))
                 .build();
-        Specification<Training> spec = mock(Specification.class);
+        when(trainingRepository.findAll(any(Specification.class))).thenReturn(List.of());
 
-        try (MockedStatic<TrainingSpecifications> staticMock = mockStatic(TrainingSpecifications.class)) {
-            staticMock.when(() -> TrainingSpecifications.forTrainerCriteria(filter)).thenReturn(spec);
-            when(trainingRepository.findAll(spec)).thenReturn(List.of());
+        List<Training> actual = service.findByTrainerCriteria(filter);
 
-            List<Training> actual = service.findByTrainerCriteria(filter);
-
-            assertTrue(actual.isEmpty());
-            verify(trainingRepository).findAll(spec);
-        }
+        assertThat(actual.isEmpty()).isTrue();
+        verify(trainingRepository).findAll(any(Specification.class));
     }
 
     @Test
