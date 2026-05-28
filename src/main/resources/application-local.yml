@@ -3,7 +3,6 @@ spring:
     url: jdbc:postgresql://localhost:5432/gym
     username: gym
     password: gym
-
   jpa:
     show-sql: true
     properties:

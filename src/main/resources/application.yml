@@ -1,20 +1,16 @@
 spring:
   application:
     name: gym-crm
-
   profiles:
     active: local
-
   datasource:
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-
   liquibase:
     change-log: classpath:db/changelog-master.xml
 
