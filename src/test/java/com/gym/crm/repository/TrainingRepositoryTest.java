@@ -75,7 +75,7 @@ class TrainingRepositoryTest extends AbstractRepositoryTest<TrainingRepository> 
 
         assertThat(result)
                 .hasSize(2)
-                .allMatch(t -> t.getTrainee().getUser().getUsername().equals("Abdul.Haritoon"));
+                .allMatch(t -> t.getTrainee().getUser().getUsername().equals("Abdul.Hariton"));
     }
 
     @Test
