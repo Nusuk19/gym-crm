@@ -7,8 +7,16 @@ import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
 @ActiveProfiles("test")
-public abstract class AbstractRepositoryTest {
+public abstract class AbstractRepositoryTest<T> {
+
+    @Autowired
+    T repository;
 
     @Autowired
     protected TestEntityManager em;
+
+    protected void flushAndClear() {
+        em.flush();
+        em.clear();
+    }
 }

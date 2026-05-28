@@ -14,11 +14,11 @@ import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TE
 class UserRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired
-    private UserRepository userRepository;
+    private UserRepository repository;
 
     @Test
     void findByUsername_existingUser_returnsUserWithAllFields() {
-        Optional<User> result = userRepository.findByUsername("Abdul.Hariton");
+        Optional<User> result = repository.findByUsername("Abdul.Hariton");
 
         assertThat(result).isPresent();
         User user = result.get();
@@ -32,7 +32,7 @@ class UserRepositoryTest extends AbstractRepositoryTest {
 
     @Test
     void findByUsername_inactiveUser_returnsUserWithCorrectActiveFlag() {
-        Optional<User> result = userRepository.findByUsername("Mike.Tyson");
+        Optional<User> result = repository.findByUsername("Mike.Tyson");
 
         assertThat(result).isPresent();
         assertThat(result.get().getIsActive()).isFalse();
@@ -41,19 +41,19 @@ class UserRepositoryTest extends AbstractRepositoryTest {
 
     @Test
     void findByUsername_nonExistingUser_returnsEmpty() {
-        assertThat(userRepository.findByUsername("ghost.user")).isEmpty();
+        assertThat(repository.findByUsername("ghost.user")).isEmpty();
     }
 
     @Test
     void save_update_firstName_updatesInDB() {
-        User user = userRepository.findByUsername("Abdul.Hariton").orElseThrow();
+        User user = repository.findByUsername("Abdul.Hariton").orElseThrow();
         User updated = user.toBuilder().firstName("UpdatedName").build();
 
-        userRepository.save(updated);
+        repository.save(updated);
         em.flush();
         em.clear();
 
-        User result = userRepository.findByUsername("Abdul.Hariton").orElseThrow();
+        User result = repository.findByUsername("Abdul.Hariton").orElseThrow();
         assertThat(result.getFirstName()).isEqualTo("UpdatedName");
         assertThat(result.getLastName()).isEqualTo("Hariton");
         assertThat(result.getUsername()).isEqualTo("Abdul.Hariton");
@@ -62,7 +62,7 @@ class UserRepositoryTest extends AbstractRepositoryTest {
 
     @Test
     void save_update_allFields_updatesAllInDB() {
-        User user = userRepository.findByUsername("Abdul.Hariton").orElseThrow();
+        User user = repository.findByUsername("Abdul.Hariton").orElseThrow();
         User updated = user.toBuilder()
                 .firstName("NewFirst")
                 .lastName("NewLast")
@@ -70,7 +70,7 @@ class UserRepositoryTest extends AbstractRepositoryTest {
                 .isActive(false)
                 .build();
 
-        User result = userRepository.save(updated);
+        User result = repository.save(updated);
         em.flush();
         em.clear();
 
@@ -80,7 +80,7 @@ class UserRepositoryTest extends AbstractRepositoryTest {
         assertThat(result.getIsActive()).isFalse();
         assertThat(result.getUsername()).isEqualTo("Abdul.Hariton");
 
-        User fromDb = userRepository.findByUsername("Abdul.Hariton").orElseThrow();
+        User fromDb = repository.findByUsername("Abdul.Hariton").orElseThrow();
         assertThat(fromDb.getFirstName()).isEqualTo("NewFirst");
         assertThat(fromDb.getPassword()).isEqualTo("newPassword");
         assertThat(fromDb.getIsActive()).isFalse();
@@ -88,13 +88,13 @@ class UserRepositoryTest extends AbstractRepositoryTest {
 
     @Test
     void save_update_isActive_toFalse_updatesInDB() {
-        User user = userRepository.findByUsername("Abdul.Hariton").orElseThrow();
+        User user = repository.findByUsername("Abdul.Hariton").orElseThrow();
         assertThat(user.getIsActive()).isTrue();
 
-        userRepository.save(user.toBuilder().isActive(false).build());
+        repository.save(user.toBuilder().isActive(false).build());
         em.flush();
         em.clear();
 
-        assertThat(userRepository.findByUsername("Abdul.Hariton").orElseThrow().getIsActive()).isFalse();
+        assertThat(repository.findByUsername("Abdul.Hariton").orElseThrow().getIsActive()).isFalse();
     }
 }

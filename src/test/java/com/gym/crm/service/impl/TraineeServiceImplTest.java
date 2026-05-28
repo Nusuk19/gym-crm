@@ -43,7 +43,6 @@ import static org.mockito.Mockito.when;
 class TraineeServiceImplTest {
 
     private static final Long ID = 1L;
-    private static final Long NON_EXISTING_ID = 99L;
     private static final String USERNAME = "Abdul.Hariton";
 
     private final Trainee trainee = buildTrainee();

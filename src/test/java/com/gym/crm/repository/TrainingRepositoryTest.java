@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
 
 import java.math.BigDecimal;
@@ -24,21 +23,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
 
 @Sql(scripts = "/datasets/training-insert.sql", executionPhase = BEFORE_TEST_METHOD)
-class TrainingRepositoryTest extends AbstractRepositoryTest {
-
-    @Autowired
-    private TrainingRepository trainingRepository;
+class TrainingRepositoryTest extends AbstractRepositoryTest<TrainingRepository> {
 
     @Test
     void findAllWithAssociations_returnsAllTrainings() {
-        assertThat(trainingRepository.findAllWithAssociations()).hasSize(3);
+        assertThat(repository.findAllWithAssociations()).hasSize(3);
     }
 
     @Test
     void findById_existingId_returnsTrainingWithAllFields() {
         Long id = getTrainingId("Boxing Basics");
 
-        Optional<Training> result = trainingRepository.findById(id);
+        Optional<Training> result = repository.findById(id);
 
         assertThat(result).isPresent();
         Training training = result.get();
@@ -52,19 +48,17 @@ class TrainingRepositoryTest extends AbstractRepositoryTest {
 
     @Test
     void findById_nonExistingId_returnsEmpty() {
-        assertThat(trainingRepository.findById(999L)).isEmpty();
+        assertThat(repository.findById(999L)).isEmpty();
     }
 
     @Test
     void save_newTraining_persistsAllFields() {
-        Training saved = trainingRepository.save(buildTraining(
+        Training saved = repository.save(buildTraining(
                 "Power Boxing", LocalDate.of(2024, 9, 1), new BigDecimal("75"),
                 "Abdul.Hariton", "Mike.Tyson", "Boxing"));
-        em.flush();
-        em.clear();
 
-        Optional<Training> fromDb = trainingRepository.findById(saved.getId());
-
+        flushAndClear();
+        Optional<Training> fromDb = repository.findById(saved.getId());
         assertThat(fromDb).isPresent();
         assertThat(fromDb.get().getName()).isEqualTo("Power Boxing");
         assertThat(fromDb.get().getTrainingDuration()).isEqualByComparingTo(new BigDecimal("75"));
@@ -77,7 +71,7 @@ class TrainingRepositoryTest extends AbstractRepositoryTest {
     void findByTraineeCriteria_onlyUsername_returnsAllTraineeTrainings() {
         var filter = TraineeTrainingSearchFilter.builder().username("Abdul.Hariton").build();
 
-        List<Training> result = trainingRepository.findAll(TrainingSpecifications.forTraineeCriteria(filter));
+        List<Training> result = repository.findAll(TrainingSpecifications.forTraineeCriteria(filter));
 
         assertThat(result).hasSize(2);
         assertThat(result).allMatch(t -> t.getTrainee().getUser().getUsername().equals("Abdul.Hariton"));
@@ -90,7 +84,7 @@ class TrainingRepositoryTest extends AbstractRepositoryTest {
                 .fromDate(LocalDate.of(2024, 8, 1))
                 .build();
 
-        List<Training> result = trainingRepository.findAll(TrainingSpecifications.forTraineeCriteria(filter));
+        List<Training> result = repository.findAll(TrainingSpecifications.forTraineeCriteria(filter));
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getName()).isEqualTo("Advanced Boxing");
@@ -103,7 +97,7 @@ class TrainingRepositoryTest extends AbstractRepositoryTest {
                 .trainingTypeName("Boxing")
                 .build();
 
-        List<Training> result = trainingRepository.findAll(TrainingSpecifications.forTraineeCriteria(filter));
+        List<Training> result = repository.findAll(TrainingSpecifications.forTraineeCriteria(filter));
 
         assertThat(result).hasSize(2)
                 .allMatch(t -> t.getTrainingType().getTrainingTypeName().equals("Boxing"));
@@ -116,13 +110,13 @@ class TrainingRepositoryTest extends AbstractRepositoryTest {
                 .trainingTypeName("Yoga")
                 .build();
 
-        assertThat(trainingRepository.findAll(TrainingSpecifications.forTraineeCriteria(filter))).isEmpty();
+        assertThat(repository.findAll(TrainingSpecifications.forTraineeCriteria(filter))).isEmpty();
     }
 
     @ParameterizedTest
     @MethodSource("traineeFilterProvider")
     void findByTraineeCriteria_parametrized_returnsExpectedCount(TraineeTrainingSearchFilter filter, int expectedCount) {
-        assertThat(trainingRepository.findAll(TrainingSpecifications.forTraineeCriteria(filter))).hasSize(expectedCount);
+        assertThat(repository.findAll(TrainingSpecifications.forTraineeCriteria(filter))).hasSize(expectedCount);
     }
 
     static Stream<Arguments> traineeFilterProvider() {
@@ -138,7 +132,7 @@ class TrainingRepositoryTest extends AbstractRepositoryTest {
     void findByTrainerCriteria_onlyUsername_returnsAllTrainerTrainings() {
         var filter = TrainerTrainingSearchFilter.builder().username("Mike.Tyson").build();
 
-        List<Training> result = trainingRepository.findAll(TrainingSpecifications.forTrainerCriteria(filter));
+        List<Training> result = repository.findAll(TrainingSpecifications.forTrainerCriteria(filter));
 
         assertThat(result).hasSize(2)
                 .allMatch(t -> t.getTrainer().getUser().getUsername().equals("Mike.Tyson"));
@@ -151,7 +145,7 @@ class TrainingRepositoryTest extends AbstractRepositoryTest {
                 .traineeFullName("Abdul Hariton")
                 .build();
 
-        List<Training> result = trainingRepository.findAll(TrainingSpecifications.forTrainerCriteria(filter));
+        List<Training> result = repository.findAll(TrainingSpecifications.forTrainerCriteria(filter));
 
         assertThat(result).hasSize(2)
                 .allMatch(t -> t.getTrainee().getUser().getUsername().equals("Abdul.Hariton"));
@@ -160,7 +154,7 @@ class TrainingRepositoryTest extends AbstractRepositoryTest {
     @ParameterizedTest
     @MethodSource("trainerFilterProvider")
     void findByTrainerCriteria_parametrized_returnsExpectedCount(TrainerTrainingSearchFilter filter, int expectedCount) {
-        assertThat(trainingRepository.findAll(TrainingSpecifications.forTrainerCriteria(filter))).hasSize(expectedCount);
+        assertThat(repository.findAll(TrainingSpecifications.forTrainerCriteria(filter))).hasSize(expectedCount);
     }
 
     static Stream<Arguments> trainerFilterProvider() {
