@@ -2,7 +2,6 @@ package com.gym.crm.repository;
 
 import com.gym.crm.model.User;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
 
 import java.util.Optional;
@@ -11,10 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
 
 @Sql(scripts = "/datasets/user-insert.sql", executionPhase = BEFORE_TEST_METHOD)
-class UserRepositoryTest extends AbstractRepositoryTest {
-
-    @Autowired
-    private UserRepository repository;
+class UserRepositoryTest extends AbstractRepositoryTest<UserRepository> {
 
     @Test
     void findByUsername_existingUser_returnsUserWithAllFields() {
@@ -50,9 +46,8 @@ class UserRepositoryTest extends AbstractRepositoryTest {
         User updated = user.toBuilder().firstName("UpdatedName").build();
 
         repository.save(updated);
-        em.flush();
-        em.clear();
 
+        flushAndClear();
         User result = repository.findByUsername("Abdul.Hariton").orElseThrow();
         assertThat(result.getFirstName()).isEqualTo("UpdatedName");
         assertThat(result.getLastName()).isEqualTo("Hariton");
@@ -71,9 +66,8 @@ class UserRepositoryTest extends AbstractRepositoryTest {
                 .build();
 
         User result = repository.save(updated);
-        em.flush();
-        em.clear();
 
+        flushAndClear();
         assertThat(result.getFirstName()).isEqualTo("NewFirst");
         assertThat(result.getLastName()).isEqualTo("NewLast");
         assertThat(result.getPassword()).isEqualTo("newPassword");
@@ -92,9 +86,8 @@ class UserRepositoryTest extends AbstractRepositoryTest {
         assertThat(user.getIsActive()).isTrue();
 
         repository.save(user.toBuilder().isActive(false).build());
-        em.flush();
-        em.clear();
 
+        flushAndClear();
         assertThat(repository.findByUsername("Abdul.Hariton").orElseThrow().getIsActive()).isFalse();
     }
 }
