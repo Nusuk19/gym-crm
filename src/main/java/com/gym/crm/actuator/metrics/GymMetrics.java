@@ -22,7 +22,6 @@ public class GymMetrics {
     public GymMetrics(MeterRegistry registry,
                       TraineeRepository traineeRepository,
                       TrainerRepository trainerRepository) {
-
         this.traineeRegistrationsCounter = Counter.builder(METRIC_REGISTRATIONS)
                 .tag(TAG_ROLE, "trainee")
                 .description("Total number of trainee registrations")
