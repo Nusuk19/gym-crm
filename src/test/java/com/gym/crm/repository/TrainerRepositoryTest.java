@@ -9,10 +9,7 @@ import org.springframework.test.context.jdbc.Sql;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
 
 @Sql(scripts = {"/datasets/cleanup.sql", "/datasets/trainer-insert.sql"}, executionPhase = BEFORE_TEST_METHOD)
@@ -22,20 +19,20 @@ class TrainerRepositoryTest extends AbstractRepositoryTest<TrainerRepository> {
     void findByUserUsername_existingTrainer_returnsFullTrainer() {
         Trainer actual = repository.findByUserUsername("Mike.Tyson").orElseThrow();
 
-        assertNotNull(actual.getId());
-        assertEquals("Mike", actual.getUser().getFirstName());
-        assertEquals("Tyson", actual.getUser().getLastName());
-        assertEquals("Mike.Tyson", actual.getUser().getUsername());
-        assertTrue(actual.getUser().getIsActive());
-        assertNotNull(actual.getSpecialization());
-        assertEquals("Boxing", actual.getSpecialization().getTrainingTypeName());
+        assertThat(actual.getId()).isNotNull();
+        assertThat(actual.getUser().getFirstName()).isEqualTo("Mike");
+        assertThat(actual.getUser().getLastName()).isEqualTo("Tyson");
+        assertThat(actual.getUser().getUsername()).isEqualTo("Mike.Tyson");
+        assertThat(actual.getUser().getIsActive()).isTrue();
+        assertThat(actual.getSpecialization()).isNotNull();
+        assertThat(actual.getSpecialization().getTrainingTypeName()).isEqualTo("Boxing");
     }
 
     @Test
     void findByUserUsername_nonExisting_returnsEmpty() {
         Optional<Trainer> actual = repository.findByUserUsername("ghost.user");
 
-        assertFalse(actual.isPresent());
+        assertThat(actual).isEmpty();
     }
 
     @Test
@@ -46,9 +43,8 @@ class TrainerRepositoryTest extends AbstractRepositoryTest<TrainerRepository> {
                 .map(t -> t.getUser().getUsername())
                 .toList();
 
-        assertTrue(actual.size() > 0);
-        assertTrue(usernames.contains("Mike.Tyson"));
-        assertTrue(usernames.contains("Adam.Future"));
+        assertThat(actual).isNotEmpty();
+        assertThat(usernames).contains("Mike.Tyson", "Adam.Future");
     }
 
     @Test
@@ -60,13 +56,13 @@ class TrainerRepositoryTest extends AbstractRepositoryTest<TrainerRepository> {
 
         Trainer actual = repository.findById(expectedId).orElseThrow();
 
-        assertEquals(expectedId, actual.getId());
-        assertEquals("Bruce", actual.getUser().getFirstName());
-        assertEquals("Lee", actual.getUser().getLastName());
-        assertEquals("Bruce.Lee", actual.getUser().getUsername());
-        assertEquals("pass123", actual.getUser().getPassword());
-        assertTrue(actual.getUser().getIsActive());
-        assertEquals("Boxing", actual.getSpecialization().getTrainingTypeName());
+        assertThat(actual.getId()).isEqualTo(expectedId);
+        assertThat(actual.getUser().getFirstName()).isEqualTo("Bruce");
+        assertThat(actual.getUser().getLastName()).isEqualTo("Lee");
+        assertThat(actual.getUser().getUsername()).isEqualTo("Bruce.Lee");
+        assertThat(actual.getUser().getPassword()).isEqualTo("pass123");
+        assertThat(actual.getUser().getIsActive()).isTrue();
+        assertThat(actual.getSpecialization().getTrainingTypeName()).isEqualTo("Boxing");
     }
 
     @Test
@@ -81,12 +77,12 @@ class TrainerRepositoryTest extends AbstractRepositoryTest<TrainerRepository> {
 
         Trainer actual = repository.findById(expectedId).orElseThrow();
 
-        assertEquals(expectedId, actual.getId());
-        assertEquals("Michael", actual.getUser().getFirstName());
-        assertEquals("Tyson", actual.getUser().getLastName());
-        assertEquals("Mike.Tyson", actual.getUser().getUsername());
-        assertTrue(actual.getUser().getIsActive());
-        assertEquals("Boxing", actual.getSpecialization().getTrainingTypeName());
+        assertThat(actual.getId()).isEqualTo(expectedId);
+        assertThat(actual.getUser().getFirstName()).isEqualTo("Michael");
+        assertThat(actual.getUser().getLastName()).isEqualTo("Tyson");
+        assertThat(actual.getUser().getUsername()).isEqualTo("Mike.Tyson");
+        assertThat(actual.getUser().getIsActive()).isTrue();
+        assertThat(actual.getSpecialization().getTrainingTypeName()).isEqualTo("Boxing");
     }
 
     @Test
@@ -97,8 +93,8 @@ class TrainerRepositoryTest extends AbstractRepositoryTest<TrainerRepository> {
                 .map(t -> t.getUser().getUsername())
                 .toList();
 
-        assertFalse(actual.isEmpty());
-        assertFalse(usernames.contains("Mike.Tyson"));
+        assertThat(actual).isNotEmpty();
+        assertThat(usernames).doesNotContain("Mike.Tyson");
     }
 
     @Test
@@ -109,22 +105,21 @@ class TrainerRepositoryTest extends AbstractRepositoryTest<TrainerRepository> {
                 .map(t -> t.getUser().getUsername())
                 .toList();
 
-        assertTrue(usernames.contains("Mike.Tyson"));
-        assertTrue(usernames.contains("Adam.Future"));
+        assertThat(usernames).contains("Mike.Tyson", "Adam.Future");
     }
 
     @Test
     void existsByUserUsername_existing_returnsTrue() {
-        boolean actual = repository.existsByUserUsername("Mike.Tyson");
+        boolean result = repository.existsByUserUsername("Mike.Tyson");
 
-        assertTrue(actual);
+        assertThat(result).isTrue();
     }
 
     @Test
     void existsByUserUsername_nonExisting_returnsFalse() {
-        boolean actual = repository.existsByUserUsername("ghost.user");
+        boolean result = repository.existsByUserUsername("ghost.user");
 
-        assertFalse(actual);
+        assertThat(result).isFalse();
     }
 
     private Trainer buildTrainer(String firstName, String lastName, String username) {
