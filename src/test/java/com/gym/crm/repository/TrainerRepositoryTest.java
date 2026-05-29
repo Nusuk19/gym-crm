@@ -9,7 +9,10 @@ import org.springframework.test.context.jdbc.Sql;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
 
 @Sql(scripts = {"/datasets/cleanup.sql", "/datasets/trainer-insert.sql"}, executionPhase = BEFORE_TEST_METHOD)
@@ -17,91 +20,111 @@ class TrainerRepositoryTest extends AbstractRepositoryTest<TrainerRepository> {
 
     @Test
     void findByUserUsername_existingTrainer_returnsFullTrainer() {
-        Trainer result = repository.findByUserUsername("Mike.Tyson").orElseThrow();
+        Trainer actual = repository.findByUserUsername("Mike.Tyson").orElseThrow();
 
-        assertThat(result.getUser().getFirstName()).isEqualTo("Mike");
-        assertThat(result.getUser().getLastName()).isEqualTo("Tyson");
-        assertThat(result.getUser().getUsername()).isEqualTo("Mike.Tyson");
-        assertThat(result.getUser().getIsActive()).isTrue();
-        assertThat(result.getId()).isNotNull();
-        assertThat(result.getSpecialization()).isNotNull();
-        assertThat(result.getSpecialization().getTrainingTypeName()).isEqualTo("Boxing");
+        assertNotNull(actual.getId());
+        assertEquals("Mike", actual.getUser().getFirstName());
+        assertEquals("Tyson", actual.getUser().getLastName());
+        assertEquals("Mike.Tyson", actual.getUser().getUsername());
+        assertTrue(actual.getUser().getIsActive());
+        assertNotNull(actual.getSpecialization());
+        assertEquals("Boxing", actual.getSpecialization().getTrainingTypeName());
     }
 
     @Test
     void findByUserUsername_nonExisting_returnsEmpty() {
-        Optional<Trainer> result = repository.findByUserUsername("ghost.user");
+        Optional<Trainer> actual = repository.findByUserUsername("ghost.user");
 
-        assertThat(result).isEmpty();
+        assertFalse(actual.isPresent());
     }
 
     @Test
     void findAllWithUserAndSpecialization_returnsAll() {
-        List<Trainer> result = repository.findAllWithUserAndSpecialization();
+        List<Trainer> actual = repository.findAllWithUserAndSpecialization();
 
-        assertThat(result).hasSizeGreaterThan(0)
-                .extracting("user.username")
-                .contains("Mike.Tyson", "Adam.Future");
+        List<String> usernames = actual.stream()
+                .map(t -> t.getUser().getUsername())
+                .toList();
+
+        assertTrue(actual.size() > 0);
+        assertTrue(usernames.contains("Mike.Tyson"));
+        assertTrue(usernames.contains("Adam.Future"));
     }
 
     @Test
-    void save_persistsTrainer() {
+    void save_newTrainer_persistsAllFields() {
         Trainer trainer = buildTrainer("Bruce", "Lee", "Bruce.Lee");
-
         Trainer saved = repository.save(trainer);
-
+        Long expectedId = saved.getId();
         flushAndClear();
-        Trainer fromDb = repository.findById(saved.getId()).orElseThrow();
-        assertThat(fromDb.getUser().getUsername()).isEqualTo("Bruce.Lee");
-        assertThat(fromDb.getUser().getFirstName()).isEqualTo("Bruce");
-        assertThat(fromDb.getUser().getLastName()).isEqualTo("Lee");
-        assertThat(fromDb.getUser().getIsActive()).isTrue();
-        assertThat(fromDb.getSpecialization().getTrainingTypeName()).isEqualTo("Boxing");
+
+        Trainer actual = repository.findById(expectedId).orElseThrow();
+
+        assertEquals(expectedId, actual.getId());
+        assertEquals("Bruce", actual.getUser().getFirstName());
+        assertEquals("Lee", actual.getUser().getLastName());
+        assertEquals("Bruce.Lee", actual.getUser().getUsername());
+        assertEquals("pass123", actual.getUser().getPassword());
+        assertTrue(actual.getUser().getIsActive());
+        assertEquals("Boxing", actual.getSpecialization().getTrainingTypeName());
     }
 
     @Test
-    void save_update_changesTrainerData() {
+    void save_update_existingTrainer_persistsAllFields() {
         Trainer trainer = repository.findByUserUsername("Mike.Tyson").orElseThrow();
-        Trainer updated = trainer.toBuilder()
+        Long expectedId = trainer.getId();
+
+        repository.save(trainer.toBuilder()
                 .user(trainer.getUser().toBuilder().firstName("Michael").build())
-                .build();
-
-        repository.save(updated);
-
+                .build());
         flushAndClear();
-        Trainer result = repository.findByUserUsername("Mike.Tyson").orElseThrow();
-        assertThat(result.getUser().getFirstName()).isEqualTo("Michael");
-        assertThat(result.getUser().getUsername()).isEqualTo("Mike.Tyson");
+
+        Trainer actual = repository.findById(expectedId).orElseThrow();
+
+        assertEquals(expectedId, actual.getId());
+        assertEquals("Michael", actual.getUser().getFirstName());
+        assertEquals("Tyson", actual.getUser().getLastName());
+        assertEquals("Mike.Tyson", actual.getUser().getUsername());
+        assertTrue(actual.getUser().getIsActive());
+        assertEquals("Boxing", actual.getSpecialization().getTrainingTypeName());
     }
 
     @Test
     void findAllActiveNotAssignedToTrainee_returnsOnlyUnassigned() {
-        List<Trainer> result = repository.findAllActiveNotAssignedToTrainee("Abdul.Hariton");
+        List<Trainer> actual = repository.findAllActiveNotAssignedToTrainee("Abdul.Hariton");
 
-        assertThat(result).isNotEmpty()
-                .extracting("user.username")
-                .doesNotContain("Mike.Tyson");
+        List<String> usernames = actual.stream()
+                .map(t -> t.getUser().getUsername())
+                .toList();
+
+        assertFalse(actual.isEmpty());
+        assertFalse(usernames.contains("Mike.Tyson"));
     }
 
     @Test
     void findAllActiveNotAssignedToTrainee_nonExistingTrainee_returnsAll() {
-        List<Trainer> result = repository.findAllActiveNotAssignedToTrainee("ghost.user");
+        List<Trainer> actual = repository.findAllActiveNotAssignedToTrainee("ghost.user");
 
-        assertThat(result).extracting("user.username").contains("Mike.Tyson", "Adam.Future");
+        List<String> usernames = actual.stream()
+                .map(t -> t.getUser().getUsername())
+                .toList();
+
+        assertTrue(usernames.contains("Mike.Tyson"));
+        assertTrue(usernames.contains("Adam.Future"));
     }
 
     @Test
     void existsByUserUsername_existing_returnsTrue() {
-        boolean exists = repository.existsByUserUsername("Mike.Tyson");
+        boolean actual = repository.existsByUserUsername("Mike.Tyson");
 
-        assertThat(exists).isTrue();
+        assertTrue(actual);
     }
 
     @Test
     void existsByUserUsername_nonExisting_returnsFalse() {
-        boolean exists = repository.existsByUserUsername("ghost.user");
+        boolean actual = repository.existsByUserUsername("ghost.user");
 
-        assertThat(exists).isFalse();
+        assertFalse(actual);
     }
 
     private Trainer buildTrainer(String firstName, String lastName, String username) {
