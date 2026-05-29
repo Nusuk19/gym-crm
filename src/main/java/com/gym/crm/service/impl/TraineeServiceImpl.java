@@ -40,7 +40,6 @@ public class TraineeServiceImpl implements TraineeService {
     @Transactional
     public Trainee create(Trainee trainee) {
         validator.validateTrainee(trainee);
-
         log.info("Creating trainee: firstName={}, lastName={}",
                 trainee.getUser().getFirstName(), trainee.getUser().getLastName());
 
@@ -54,13 +53,11 @@ public class TraineeServiceImpl implements TraineeService {
                 .rawPassword(rawPassword)
                 .isActive(Boolean.TRUE)
                 .build();
-
         Trainee traineeWithProfile = trainee.toBuilder()
                 .user(userWithProfile)
                 .build();
 
         Trainee saved = traineeRepository.save(traineeWithProfile);
-
         gymMetrics.incrementTraineeRegistrations();
 
         return saved;

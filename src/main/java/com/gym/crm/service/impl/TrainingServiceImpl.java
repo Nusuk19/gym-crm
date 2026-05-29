@@ -40,7 +40,6 @@ public class TrainingServiceImpl implements TrainingService {
 
         Trainee trainee = traineeRepository.findByUserUsername(request.getTraineeUsername())
                 .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + request.getTraineeUsername()));
-
         Trainer trainer = trainerRepository.findByUserUsername(request.getTrainerUsername())
                 .orElseThrow(() -> new EntityNotFoundException("Trainer not found: " + request.getTrainerUsername()));
 
@@ -56,10 +55,7 @@ public class TrainingServiceImpl implements TrainingService {
         validator.validateTraining(training);
 
         Training saved = trainingRepository.save(training);
-
         gymMetrics.incrementTrainingsCreated();
-
-        log.info("Training saved: name={}", saved.getName());
 
         return saved;
     }
