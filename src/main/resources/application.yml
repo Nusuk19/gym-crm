@@ -34,3 +34,7 @@ management:
   endpoint:
     health:
       show-details: when_authorized
+  prometheus:
+    metrics:
+      export:
+        enabled: true

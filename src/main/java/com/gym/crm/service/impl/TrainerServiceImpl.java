@@ -1,5 +1,6 @@
 package com.gym.crm.service.impl;
 
+import com.gym.crm.actuator.metrics.GymMetrics;
 import com.gym.crm.dto.request.ActivationRequest;
 import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.exception.EntityNotFoundException;
@@ -34,6 +35,7 @@ public class TrainerServiceImpl implements TrainerService {
     private final EntityValidator validator;
     private final UserProfileService userProfileService;
     private final UserService userService;
+    private final GymMetrics gymMetrics;
 
     @Override
     @Transactional
@@ -63,7 +65,11 @@ public class TrainerServiceImpl implements TrainerService {
 
         validator.validateTrainer(trainerWithProfile);
 
-        return trainerRepository.save(trainerWithProfile);
+        Trainer saved = trainerRepository.save(trainerWithProfile);
+
+        gymMetrics.incrementTrainerRegistrations();
+
+        return saved;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.gym.crm.service.impl;
 
+import com.gym.crm.actuator.metrics.GymMetrics;
 import com.gym.crm.dto.request.ActivationRequest;
 import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.exception.EntityNotFoundException;
@@ -33,6 +34,7 @@ public class TraineeServiceImpl implements TraineeService {
     private final EntityValidator validator;
     private final UserProfileService userProfileService;
     private final UserService userService;
+    private final GymMetrics gymMetrics;
 
     @Override
     @Transactional
@@ -57,7 +59,11 @@ public class TraineeServiceImpl implements TraineeService {
                 .user(userWithProfile)
                 .build();
 
-        return traineeRepository.save(traineeWithProfile);
+        Trainee saved = traineeRepository.save(traineeWithProfile);
+
+        gymMetrics.incrementTraineeRegistrations();
+
+        return saved;
     }
 
     @Override

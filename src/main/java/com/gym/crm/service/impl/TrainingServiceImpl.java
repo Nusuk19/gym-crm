@@ -1,5 +1,6 @@
 package com.gym.crm.service.impl;
 
+import com.gym.crm.actuator.metrics.GymMetrics;
 import com.gym.crm.dao.search.filters.TraineeTrainingSearchFilter;
 import com.gym.crm.dao.search.filters.TrainerTrainingSearchFilter;
 import com.gym.crm.dto.request.CreateTrainingRequest;
@@ -29,6 +30,7 @@ public class TrainingServiceImpl implements TrainingService {
     private final TraineeRepository traineeRepository;
     private final TrainerRepository trainerRepository;
     private final EntityValidator validator;
+    private final GymMetrics gymMetrics;
 
     @Override
     @Transactional
@@ -53,7 +55,13 @@ public class TrainingServiceImpl implements TrainingService {
 
         validator.validateTraining(training);
 
-        return trainingRepository.save(training);
+        Training saved = trainingRepository.save(training);
+
+        gymMetrics.incrementTrainingsCreated();
+
+        log.info("Training saved: name={}", saved.getName());
+
+        return saved;
     }
 
     @Override
