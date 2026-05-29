@@ -93,7 +93,7 @@ class TrainerRepositoryTest extends AbstractRepositoryTest<TrainerRepository> {
                 .map(t -> t.getUser().getUsername())
                 .toList();
 
-        assertThat(actual).isNotEmpty();
+        assertThat(usernames).isNotEmpty();
         assertThat(usernames).doesNotContain("Mike.Tyson");
     }
 
