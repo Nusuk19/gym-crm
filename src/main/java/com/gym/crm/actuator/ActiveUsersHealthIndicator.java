@@ -20,18 +20,12 @@ public class ActiveUsersHealthIndicator implements HealthIndicator {
             long totalUsers = userRepository.count();
 
             if (totalUsers == 0) {
-                log.warn("Health check: no users found in the system");
-
-                return Health.up()
-                        .withDetail("warning", "No users found in the system")
-                        .withDetail("totalUsers", 0)
-                        .build();
+                return noUsersHealth();
             }
 
             return Health.up()
                     .withDetail("totalUsers", totalUsers)
                     .build();
-
         } catch (Exception e) {
             log.error("Health check failed: cannot query users table", e);
 
@@ -40,5 +34,13 @@ public class ActiveUsersHealthIndicator implements HealthIndicator {
                     .withDetail("error", e.getClass().getSimpleName())
                     .build();
         }
+    }
+
+    private Health noUsersHealth() {
+        log.warn("Health check: no users found in the system");
+        return Health.up()
+                .withDetail("warning", "No users found in the system")
+                .withDetail("totalUsers", 0)
+                .build();
     }
 }
