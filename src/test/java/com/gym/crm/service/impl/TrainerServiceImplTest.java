@@ -1,5 +1,6 @@
 package com.gym.crm.service.impl;
 
+import com.gym.crm.actuator.metrics.GymMetrics;
 import com.gym.crm.dto.request.ActivationRequest;
 import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.exception.EntityNotFoundException;
@@ -58,6 +59,8 @@ class TrainerServiceImplTest {
     private UserService userService;
     @InjectMocks
     private TrainerServiceImpl service;
+    @Mock
+    private GymMetrics gymMetrics;
 
     @Test
     void create_whenValidTrainer_savesWithGeneratedProfile() {
@@ -80,6 +83,7 @@ class TrainerServiceImplTest {
         verify(userProfileService).generatePassword();
         verify(userProfileService).hashPassword("rawPass123");
         verify(trainerRepository).save(any(Trainer.class));
+        verify(gymMetrics).incrementTrainerRegistrations();
     }
 
     @Test
@@ -89,6 +93,7 @@ class TrainerServiceImplTest {
         assertThrows(EntityValidationException.class, () -> service.create(trainer, SPECIALIZATION));
 
         verify(trainerRepository, never()).save(any());
+        verify(gymMetrics, never()).incrementTrainerRegistrations();
     }
 
     @Test
@@ -101,6 +106,7 @@ class TrainerServiceImplTest {
                 .hasMessageContaining("UNKNOWN");
 
         verify(trainerRepository, never()).save(any());
+        verify(gymMetrics, never()).incrementTrainerRegistrations();
     }
 
     @Test

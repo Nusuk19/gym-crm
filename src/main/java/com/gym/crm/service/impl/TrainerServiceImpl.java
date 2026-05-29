@@ -1,5 +1,6 @@
 package com.gym.crm.service.impl;
 
+import com.gym.crm.actuator.metrics.GymMetrics;
 import com.gym.crm.dto.request.ActivationRequest;
 import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.exception.EntityNotFoundException;
@@ -34,18 +35,18 @@ public class TrainerServiceImpl implements TrainerService {
     private final EntityValidator validator;
     private final UserProfileService userProfileService;
     private final UserService userService;
+    private final GymMetrics gymMetrics;
 
     @Override
     @Transactional
     public Trainer create(Trainer trainer, String specializationName) {
+        validator.validateTrainer(trainer);
         log.info("Creating trainer: firstName={}, lastName={}",
                 trainer.getUser().getFirstName(), trainer.getUser().getLastName());
-        validator.validateTrainer(trainer);
 
         TrainingType specialization = resolveSpecialization(specializationName);
 
-        String username = userProfileService.generateUsername(
-                trainer.getUser().getFirstName(), trainer.getUser().getLastName());
+        String username = userProfileService.generateUsername(trainer.getUser().getFirstName(), trainer.getUser().getLastName());
         String rawPassword = userProfileService.generatePassword();
         String hashedPassword = userProfileService.hashPassword(rawPassword);
 
@@ -55,7 +56,6 @@ public class TrainerServiceImpl implements TrainerService {
                 .rawPassword(rawPassword)
                 .isActive(Boolean.TRUE)
                 .build();
-
         Trainer trainerWithProfile = trainer.toBuilder()
                 .user(userWithProfile)
                 .specialization(specialization)
@@ -63,7 +63,10 @@ public class TrainerServiceImpl implements TrainerService {
 
         validator.validateTrainer(trainerWithProfile);
 
-        return trainerRepository.save(trainerWithProfile);
+        Trainer saved = trainerRepository.save(trainerWithProfile);
+        gymMetrics.incrementTrainerRegistrations();
+
+        return saved;
     }
 
     @Override

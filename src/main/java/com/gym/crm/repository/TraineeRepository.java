@@ -26,4 +26,6 @@ public interface TraineeRepository extends JpaRepository<Trainee, Long> {
     List<Trainee> findAllWithUser();
 
     boolean existsByUserUsername(String username);
+
+    long countByUserIsActiveTrue();
 }

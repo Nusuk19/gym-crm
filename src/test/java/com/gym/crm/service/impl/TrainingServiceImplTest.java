@@ -1,5 +1,6 @@
 package com.gym.crm.service.impl;
 
+import com.gym.crm.actuator.metrics.GymMetrics;
 import com.gym.crm.dao.search.filters.TraineeTrainingSearchFilter;
 import com.gym.crm.dao.search.filters.TrainerTrainingSearchFilter;
 import com.gym.crm.dto.request.CreateTrainingRequest;
@@ -55,6 +56,8 @@ class TrainingServiceImplTest {
     private EntityValidator validator;
     @InjectMocks
     private TrainingServiceImpl service;
+    @Mock
+    private GymMetrics gymMetrics;
 
     @Test
     void create_whenValidRequest_buildsTrainingAndSaves() {
@@ -78,6 +81,7 @@ class TrainingServiceImplTest {
         verify(trainerRepository).findByUserUsername(TRAINER_USERNAME);
         verify(validator).validateTraining(any(Training.class));
         verify(trainingRepository).save(any(Training.class));
+        verify(gymMetrics).incrementTrainingsCreated();
     }
 
     @Test
@@ -92,6 +96,7 @@ class TrainingServiceImplTest {
                 .hasMessageContaining(TRAINEE_USERNAME);
         verify(trainerRepository, never()).findByUserUsername(any());
         verify(trainingRepository, never()).save(any());
+        verify(gymMetrics, never()).incrementTrainingsCreated();
     }
 
     @Test
@@ -106,6 +111,7 @@ class TrainingServiceImplTest {
                 .hasMessageContaining("Trainer not found")
                 .hasMessageContaining(TRAINER_USERNAME);
         verify(trainingRepository, never()).save(any());
+        verify(gymMetrics, never()).incrementTrainingsCreated();
     }
 
     @Test

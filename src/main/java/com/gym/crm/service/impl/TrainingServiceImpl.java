@@ -1,5 +1,6 @@
 package com.gym.crm.service.impl;
 
+import com.gym.crm.actuator.metrics.GymMetrics;
 import com.gym.crm.dao.search.filters.TraineeTrainingSearchFilter;
 import com.gym.crm.dao.search.filters.TrainerTrainingSearchFilter;
 import com.gym.crm.dto.request.CreateTrainingRequest;
@@ -29,6 +30,7 @@ public class TrainingServiceImpl implements TrainingService {
     private final TraineeRepository traineeRepository;
     private final TrainerRepository trainerRepository;
     private final EntityValidator validator;
+    private final GymMetrics gymMetrics;
 
     @Override
     @Transactional
@@ -38,7 +40,6 @@ public class TrainingServiceImpl implements TrainingService {
 
         Trainee trainee = traineeRepository.findByUserUsername(request.getTraineeUsername())
                 .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + request.getTraineeUsername()));
-
         Trainer trainer = trainerRepository.findByUserUsername(request.getTrainerUsername())
                 .orElseThrow(() -> new EntityNotFoundException("Trainer not found: " + request.getTrainerUsername()));
 
@@ -53,7 +54,10 @@ public class TrainingServiceImpl implements TrainingService {
 
         validator.validateTraining(training);
 
-        return trainingRepository.save(training);
+        Training saved = trainingRepository.save(training);
+        gymMetrics.incrementTrainingsCreated();
+
+        return saved;
     }
 
     @Override

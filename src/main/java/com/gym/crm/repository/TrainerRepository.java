@@ -40,4 +40,6 @@ public interface TrainerRepository extends JpaRepository<Trainer, Long> {
     List<Trainer> findAllByUserUsernameIn(@Param("usernames") List<String> usernames);
 
     boolean existsByUserUsername(String username);
+
+    long countByUserIsActiveTrue();
 }

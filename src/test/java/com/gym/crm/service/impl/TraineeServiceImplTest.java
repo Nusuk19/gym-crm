@@ -3,6 +3,7 @@ package com.gym.crm.service.impl;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import com.gym.crm.actuator.metrics.GymMetrics;
 import com.gym.crm.dto.request.ActivationRequest;
 import com.gym.crm.dto.request.ChangePasswordRequest;
 import com.gym.crm.exception.EntityNotFoundException;
@@ -59,6 +60,8 @@ class TraineeServiceImplTest {
     private UserService userService;
     @InjectMocks
     private TraineeServiceImpl service;
+    @Mock
+    private GymMetrics gymMetrics;
 
     private ListAppender<ILoggingEvent> listAppender;
 
@@ -87,6 +90,7 @@ class TraineeServiceImplTest {
         verify(userProfileService).generatePassword();
         verify(userProfileService).hashPassword("rawPass123");
         verify(traineeRepository).save(any(Trainee.class));
+        verify(gymMetrics).incrementTraineeRegistrations();
     }
 
     @Test
@@ -97,6 +101,7 @@ class TraineeServiceImplTest {
         assertThrows(EntityValidationException.class, () -> service.create(null));
 
         verify(traineeRepository, never()).save(any());
+        verify(gymMetrics, never()).incrementTraineeRegistrations();
     }
 
     @Test
