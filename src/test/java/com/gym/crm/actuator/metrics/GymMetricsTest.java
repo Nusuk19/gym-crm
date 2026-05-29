@@ -11,7 +11,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,9 +39,10 @@ class GymMetricsTest {
         gymMetrics.incrementTraineeRegistrations();
 
         Counter counter = registry.find("gym_registrations_total").tag("role", "trainee").counter();
+        double actual = counter.count();
 
-        assertThat(counter).isNotNull();
-        assertThat(counter.count()).isEqualTo(2.0);
+        assertNotNull(counter);
+        assertEquals(2.0, actual);
     }
 
     @Test
@@ -48,9 +50,10 @@ class GymMetricsTest {
         gymMetrics.incrementTrainerRegistrations();
 
         Counter counter = registry.find("gym_registrations_total").tag("role", "trainer").counter();
+        double actual = counter.count();
 
-        assertThat(counter).isNotNull();
-        assertThat(counter.count()).isEqualTo(1.0);
+        assertNotNull(counter);
+        assertEquals(1.0, actual);
     }
 
     @Test
@@ -60,9 +63,10 @@ class GymMetricsTest {
         gymMetrics.incrementTrainingsCreated();
 
         Counter counter = registry.find("gym_trainings_created_total").counter();
+        double actual = counter.count();
 
-        assertThat(counter).isNotNull();
-        assertThat(counter.count()).isEqualTo(3.0);
+        assertNotNull(counter);
+        assertEquals(3.0, actual);
     }
 
     @Test
@@ -71,12 +75,16 @@ class GymMetricsTest {
         Counter trainerCounter = registry.find("gym_registrations_total").tag("role", "trainer").counter();
         Counter trainingsCounter = registry.find("gym_trainings_created_total").counter();
 
-        assertThat(traineeCounter).isNotNull();
-        assertThat(trainerCounter).isNotNull();
-        assertThat(trainingsCounter).isNotNull();
-        assertThat(traineeCounter.count()).isEqualTo(0.0);
-        assertThat(trainerCounter.count()).isEqualTo(0.0);
-        assertThat(trainingsCounter.count()).isEqualTo(0.0);
+        double traineeActual = traineeCounter.count();
+        double trainerActual = trainerCounter.count();
+        double trainingsActual = trainingsCounter.count();
+
+        assertNotNull(traineeCounter);
+        assertNotNull(trainerCounter);
+        assertNotNull(trainingsCounter);
+        assertEquals(0.0, traineeActual);
+        assertEquals(0.0, trainerActual);
+        assertEquals(0.0, trainingsActual);
     }
 
     @Test
@@ -85,7 +93,7 @@ class GymMetricsTest {
 
         double actual = registry.get("gym_active_users").tag("role", "trainee").gauge().value();
 
-        assertThat(actual).isEqualTo(5.0);
+        assertEquals(5.0, actual);
     }
 
     @Test
@@ -94,7 +102,7 @@ class GymMetricsTest {
 
         double actual = registry.get("gym_active_users").tag("role", "trainer").gauge().value();
 
-        assertThat(actual).isEqualTo(3.0);
+        assertEquals(3.0, actual);
     }
 
     @Test
@@ -103,7 +111,10 @@ class GymMetricsTest {
         gymMetrics.incrementTraineeRegistrations();
         gymMetrics.incrementTrainerRegistrations();
 
-        assertThat(registry.find("gym_registrations_total").tag("role", "trainee").counter().count()).isEqualTo(2.0);
-        assertThat(registry.find("gym_registrations_total").tag("role", "trainer").counter().count()).isEqualTo(1.0);
+        double traineeActual = registry.find("gym_registrations_total").tag("role", "trainee").counter().count();
+        double trainerActual = registry.find("gym_registrations_total").tag("role", "trainer").counter().count();
+
+        assertEquals(2.0, traineeActual);
+        assertEquals(1.0, trainerActual);
     }
 }
