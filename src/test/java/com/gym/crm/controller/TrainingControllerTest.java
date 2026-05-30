@@ -5,7 +5,10 @@ import com.gia.openapi.model.TrainingCreateRequest;
 import com.gia.openapi.model.TrainingTypeResponse;
 import com.gym.crm.config.SecurityConfig;
 import com.gym.crm.facade.GymFacade;
+import com.gym.crm.util.JsonResourceReader;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -42,11 +45,11 @@ class TrainingControllerTest {
 
     @Test
     void addTraining_shouldReturnOk_whenRequestIsValid() throws Exception {
-        TrainingCreateRequest request = buildCreateRequest();
+        String request = JsonResourceReader.readResource("/json/training/training-create-request.json");
 
         mockMvc.perform(post(BASE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(request))
                 .andExpect(status().isOk());
 
         verify(facade).createTraining(any(TrainingCreateRequest.class));
@@ -119,20 +122,19 @@ class TrainingControllerTest {
 
     @Test
     void getTrainingTypes_shouldReturnList_whenTypesExist() throws Exception {
+        String expectedResponse = JsonResourceReader.readResource("/json/training/training-types-response.json");
         List<TrainingTypeResponse> response = List.of(
                 buildTrainingTypeResponse(1L, "BOXING"),
                 buildTrainingTypeResponse(2L, "CARDIO"));
-
         when(facade.findAllTrainingTypes()).thenReturn(response);
 
-        mockMvc.perform(get(BASE_URL + "/types"))
+        String actualResponse = mockMvc.perform(get(BASE_URL + "/types"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].name").value("BOXING"))
-                .andExpect(jsonPath("$[1].id").value(2))
-                .andExpect(jsonPath("$[1].name").value("CARDIO"));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        JSONAssert.assertEquals(expectedResponse, actualResponse, JSONCompareMode.STRICT);
         verify(facade).findAllTrainingTypes();
     }
 

@@ -11,7 +11,10 @@ import com.gia.openapi.model.TrainerUpdateRequest;
 import com.gia.openapi.model.TrainerUpdateResponse;
 import com.gym.crm.config.SecurityConfig;
 import com.gym.crm.facade.GymFacade;
+import com.gym.crm.util.JsonResourceReader;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -57,20 +60,22 @@ class TrainerControllerTest {
 
     @Test
     void register_shouldReturnCredentials_whenRequestIsValid() throws Exception {
-        TrainerCreateRequest request = buildCreateRequest();
+        String request = JsonResourceReader.readResource("/json/trainer/trainer-create-request.json");
+        String expectedResponse = JsonResourceReader.readResource("/json/trainer/trainer-create-response.json");
         TrainerCreateResponse response = new TrainerCreateResponse();
         response.setUsername(USERNAME);
         response.setPassword(PASSWORD);
-
         when(facade.createTrainer(any(TrainerCreateRequest.class))).thenReturn(response);
 
-        mockMvc.perform(post(BASE_URL + "/register")
+        String actualResponse = mockMvc.perform(post(BASE_URL + "/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(request))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value(USERNAME))
-                .andExpect(jsonPath("$.password").value(PASSWORD));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        JSONAssert.assertEquals(expectedResponse, actualResponse, JSONCompareMode.STRICT);
         verify(facade).createTrainer(any(TrainerCreateRequest.class));
     }
 
@@ -104,20 +109,17 @@ class TrainerControllerTest {
 
     @Test
     void getTrainerProfile_shouldReturnTrainer_whenExists() throws Exception {
+        String expectedResponse = JsonResourceReader.readResource("/json/trainer/trainer-get-response.json");
         TrainerGetResponse response = buildGetResponse();
-
         when(facade.getTrainerByUsername(USERNAME)).thenReturn(response);
 
-        mockMvc.perform(get(BASE_URL + "/" + USERNAME))
+        String actualResponse = mockMvc.perform(get(BASE_URL + "/" + USERNAME))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.firstName").value(FIRST_NAME))
-                .andExpect(jsonPath("$.lastName").value(LAST_NAME))
-                .andExpect(jsonPath("$.specialization").value(SPECIALIZATION))
-                .andExpect(jsonPath("$.isActive").value(true))
-                .andExpect(jsonPath("$.trainees").isArray())
-                .andExpect(jsonPath("$.trainees.length()").value(1))
-                .andExpect(jsonPath("$.trainees[0].username").value(TRAINEE_USERNAME));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        JSONAssert.assertEquals(expectedResponse, actualResponse, JSONCompareMode.STRICT);
         verify(facade).getTrainerByUsername(USERNAME);
     }
 
@@ -230,15 +232,6 @@ class TrainerControllerTest {
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(facade);
-    }
-
-    private TrainerCreateRequest buildCreateRequest() {
-        TrainerCreateRequest request = new TrainerCreateRequest();
-        request.setFirstName(FIRST_NAME);
-        request.setLastName(LAST_NAME);
-        request.setSpecialization(SPECIALIZATION);
-
-        return request;
     }
 
     private TrainerUpdateRequest buildUpdateRequest() {

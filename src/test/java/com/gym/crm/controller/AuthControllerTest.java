@@ -5,6 +5,7 @@ import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
 import com.gym.crm.config.SecurityConfig;
 import com.gym.crm.facade.GymFacade;
+import com.gym.crm.util.JsonResourceReader;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -26,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(SecurityConfig.class)
 class AuthControllerTest {
 
-    private static final String USERNAME = "john.doe";
+    private static final String USERNAME = "Abdul.Hariton";
     private static final String PASSWORD = "password123";
     private static final String NEW_PASSWORD = "newPassword123";
 
@@ -41,9 +42,11 @@ class AuthControllerTest {
 
     @Test
     void login_validRequest_returns200() throws Exception {
+        String request = JsonResourceReader.readResource("/json/auth/auth-login-request.json");
+
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new LoginRequest(USERNAME, PASSWORD))))
+                        .content(request))
                 .andExpect(status().isOk());
 
         verify(facade).login(any(LoginRequest.class));
@@ -84,9 +87,11 @@ class AuthControllerTest {
 
     @Test
     void changePassword_validRequest_returns200() throws Exception {
+        String request = JsonResourceReader.readResource("/json/auth/auth-change-password-request.json");
+
         mockMvc.perform(put("/api/v1/auth/password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new LoginChangeRequest(USERNAME, PASSWORD, NEW_PASSWORD))))
+                        .content(request))
                 .andExpect(status().isOk());
 
         verify(facade).changePassword(any(LoginChangeRequest.class));
