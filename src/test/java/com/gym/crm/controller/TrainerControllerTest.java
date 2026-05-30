@@ -234,15 +234,6 @@ class TrainerControllerTest {
         verifyNoInteractions(facade);
     }
 
-    private TrainerCreateRequest buildCreateRequest() {
-        TrainerCreateRequest request = new TrainerCreateRequest();
-        request.setFirstName(FIRST_NAME);
-        request.setLastName(LAST_NAME);
-        request.setSpecialization(SPECIALIZATION);
-
-        return request;
-    }
-
     private TrainerUpdateRequest buildUpdateRequest() {
         TrainerUpdateRequest request = new TrainerUpdateRequest();
         request.setFirstName(FIRST_NAME);

@@ -318,16 +318,6 @@ class TraineeControllerTest {
         verifyNoInteractions(facade);
     }
 
-    private TraineeCreateRequest buildCreateRequest() {
-        TraineeCreateRequest request = new TraineeCreateRequest();
-        request.setFirstName(FIRST_NAME);
-        request.setLastName(LAST_NAME);
-        request.setDateOfBirth(DATE_OF_BIRTH);
-        request.setAddress(ADDRESS);
-
-        return request;
-    }
-
     private TraineeUpdateRequest buildUpdateRequest() {
         TraineeUpdateRequest request = new TraineeUpdateRequest();
         request.setFirstName(FIRST_NAME);
