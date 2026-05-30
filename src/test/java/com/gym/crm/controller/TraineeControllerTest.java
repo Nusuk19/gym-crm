@@ -280,8 +280,7 @@ class TraineeControllerTest {
                         .param("trainingType", SPECIALIZATION))
                 .andExpect(status().isOk());
 
-        verify(facade).findTrainingsByTraineeCriteria(
-                USERNAME, from, to, TRAINER_USERNAME, SPECIALIZATION);
+        verify(facade).findTrainingsByTraineeCriteria(USERNAME, from, to, TRAINER_USERNAME, SPECIALIZATION);
     }
 
     @Test
