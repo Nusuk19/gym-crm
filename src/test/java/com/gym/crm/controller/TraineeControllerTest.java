@@ -13,7 +13,10 @@ import com.gia.openapi.model.TraineeUpdateRequest;
 import com.gia.openapi.model.TraineeUpdateResponse;
 import com.gym.crm.config.SecurityConfig;
 import com.gym.crm.facade.GymFacade;
+import com.gym.crm.util.JsonResourceReader;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -41,14 +44,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(SecurityConfig.class)
 class TraineeControllerTest {
 
-    private static final String USERNAME = "John.Doe";
-    private static final String TRAINER_USERNAME = "Mike.Smith";
+    private static final String USERNAME = "Abdul.Hariton";
+    private static final String TRAINER_USERNAME = "Mike.Tyson";
     private static final String BASE_URL = "/api/v1/trainees";
-    private static final String FIRST_NAME = "John";
-    private static final String LAST_NAME = "Doe";
+    private static final String FIRST_NAME = "Abdul";
+    private static final String LAST_NAME = "Hariton";
     private static final String PASSWORD = "password123";
-    private static final String SPECIALIZATION = "CARDIO";
-    private static final LocalDate DATE_OF_BIRTH = LocalDate.of(1990, 1, 15);
+    private static final String SPECIALIZATION = "BOXING";
+    private static final LocalDate DATE_OF_BIRTH = LocalDate.of(1999, 2, 15);
     private static final String ADDRESS = "Kyiv, Ukraine";
 
     @Autowired
@@ -62,18 +65,21 @@ class TraineeControllerTest {
 
     @Test
     void register_shouldReturnCredentials_whenRequestIsValid() throws Exception {
-        TraineeCreateRequest request = buildCreateRequest();
-        TraineeCreateResponse response = new TraineeCreateResponse(USERNAME, PASSWORD);
+        String request = JsonResourceReader.readResource("/json/trainee/trainee-create-request.json");
+        String expectedResponse = JsonResourceReader.readResource("/json/trainee/trainee-create-response.json");
 
+        TraineeCreateResponse response = new TraineeCreateResponse(USERNAME, PASSWORD);
         when(facade.createTrainee(any(TraineeCreateRequest.class))).thenReturn(response);
 
-        mockMvc.perform(post(BASE_URL + "/register")
+        String actualResponse = mockMvc.perform(post(BASE_URL + "/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(request))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value(USERNAME))
-                .andExpect(jsonPath("$.password").value(PASSWORD));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        JSONAssert.assertEquals(expectedResponse, actualResponse, JSONCompareMode.STRICT);
         verify(facade).createTrainee(any(TraineeCreateRequest.class));
     }
 
@@ -122,19 +128,18 @@ class TraineeControllerTest {
 
     @Test
     void getTraineeProfile_shouldReturnTrainee_whenExists() throws Exception {
-        TraineeGetResponse response = buildGetResponse();
+        String expectedResponse = JsonResourceReader.readResource("/json/trainee/trainee-get-response.json");
 
+        TraineeGetResponse response = buildGetResponse();
         when(facade.getTraineeByUsername(USERNAME)).thenReturn(response);
 
-        mockMvc.perform(get(BASE_URL + "/" + USERNAME))
+        String actualResponse = mockMvc.perform(get(BASE_URL + "/" + USERNAME))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.firstName").value(FIRST_NAME))
-                .andExpect(jsonPath("$.lastName").value(LAST_NAME))
-                .andExpect(jsonPath("$.isActive").value(true))
-                .andExpect(jsonPath("$.trainers").isArray())
-                .andExpect(jsonPath("$.trainers.length()").value(1))
-                .andExpect(jsonPath("$.trainers[0].username").value(TRAINER_USERNAME));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        JSONAssert.assertEquals(expectedResponse, actualResponse, JSONCompareMode.STRICT);
         verify(facade).getTraineeByUsername(USERNAME);
     }
 
@@ -207,7 +212,7 @@ class TraineeControllerTest {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].username").value(TRAINER_USERNAME))
                 .andExpect(jsonPath("$[0].firstName").value("Mike"))
-                .andExpect(jsonPath("$[0].lastName").value("Smith"))
+                .andExpect(jsonPath("$[0].lastName").value("Tyson"))
                 .andExpect(jsonPath("$[0].specialization").value(SPECIALIZATION));
 
         verify(facade).findAllTrainersNotAssignedToTrainee(USERNAME);
@@ -363,7 +368,7 @@ class TraineeControllerTest {
         AssignedTrainerResponse response = new AssignedTrainerResponse();
         response.setUsername(TRAINER_USERNAME);
         response.setFirstName("Mike");
-        response.setLastName("Smith");
+        response.setLastName("Tyson");
         response.setSpecialization(SPECIALIZATION);
 
         return response;
