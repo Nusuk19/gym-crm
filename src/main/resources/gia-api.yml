@@ -649,7 +649,11 @@ paths:
               $ref: '#/components/schemas/LoginRequest'
       responses:
         '200':
-          description: Successful login
+          description: JWT Token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
         '404':
           description: Invalid user credentials
           content:
@@ -1122,6 +1126,20 @@ components:
           format: password
           description: password
           example: '123456'
+    LoginResponse:
+      type: object
+      required:
+        - username
+        - token
+      properties:
+        username:
+          type: string
+          description: User's username
+          example: ricardo.milos
+        token:
+          type: string
+          description: JWT Token
+          example: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyaWNhcmRvLm1pbG9zIn0.xxx
     LoginChangeRequest:
       type: object
       required:
@@ -1158,9 +1176,10 @@ components:
           description: Human-readable description of the error
           example: "Validation error: firstName must not be empty"
   securitySchemes:
-    basicAuth:
+    bearerAuth:
       type: http
-      scheme: basic
-      description: Basic authentication using username and password
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Bearer token authentication
 security:
-  - basicAuth: []
+  - bearerAuth: []
