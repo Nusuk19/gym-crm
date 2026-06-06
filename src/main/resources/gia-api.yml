@@ -77,6 +77,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Access denied - you can only access your own data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Trainee not found
           content:
@@ -124,6 +130,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Access denied - you can only access your own data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Trainee not found
           content:
@@ -149,6 +161,12 @@ paths:
       responses:
         '200':
           description: Trainee profile deleted successfully
+        '403':
+          description: Access denied - you can only access your own data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized access
           content:
@@ -188,6 +206,12 @@ paths:
       responses:
         '200':
           description: Activation status updated successfully
+        '403':
+          description: Access denied - you can only access your own data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '400':
           description: Invalid input data
           content:
@@ -233,6 +257,12 @@ paths:
       responses:
         '200':
           description: Activation status updated successfully
+        '403':
+          description: Access denied - you can only access your own data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '400':
           description: Invalid input data
           content:
@@ -294,6 +324,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Access denied - you can only access your own data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Trainee not found
           content:
@@ -337,6 +373,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Access denied - you can only access your own data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Trainee not found
           content:
@@ -369,6 +411,12 @@ paths:
                   $ref: '#/components/schemas/GetTrainerTrainingResponse'
         '401':
           description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Access denied - you can only access your own data
           content:
             application/json:
               schema:
@@ -458,6 +506,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Access denied - you can only access your own data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Trainer not found
           content:
@@ -505,6 +559,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Access denied - you can only access your own data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Trainer not found
           content:
@@ -540,6 +600,12 @@ paths:
                   $ref: '#/components/schemas/AssignedTrainerResponse'
         '401':
           description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Access denied - you can only access your own data
           content:
             application/json:
               schema:
@@ -687,6 +753,12 @@ paths:
           description: Password changed successfully
         '401':
           description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Access denied - you can only access your own data
           content:
             application/json:
               schema:
