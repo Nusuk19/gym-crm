@@ -2,6 +2,7 @@ package com.gym.crm.controller;
 
 import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
+import com.gia.openapi.model.LoginResponse;
 import com.gym.crm.facade.GymFacade;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,7 +31,7 @@ public class AuthController {
 
     private final GymFacade facade;
 
-    @Operation(summary = "Login", description = "Authenticate user and start session")
+    @Operation(summary = "Login", description = "Authenticate user and return JWT token")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Login successful"),
             @ApiResponse(responseCode = "400", description = "Validation error",
@@ -44,12 +45,8 @@ public class AuthController {
                             schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest request, HttpSession session) {
-        facade.login(request);
-
-        session.setAttribute("username", request.getUsername());
-
-        return ResponseEntity.ok().build();
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(facade.login(request));
     }
 
     @Operation(summary = "Change password", description = "Change password for authenticated user")

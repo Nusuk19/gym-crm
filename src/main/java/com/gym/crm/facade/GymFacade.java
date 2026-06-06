@@ -6,6 +6,7 @@ import com.gia.openapi.model.GetTraineeTrainingResponse;
 import com.gia.openapi.model.GetTrainerTrainingResponse;
 import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
+import com.gia.openapi.model.LoginResponse;
 import com.gia.openapi.model.TraineeAssignedTrainersUpdateRequest;
 import com.gia.openapi.model.TraineeAssignedTrainersUpdateResponse;
 import com.gia.openapi.model.TraineeCreateRequest;
@@ -43,7 +44,7 @@ import com.gym.crm.mapper.TrainerMapper;
 import com.gym.crm.mapper.TrainerRestMapper;
 import com.gym.crm.mapper.TrainingMapper;
 import com.gym.crm.mapper.TrainingRestMapper;
-import com.gym.crm.security.Authenticated;
+import com.gym.crm.security.JwtService;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
@@ -58,7 +59,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 
@@ -70,6 +70,7 @@ public class GymFacade {
     private final TrainingTypeService trainingTypeService;
     private final UserService userService;
     private final UserProfileService userProfileService;
+    private final JwtService jwtService;
 
     private TraineeMapper traineeMapper;
     private TraineeRestMapper traineeRestMapper;
@@ -86,13 +87,15 @@ public class GymFacade {
                      TrainingService trainingService,
                      TrainingTypeService trainingTypeService,
                      UserService userService,
-                     UserProfileService userProfileService) {
+                     UserProfileService userProfileService,
+                     JwtService jwtService) {
         this.traineeService = traineeService;
         this.trainerService = trainerService;
         this.trainingService = trainingService;
         this.trainingTypeService = trainingTypeService;
         this.userService = userService;
         this.userProfileService = userProfileService;
+        this.jwtService = jwtService;
     }
 
     @Autowired
@@ -140,11 +143,17 @@ public class GymFacade {
         this.authenticationService = authenticationService;
     }
 
-    public void login(LoginRequest request) {
+    public LoginResponse login(LoginRequest request) {
         UserCredentials credentials = authMapper.toCredentials(request);
         coreValidator.validate(credentials);
 
         authenticationService.validateCredentials(credentials);
+
+        String token = jwtService.generateToken(credentials.getUsername());
+
+        return new LoginResponse()
+                .username(credentials.getUsername())
+                .token(token);
     }
 
     public void changePassword(LoginChangeRequest request) {
@@ -178,7 +187,6 @@ public class GymFacade {
         return traineeRestMapper.toCreateResponse(response);
     }
 
-    @Authenticated
     public TraineeGetResponse getTraineeByUsername(String username) {
 
         TraineeProfileResponse traineeProfile = traineeService.findByUsername(username)
@@ -188,7 +196,6 @@ public class GymFacade {
         return traineeRestMapper.toGetResponse(traineeProfile);
     }
 
-    @Authenticated
     public TraineeUpdateResponse updateTrainee(String username, TraineeUpdateRequest request) {
         var internalRequest = traineeRestMapper.toUpdateRequest(username, request);
         coreValidator.validate(internalRequest);
@@ -204,19 +211,10 @@ public class GymFacade {
         return traineeRestMapper.toUpdateResponse(profile);
     }
 
-    @Authenticated
     public void deleteTraineeByUsername(String username) {
         traineeService.deleteByUsername(username);
     }
 
-    public Optional<TraineeProfileResponse> findTraineeByUsername(String username, UserCredentials credentials) {
-        coreValidator.validate(credentials);
-        authenticationService.validateTraineeCredentials(credentials);
-
-        return traineeService.findByUsername(username).map(traineeMapper::toProfileResponse);
-    }
-
-    @Authenticated
     public TraineeAssignedTrainersUpdateResponse updateTraineeTrainers(String username, TraineeAssignedTrainersUpdateRequest request) {
         List<AssignedTrainerInfo> trainers = traineeService.updateTrainers(username, request.getTrainerUsernames()).stream()
                 .map(traineeMapper::toAssignedTrainerInfo)
@@ -225,7 +223,6 @@ public class GymFacade {
         return traineeRestMapper.toAssignedTrainersUpdateResponse(trainers);
     }
 
-    @Authenticated
     public void changeTraineeActivationStatus(String username, ActivationStatusRequest request) {
         ActivationRequest activationRequest = traineeRestMapper.toActivationRequest(username, request);
 
@@ -253,7 +250,6 @@ public class GymFacade {
         return trainerRestMapper.toCreateResponse(response);
     }
 
-    @Authenticated
     public TrainerUpdateResponse updateTrainer(String username, TrainerUpdateRequest request) {
         UpdateTrainerRequest internalRequest = trainerRestMapper.toUpdateRequest(username, request);
         coreValidator.validate(internalRequest);
@@ -264,7 +260,6 @@ public class GymFacade {
         return trainerRestMapper.toUpdateResponse(profile);
     }
 
-    @Authenticated
     public TrainerGetResponse getTrainerByUsername(String username) {
         TrainerProfileResponse profile = trainerService.findByUsername(username)
                 .map(trainerMapper::toProfileResponse)
@@ -273,7 +268,6 @@ public class GymFacade {
         return trainerRestMapper.toGetResponse(profile);
     }
 
-    @Authenticated
     public List<AssignedTrainerResponse> findAllTrainersNotAssignedToTrainee(String username) {
         return trainerService.findAllNotAssignedToTrainee(username).stream()
                 .map(traineeMapper::toAssignedTrainerInfo)
@@ -281,7 +275,6 @@ public class GymFacade {
                 .toList();
     }
 
-    @Authenticated
     public void changeTrainerActivationStatus(String username, ActivationStatusRequest statusRequest) {
         ActivationRequest request = trainerRestMapper.toActivationRequest(username, statusRequest);
 
@@ -292,7 +285,6 @@ public class GymFacade {
         action.accept(request);
     }
 
-    @Authenticated
     public void createTraining(TrainingCreateRequest request) {
         CreateTrainingRequest internalRequest = trainingRestMapper.toCreateRequest(request);
         coreValidator.validate(internalRequest);
@@ -300,12 +292,10 @@ public class GymFacade {
         trainingService.create(internalRequest);
     }
 
-    @Authenticated
     public List<TrainingTypeResponse> findAllTrainingTypes() {
         return trainingRestMapper.toTrainingTypeResponseList(trainingTypeService.findAll());
     }
 
-    @Authenticated
     public List<GetTraineeTrainingResponse> findTrainingsByTraineeCriteria(String username, LocalDate fromDate, LocalDate toDate,
                                                                            String trainerName, String trainingType) {
         TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
@@ -322,7 +312,6 @@ public class GymFacade {
                 .toList();
     }
 
-    @Authenticated
     public List<GetTrainerTrainingResponse> findTrainingsByTrainerCriteria(String username, LocalDate fromDate, LocalDate toDate, String traineeName) {
         TrainerTrainingSearchFilter filter = TrainerTrainingSearchFilter.builder()
                 .username(username)
