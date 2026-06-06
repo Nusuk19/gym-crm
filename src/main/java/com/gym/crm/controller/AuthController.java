@@ -10,11 +10,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -58,6 +58,9 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Not authenticated",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Access denied - you can only change your own password",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "User not found",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
@@ -65,6 +68,7 @@ public class AuthController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @PreAuthorize("#request.username == authentication.principal.username")
     @PutMapping("/password")
     public ResponseEntity<Void> changePassword(@Valid @RequestBody LoginChangeRequest request) {
         facade.changePassword(request);
