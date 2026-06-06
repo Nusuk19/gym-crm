@@ -3,21 +3,24 @@ package com.gym.crm.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
+import com.gia.openapi.model.LoginResponse;
 import com.gym.crm.facade.GymFacade;
+import com.gym.crm.security.GymUserDetailsService;
+import com.gym.crm.security.JwtService;
 import com.gym.crm.util.JsonResourceReader;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -29,6 +32,7 @@ class AuthControllerTest {
     private static final String USERNAME = "Abdul.Hariton";
     private static final String PASSWORD = "password123";
     private static final String NEW_PASSWORD = "newPassword123";
+    private static final String TOKEN = "jwt-token";
 
     @Autowired
     private MockMvc mockMvc;
@@ -39,29 +43,32 @@ class AuthControllerTest {
     @MockBean
     private GymFacade facade;
 
-    @Test
-    void login_validRequest_returns200() throws Exception {
-        String request = JsonResourceReader.readResource("/json/auth/auth-login-request.json");
+    @MockBean
+    private GymUserDetailsService gymUserDetailsService;
 
-        mockMvc.perform(post("/api/v1/auth/login")
+    @MockBean
+    private JwtService jwtService;
+
+    @Test
+    void login_validRequest_returns200WithToken() throws Exception {
+        String request = JsonResourceReader.readResource("/json/auth/auth-login-request.json");
+        String expectedResponse = JsonResourceReader.readResource("/json/auth/auth-login-response.json");
+        LoginResponse response = new LoginResponse()
+                .username(USERNAME)
+                .token(TOKEN);
+
+        when(facade.login(any(LoginRequest.class))).thenReturn(response);
+
+        String actualResponse = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        JSONAssert.assertEquals(expectedResponse, actualResponse, true);
         verify(facade).login(any(LoginRequest.class));
-    }
-
-    @Test
-    void login_validRequest_storesUsernameInSession() throws Exception {
-        MockHttpSession session = new MockHttpSession();
-
-        mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new LoginRequest(USERNAME, PASSWORD)))
-                        .session(session))
-                .andExpect(status().isOk());
-
-        assertThat(session.getAttribute("username")).isEqualTo(USERNAME);
     }
 
     @Test
