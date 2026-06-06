@@ -10,6 +10,8 @@ import com.gia.openapi.model.TrainerGetResponse;
 import com.gia.openapi.model.TrainerUpdateRequest;
 import com.gia.openapi.model.TrainerUpdateResponse;
 import com.gym.crm.facade.GymFacade;
+import com.gym.crm.security.GymUserDetailsService;
+import com.gym.crm.security.JwtService;
 import com.gym.crm.util.JsonResourceReader;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -56,6 +58,12 @@ class TrainerControllerTest {
 
     @MockBean
     private GymFacade facade;
+
+    @MockBean
+    private GymUserDetailsService gymUserDetailsService;
+
+    @MockBean
+    private JwtService jwtService;
 
     @Test
     void register_shouldReturnCredentials_whenRequestIsValid() throws Exception {

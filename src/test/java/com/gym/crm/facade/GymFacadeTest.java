@@ -6,6 +6,7 @@ import com.gia.openapi.model.GetTraineeTrainingResponse;
 import com.gia.openapi.model.GetTrainerTrainingResponse;
 import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
+import com.gia.openapi.model.LoginResponse;
 import com.gia.openapi.model.TraineeAssignedTrainersUpdateRequest;
 import com.gia.openapi.model.TraineeAssignedTrainersUpdateResponse;
 import com.gia.openapi.model.TraineeCreateRequest;
@@ -48,6 +49,7 @@ import com.gym.crm.model.Trainer;
 import com.gym.crm.model.Training;
 import com.gym.crm.model.TrainingType;
 import com.gym.crm.model.User;
+import com.gym.crm.security.JwtService;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
@@ -82,6 +84,7 @@ class GymFacadeTest {
     private static final Long EXISTING_ID = 1L;
     private static final String USERNAME = "Abdul.Hariton";
     private static final String TRAINER_USERNAME = "Mike.Tyson";
+    private static final String TOKEN = "jwt-token";
 
     @Mock
     private TraineeService traineeService;
@@ -95,6 +98,8 @@ class GymFacadeTest {
     private UserService userService;
     @Mock
     private UserProfileService userProfileService;
+    @Mock
+    private JwtService jwtService;
     @Mock
     private TraineeMapper traineeMapper;
     @Mock
@@ -126,7 +131,7 @@ class GymFacadeTest {
 
     @BeforeEach
     void setUp() {
-        facade = new GymFacade(traineeService, trainerService, trainingService, trainingTypeService, userService, userProfileService);
+        facade = new GymFacade(traineeService, trainerService, trainingService, trainingTypeService, userService, userProfileService, jwtService);
         facade.setTraineeMapper(traineeMapper);
         facade.setTrainerMapper(trainerMapper);
         facade.setTrainingMapper(trainingMapper);
@@ -148,7 +153,7 @@ class GymFacadeTest {
     }
 
     @Test
-    void login_validatesCredentialsAndAuthenticates() {
+    void login_validatesCredentials_returnsLoginResponseWithToken() {
         LoginRequest request = new LoginRequest(USERNAME, "oldpassword1");
         UserCredentials credentials = UserCredentials.builder()
                 .username(USERNAME)
@@ -156,12 +161,16 @@ class GymFacadeTest {
                 .build();
 
         when(authMapper.toCredentials(request)).thenReturn(credentials);
+        when(jwtService.generateToken(USERNAME)).thenReturn(TOKEN);
 
-        facade.login(request);
+        LoginResponse actual = facade.login(request);
 
+        assertThat(actual.getUsername()).isEqualTo(USERNAME);
+        assertThat(actual.getToken()).isEqualTo(TOKEN);
         verify(authMapper).toCredentials(request);
         verify(coreValidator).validate(credentials);
         verify(authenticationService).validateCredentials(credentials);
+        verify(jwtService).generateToken(USERNAME);
     }
 
     @Test
