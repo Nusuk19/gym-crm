@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.method.ParameterValidationResult;
@@ -56,6 +57,18 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("AccessDeniedException → 403, code 2806, no internal details leaked")
+    void handleAccessDenied_returns403WithoutDetails() {
+        AccessDeniedException ex = new AccessDeniedException("Access denied");
+
+        ResponseEntity<Map<String, Object>> response = handler.handleAccessDenied(ex);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(403);
+        assertThat(response.getBody()).containsEntry("errorCode", 2806);
+        assertThat(response.getBody()).containsEntry("errorMessage", "User is not authorized for request operation");
+    }
+
+    @Test
     @DisplayName("AuthenticationFailedException → 401, code 2805, no internal details leaked")
     void handleAuthentication_returns401WithoutDetails() {
         AuthenticationFailedException ex = new AuthenticationFailedException("Invalid credentials");
@@ -68,13 +81,13 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("AuthorizationException → 401, code 2806, no internal details leaked")
-    void handleAuthorization_returns401WithoutDetails() {
+    @DisplayName("AuthorizationException → 403, code 2806, no internal details leaked")
+    void handleAuthorization_returns403WithoutDetails() {
         AuthorizationException ex = new AuthorizationException("User is not authorized");
 
         ResponseEntity<Map<String, Object>> response = handler.handleAuthorization(ex);
 
-        assertThat(response.getStatusCode().value()).isEqualTo(401);
+        assertThat(response.getStatusCode().value()).isEqualTo(403);
         assertThat(response.getBody()).containsEntry("errorCode", 2806);
         assertThat(response.getBody()).containsEntry("errorMessage", "User is not authorized for request operation");
     }
