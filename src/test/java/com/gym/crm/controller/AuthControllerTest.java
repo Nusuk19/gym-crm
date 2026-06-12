@@ -7,6 +7,7 @@ import com.gia.openapi.model.LoginResponse;
 import com.gym.crm.facade.GymFacade;
 import com.gym.crm.security.GymUserDetailsService;
 import com.gym.crm.security.JwtService;
+import com.gym.crm.security.TokenBlacklistService;
 import com.gym.crm.util.JsonResourceReader;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -48,6 +50,9 @@ class AuthControllerTest {
 
     @MockBean
     private JwtService jwtService;
+
+    @MockBean
+    private TokenBlacklistService tokenBlacklistService;
 
     @Test
     void login_validRequest_returns200WithToken() throws Exception {
@@ -111,5 +116,16 @@ class AuthControllerTest {
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(facade);
+    }
+
+    @Test
+    void logout_shouldReturnOk() throws Exception {
+        String authorizationHeader = "Bearer jwt-token";
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .header(HttpHeaders.AUTHORIZATION, authorizationHeader))
+                .andExpect(status().isOk());
+
+        verify(facade).logout(authorizationHeader);
     }
 }

@@ -174,6 +174,16 @@ class GymFacadeTest {
     }
 
     @Test
+    void logoutShouldClearSecurityContext() {
+        String token = "jwt-token";
+        String authorizationHeader = "Bearer " + token;
+
+        facade.logout(authorizationHeader);
+
+        verify(authenticationService).logout(authorizationHeader);
+    }
+
+    @Test
     void changePassword_validatesRequestThenAuthenticatesThenChanges() {
         LoginChangeRequest request = new LoginChangeRequest(USERNAME, "oldpassword1", "newpassword1");
         ChangePasswordRequest changeRequest = ChangePasswordRequest.builder()

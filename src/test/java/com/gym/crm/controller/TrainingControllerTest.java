@@ -6,6 +6,7 @@ import com.gia.openapi.model.TrainingTypeResponse;
 import com.gym.crm.facade.GymFacade;
 import com.gym.crm.security.GymUserDetailsService;
 import com.gym.crm.security.JwtService;
+import com.gym.crm.security.TokenBlacklistService;
 import com.gym.crm.util.JsonResourceReader;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -49,6 +50,9 @@ class TrainingControllerTest {
 
     @MockBean
     private JwtService jwtService;
+
+    @MockBean
+    private TokenBlacklistService tokenBlacklistService;
 
     @Test
     void addTraining_shouldReturnOk_whenRequestIsValid() throws Exception {

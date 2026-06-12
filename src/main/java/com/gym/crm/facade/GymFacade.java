@@ -156,6 +156,10 @@ public class GymFacade {
                 .token(token);
     }
 
+    public void logout(String authorizationHeader) {
+        authenticationService.logout(authorizationHeader);
+    }
+
     public void changePassword(LoginChangeRequest request) {
         ChangePasswordRequest changeRequest = authMapper.toChangePassword(request);
         coreValidator.validate(changeRequest);
