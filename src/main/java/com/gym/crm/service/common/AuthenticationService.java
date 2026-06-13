@@ -8,6 +8,8 @@ import com.gym.crm.model.User;
 import com.gym.crm.repository.TraineeRepository;
 import com.gym.crm.repository.TrainerRepository;
 import com.gym.crm.repository.UserRepository;
+import com.gym.crm.security.BruteForceProtectionService;
+import com.gym.crm.security.TokenBlacklistService;
 import com.gym.crm.service.profile.PasswordEncoder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,24 +21,32 @@ import org.springframework.stereotype.Component;
 public class AuthenticationService {
 
     private static final String INVALID_CREDENTIALS = "Invalid credentials";
+    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String INVALID_AUTHORIZATION_HEADER_MESSAGE = "Invalid authorization header";
 
     private final TraineeRepository traineeRepository;
     private final TrainerRepository trainerRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final BruteForceProtectionService bruteForceProtectionService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     public void validateTraineeCredentials(UserCredentials credentials) {
         log.info("Validating trainee credentials: username={}", credentials.getUsername());
 
         Trainee trainee = traineeRepository.findByUserUsername(credentials.getUsername())
                 .orElseThrow(() -> new AuthenticationFailedException(INVALID_CREDENTIALS));
+        String username = credentials.getUsername();
 
+        bruteForceProtectionService.checkBlocked(username);
         if (!passwordEncoder.matches(credentials.getPassword(), trainee.getUser().getPassword())) {
             log.warn("Authentication failed for trainee: username={}", credentials.getUsername());
+            bruteForceProtectionService.loginFailed(username);
 
             throw new AuthenticationFailedException(INVALID_CREDENTIALS);
         }
 
+        bruteForceProtectionService.loginSucceeded(username);
         log.info("Trainee credentials validated successfully: username={}", credentials.getUsername());
     }
 
@@ -46,12 +56,16 @@ public class AuthenticationService {
         Trainer trainer = trainerRepository.findByUserUsername(credentials.getUsername())
                 .orElseThrow(() -> new AuthenticationFailedException(INVALID_CREDENTIALS));
 
+        String username = credentials.getUsername();
+        bruteForceProtectionService.checkBlocked(username);
         if (!passwordEncoder.matches(credentials.getPassword(), trainer.getUser().getPassword())) {
             log.warn("Authentication failed for trainer: username={}", credentials.getUsername());
+            bruteForceProtectionService.loginFailed(username);
 
             throw new AuthenticationFailedException(INVALID_CREDENTIALS);
         }
 
+        bruteForceProtectionService.loginSucceeded(username);
         log.info("Trainer credentials validated successfully: username={}", credentials.getUsername());
     }
 
@@ -69,5 +83,19 @@ public class AuthenticationService {
         }
 
         log.info("Credentials validated successfully: username={}", credentials.getUsername());
+    }
+
+    public void logout(String authorizationHeader) {
+        String token = extractToken(authorizationHeader);
+
+        tokenBlacklistService.blacklist(token);
+    }
+
+    private String extractToken(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER_PREFIX)) {
+            throw new AuthenticationFailedException(INVALID_AUTHORIZATION_HEADER_MESSAGE);
+        }
+
+        return authorizationHeader.substring(BEARER_PREFIX.length());
     }
 }

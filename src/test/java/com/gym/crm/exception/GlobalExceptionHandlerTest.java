@@ -183,4 +183,18 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody()).containsEntry("errorCode", 3358);
         assertThat(response.getBody()).containsEntry("errorMessage", "Unexpected database access failure");
     }
+
+    @Test
+    @DisplayName("UserBlockedException → 403, code 2806, block details included")
+    void handleUserBlockedException_returns403WithBlockMessage() {
+        UserBlockedException ex = new UserBlockedException("User is blocked");
+
+        ResponseEntity<Map<String, Object>> response = handler.handleUserBlockedException(ex);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(403);
+        assertThat(response.getBody()).containsEntry("errorCode", 2806);
+        assertThat(response.getBody().get("errorMessage").toString())
+                .contains("User is not authorized for request operation")
+                .contains("User is temporarily blocked due to multiple failed login attempts. Please try again later.");
+    }
 }

@@ -12,6 +12,7 @@ import com.gia.openapi.model.TrainerUpdateResponse;
 import com.gym.crm.facade.GymFacade;
 import com.gym.crm.security.GymUserDetailsService;
 import com.gym.crm.security.JwtService;
+import com.gym.crm.security.TokenBlacklistService;
 import com.gym.crm.util.JsonResourceReader;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -64,6 +65,9 @@ class TrainerControllerTest {
 
     @MockBean
     private JwtService jwtService;
+
+    @MockBean
+    private TokenBlacklistService tokenBlacklistService;
 
     @Test
     void register_shouldReturnCredentials_whenRequestIsValid() throws Exception {

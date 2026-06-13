@@ -118,6 +118,13 @@ public class GlobalExceptionHandler {
         return buildResponse(SERVICE_ERROR);
     }
 
+    @ExceptionHandler(UserBlockedException.class)
+    public ResponseEntity<Map<String, Object>> handleUserBlockedException(UserBlockedException exception) {
+        log.warn("User blocked: {}", exception.getMessage(), exception);
+
+        return buildResponse(AUTHORIZATION_ERROR, "User is temporarily blocked due to multiple failed login attempts. Please try again later.");
+    }
+
     private ResponseEntity<Map<String, Object>> buildResponse(ApiErrorCode errorCode) {
         return buildBody(errorCode, errorCode.getMessage());
     }

@@ -2,6 +2,7 @@ package com.gym.crm.security;
 
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -9,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -35,6 +37,9 @@ class JwtAuthenticationFilterTest {
     private GymUserDetailsService userDetailsService;
 
     @Mock
+    private TokenBlacklistService tokenBlacklistService;
+
+    @Mock
     private FilterChain filterChain;
 
     private JwtAuthenticationFilter filter;
@@ -44,7 +49,7 @@ class JwtAuthenticationFilterTest {
     @BeforeEach
     void setUp() {
         SecurityContextHolder.clearContext();
-        filter = new JwtAuthenticationFilter(jwtService, userDetailsService);
+        filter = new JwtAuthenticationFilter(jwtService, userDetailsService, tokenBlacklistService);
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
     }
@@ -53,6 +58,8 @@ class JwtAuthenticationFilterTest {
     void doFilter_validBearerToken_shouldSetAuthentication() throws Exception {
         request.addHeader(HttpHeaders.AUTHORIZATION, BEARER_TOKEN);
         UserDetails userDetails = buildUserDetails();
+
+        when(tokenBlacklistService.isBlacklisted(TOKEN)).thenReturn(false);
         when(jwtService.isTokenValid(TOKEN)).thenReturn(true);
         when(jwtService.extractUsername(TOKEN)).thenReturn(USERNAME);
         when(userDetailsService.loadUserByUsername(USERNAME)).thenReturn(userDetails);
@@ -61,6 +68,11 @@ class JwtAuthenticationFilterTest {
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
         assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo(USERNAME);
+
+        verify(tokenBlacklistService).isBlacklisted(TOKEN);
+        verify(jwtService).isTokenValid(TOKEN);
+        verify(jwtService).extractUsername(TOKEN);
+        verify(userDetailsService).loadUserByUsername(USERNAME);
         verify(filterChain).doFilter(request, response);
     }
 
@@ -69,7 +81,11 @@ class JwtAuthenticationFilterTest {
         filter.doFilterInternal(request, response, filterChain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+
+        verify(tokenBlacklistService, never()).isBlacklisted(any());
         verify(jwtService, never()).isTokenValid(any());
+        verify(jwtService, never()).extractUsername(any());
+        verify(userDetailsService, never()).loadUserByUsername(any());
         verify(filterChain).doFilter(request, response);
     }
 
@@ -80,18 +96,28 @@ class JwtAuthenticationFilterTest {
         filter.doFilterInternal(request, response, filterChain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+
+        verify(tokenBlacklistService, never()).isBlacklisted(any());
         verify(jwtService, never()).isTokenValid(any());
+        verify(jwtService, never()).extractUsername(any());
+        verify(userDetailsService, never()).loadUserByUsername(any());
         verify(filterChain).doFilter(request, response);
     }
 
     @Test
     void doFilter_invalidToken_shouldNotSetAuthentication() throws Exception {
         request.addHeader(HttpHeaders.AUTHORIZATION, BEARER_TOKEN);
+
+        when(tokenBlacklistService.isBlacklisted(TOKEN)).thenReturn(false);
         when(jwtService.isTokenValid(TOKEN)).thenReturn(false);
 
         filter.doFilterInternal(request, response, filterChain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+
+        verify(tokenBlacklistService).isBlacklisted(TOKEN);
+        verify(jwtService).isTokenValid(TOKEN);
+        verify(jwtService, never()).extractUsername(any());
         verify(userDetailsService, never()).loadUserByUsername(any());
         verify(filterChain).doFilter(request, response);
     }
@@ -99,30 +125,59 @@ class JwtAuthenticationFilterTest {
     @Test
     void doFilter_alreadyAuthenticated_shouldNotReAuthenticate() throws Exception {
         request.addHeader(HttpHeaders.AUTHORIZATION, BEARER_TOKEN);
+
         UserDetails userDetails = buildUserDetails();
-        when(jwtService.isTokenValid(TOKEN)).thenReturn(true);
-        when(jwtService.extractUsername(TOKEN)).thenReturn(USERNAME);
-        when(userDetailsService.loadUserByUsername(USERNAME)).thenReturn(userDetails);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities())
+        );
 
         filter.doFilterInternal(request, response, filterChain);
-        filter.doFilterInternal(request, response, filterChain);
 
-        verify(userDetailsService).loadUserByUsername(USERNAME);
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo(USERNAME);
+
+        verify(tokenBlacklistService, never()).isBlacklisted(any());
+        verify(jwtService, never()).isTokenValid(any());
+        verify(jwtService, never()).extractUsername(any());
+        verify(userDetailsService, never()).loadUserByUsername(any());
+        verify(filterChain).doFilter(request, response);
     }
 
     @Test
     void doFilter_usernameIsNull_shouldNotSetAuthentication() throws Exception {
         request.addHeader(HttpHeaders.AUTHORIZATION, BEARER_TOKEN);
+
+        when(tokenBlacklistService.isBlacklisted(TOKEN)).thenReturn(false);
         when(jwtService.isTokenValid(TOKEN)).thenReturn(true);
         when(jwtService.extractUsername(TOKEN)).thenReturn(null);
 
         filter.doFilterInternal(request, response, filterChain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
-        verify(filterChain).doFilter(request, response);
+
+        verify(tokenBlacklistService).isBlacklisted(TOKEN);
         verify(jwtService).isTokenValid(TOKEN);
         verify(jwtService).extractUsername(TOKEN);
         verify(userDetailsService, never()).loadUserByUsername(any());
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    @DisplayName("Should not set authentication when token is blacklisted")
+    void doFilter_blacklistedToken_shouldNotSetAuthentication() throws Exception {
+        request.addHeader(HttpHeaders.AUTHORIZATION, BEARER_TOKEN);
+
+        when(tokenBlacklistService.isBlacklisted(TOKEN)).thenReturn(true);
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+
+        verify(tokenBlacklistService).isBlacklisted(TOKEN);
+        verify(jwtService, never()).isTokenValid(any());
+        verify(jwtService, never()).extractUsername(any());
+        verify(userDetailsService, never()).loadUserByUsername(any());
+        verify(filterChain).doFilter(request, response);
     }
 
     private UserDetails buildUserDetails() {
